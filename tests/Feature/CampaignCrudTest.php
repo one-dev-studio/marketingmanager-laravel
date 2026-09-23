@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Campaign;
+use App\Models\Channel;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,21 +20,25 @@ class CampaignCrudTest extends TestCase
     {
         parent::setUp();
         
-        $this->user = User::factory()->create();
-        $this->organization = Organization::factory()->create();
-        $this->user->organizations()->attach($this->organization->id, ['role_id' => 1]);
-        
-        $this->actingAs($this->user);
+        [$this->user, $this->organization] = $this->actingAsOrganizationAdmin();
     }
 
     public function testUserCanCreateCampaign(): void
     {
+        $channel = Channel::factory()->create([
+            'organization_id' => $this->organization->id,
+            'status' => 'active',
+        ]);
+
         $response = $this->post("/main/{$this->organization->id}/campaigns", [
             'name' => 'New Campaign',
             'description' => 'Campaign Description',
-            'status' => 'draft',
-            'start_date' => '2024-01-01',
-            'end_date' => '2024-12-31',
+            'start_date' => now()->addDay()->toDateString(),
+            'end_date' => now()->addMonths(2)->toDateString(),
+            'budget' => 500,
+            'channels' => [
+                ['id' => $channel->id, 'budget' => 500],
+            ],
         ]);
 
         $response->assertRedirect();

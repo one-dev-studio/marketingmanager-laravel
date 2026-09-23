@@ -29,7 +29,7 @@ class CampaignService
 
             $campaign = $this->repository->create([
                 ...$data,
-                'organization_id' => $user->primaryOrganization()->id,
+                'organization_id' => $data['organization_id'] ?? $user->primaryOrganization()?->id,
                 'created_by' => $user->id,
                 'status' => $data['status'] ?? 'draft',
             ]);

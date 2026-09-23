@@ -31,6 +31,7 @@ class LocalizationHelperTest extends TestCase
         App::instance(LocaleService::class, $localeServiceMock);
         
         set_locale('fr');
+        $this->addToAssertionCount(1);
     }
 
     public function testSupportedLocales(): void

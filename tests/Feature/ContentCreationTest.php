@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Brand;
 use App\Models\Campaign;
+use App\Models\Channel;
 use App\Models\Organization;
 use App\Models\ScheduledPost;
 use App\Models\User;
@@ -21,13 +22,9 @@ class ContentCreationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
-        $this->user = User::factory()->create();
-        $this->organization = Organization::factory()->create();
+
+        [$this->user, $this->organization] = $this->actingAsOrganizationAdmin();
         $this->brand = Brand::factory()->create(['organization_id' => $this->organization->id]);
-        $this->user->organizations()->attach($this->organization->id, ['role_id' => 1]);
-        
-        $this->actingAs($this->user);
     }
 
     public function testUserCanCreateContent(): void
@@ -35,15 +32,21 @@ class ContentCreationTest extends TestCase
         $campaign = Campaign::factory()->create([
             'organization_id' => $this->organization->id,
             'brand_id' => $this->brand->id,
+            'created_by' => $this->user->id,
         ]);
 
-        $response = $this->post("/main/{$this->organization->id}/scheduled-posts", [
-            'campaign_id' => $campaign->id,
+        $channel = Channel::factory()->create([
+            'organization_id' => $this->organization->id,
+            'status' => 'active',
+        ]);
+
+        $response = $this->postJson("/main/{$this->organization->id}/campaigns/{$campaign->id}/content", [
+            'channel_id' => $channel->id,
             'content' => 'Test Content',
             'scheduled_at' => now()->addDay()->toDateTimeString(),
         ]);
 
-        $response->assertRedirect();
+        $response->assertCreated();
         $this->assertDatabaseHas('scheduled_posts', [
             'content' => 'Test Content',
             'campaign_id' => $campaign->id,
@@ -52,16 +55,23 @@ class ContentCreationTest extends TestCase
 
     public function testUserCanUpdateContent(): void
     {
+        $campaign = Campaign::factory()->create([
+            'organization_id' => $this->organization->id,
+            'created_by' => $this->user->id,
+        ]);
+
         $post = ScheduledPost::factory()->create([
             'organization_id' => $this->organization->id,
-            'campaign_id' => Campaign::factory()->create(['organization_id' => $this->organization->id]),
+            'campaign_id' => $campaign->id,
+            'created_by' => $this->user->id,
         ]);
 
-        $response = $this->put("/main/{$this->organization->id}/scheduled-posts/{$post->id}", [
-            'content' => 'Updated Content',
-        ]);
+        $response = $this->putJson(
+            "/main/{$this->organization->id}/campaigns/{$campaign->id}/content/{$post->id}",
+            ['content' => 'Updated Content'],
+        );
 
-        $response->assertRedirect();
+        $response->assertOk();
         $this->assertDatabaseHas('scheduled_posts', [
             'id' => $post->id,
             'content' => 'Updated Content',
@@ -70,19 +80,32 @@ class ContentCreationTest extends TestCase
 
     public function testUserCanSubmitContentForApproval(): void
     {
+        $approver = User::factory()->create();
+        $this->organization->users()->attach($approver->id, [
+            'role_id' => \App\Models\Role::where('name', 'admin')->firstOrFail()->id,
+        ]);
+
+        $campaign = Campaign::factory()->create([
+            'organization_id' => $this->organization->id,
+            'created_by' => $this->user->id,
+        ]);
+
         $post = ScheduledPost::factory()->create([
             'organization_id' => $this->organization->id,
-            'campaign_id' => Campaign::factory()->create(['organization_id' => $this->organization->id]),
+            'campaign_id' => $campaign->id,
+            'created_by' => $this->user->id,
             'status' => 'draft',
         ]);
 
-        $response = $this->post("/main/{$this->organization->id}/scheduled-posts/{$post->id}/submit");
+        $response = $this->postJson(
+            "/main/{$this->organization->id}/content-approvals/{$post->id}/request",
+            ['approved_by' => $approver->id],
+        );
 
-        $response->assertRedirect();
+        $response->assertCreated();
         $this->assertDatabaseHas('scheduled_posts', [
             'id' => $post->id,
-            'status' => 'pending_approval',
+            'status' => 'pending',
         ]);
     }
 }
-
