@@ -15,12 +15,12 @@ jobs:
           php-version: '8.4'
           extensions: mbstring, pdo_sqlite, sqlite3
           coverage: none
+      - name: Copy environment
+        run: cp .env.example .env
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
-      - name: Copy environment
-        run: cp .env.example .env || true
       - name: Generate key
-        run: php artisan key:generate --force || true
+        run: php artisan key:generate --force
       - name: Run tests
         run: php vendor/bin/phpunit --stop-on-failure
       - name: Health check route
