@@ -119,8 +119,10 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'admin', 'description' => 'Administrator', 'level' => 90],
             ['name' => 'editor', 'description' => 'Editor', 'level' => 50],
             ['name' => 'viewer', 'description' => 'Viewer', 'level' => 10],
+            ['name' => 'client', 'description' => 'Client', 'level' => 10],
             ['name' => 'agency_admin', 'description' => 'Agency Administrator', 'level' => 80],
             ['name' => 'agency_member', 'description' => 'Agency Member', 'level' => 40],
+            ['name' => 'agency', 'description' => 'Agency user', 'level' => 40],
         ];
 
         foreach ($roles as $role) {
@@ -140,14 +142,15 @@ class RolePermissionSeeder extends Seeder
         $admin = Role::where('name', 'admin')->first();
         $editor = Role::where('name', 'editor')->first();
         $viewer = Role::where('name', 'viewer')->first();
+        $client = Role::where('name', 'client')->first();
         $agencyAdmin = Role::where('name', 'agency_admin')->first();
         $agencyMember = Role::where('name', 'agency_member')->first();
+        $agency = Role::where('name', 'agency')->first();
 
         // Super Admin gets all permissions
-        $superAdmin->givePermissionTo(Permission::all());
+        $superAdmin->syncPermissions(Permission::all());
 
-        // Admin gets most permissions except super admin specific ones
-        $admin->givePermissionTo([
+        $admin->syncPermissions([
             'campaigns.view', 'campaigns.create', 'campaigns.update', 'campaigns.delete', 'campaigns.publish',
             'content.view', 'content.create', 'content.update', 'content.delete', 'content.approve',
             'brands.view', 'brands.create', 'brands.update', 'brands.delete',
@@ -164,7 +167,7 @@ class RolePermissionSeeder extends Seeder
         ]);
 
         // Editor can create and update but not delete
-        $editor->givePermissionTo([
+        $editor->syncPermissions([
             'campaigns.view', 'campaigns.create', 'campaigns.update', 'campaigns.publish',
             'content.view', 'content.create', 'content.update',
             'brands.view', 'brands.create', 'brands.update',
@@ -179,7 +182,7 @@ class RolePermissionSeeder extends Seeder
         ]);
 
         // Viewer can only view
-        $viewer->givePermissionTo([
+        $viewer->syncPermissions([
             'campaigns.view',
             'content.view',
             'brands.view',
@@ -192,8 +195,16 @@ class RolePermissionSeeder extends Seeder
             'analytics.view',
         ]);
 
+        $client->syncPermissions([
+            'content.view',
+            'brands.view',
+            'products.view',
+            'channels.view',
+            'analytics.view',
+        ]);
+
         // Agency Admin gets similar permissions to admin
-        $agencyAdmin->givePermissionTo([
+        $agencyAdmin->syncPermissions([
             'campaigns.view', 'campaigns.create', 'campaigns.update', 'campaigns.delete', 'campaigns.publish',
             'content.view', 'content.create', 'content.update', 'content.delete', 'content.approve',
             'brands.view', 'brands.create', 'brands.update', 'brands.delete',
@@ -208,7 +219,7 @@ class RolePermissionSeeder extends Seeder
         ]);
 
         // Agency Member gets editor-like permissions
-        $agencyMember->givePermissionTo([
+        $agencyMember->syncPermissions([
             'campaigns.view', 'campaigns.create', 'campaigns.update', 'campaigns.publish',
             'content.view', 'content.create', 'content.update',
             'brands.view', 'brands.create', 'brands.update',
@@ -221,6 +232,10 @@ class RolePermissionSeeder extends Seeder
             'analytics.view',
             'ai.generate_content', 'ai.generate_images',
         ]);
+
+        if ($agency) {
+            $agency->syncPermissions($agencyMember->permissions);
+        }
     }
 }
 

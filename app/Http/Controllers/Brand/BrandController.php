@@ -7,10 +7,10 @@ use App\Http\Requests\Brand\CreateBrandRequest;
 use App\Http\Requests\Brand\UpdateBrandRequest;
 use App\Http\Resources\Brand\BrandResource;
 use App\Models\Brand;
+use App\Models\Organization;
 use App\Services\Brand\BrandService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class BrandController extends Controller
 {
@@ -18,66 +18,154 @@ class BrandController extends Controller
         private BrandService $brandService
     ) {}
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, ?string $organizationId = null)
     {
-        $organizationId = $request->user()->primaryOrganization()->id;
+        $organizationId = $this->resolveOrganizationId($request, $organizationId);
+
+        $this->authorize('viewAny', Brand::class);
+
         $brands = Brand::where('organization_id', $organizationId)
             ->with(['organization', 'assets'])
             ->withCount('products')
             ->paginate();
 
-        return BrandResource::collection($brands);
+        if ($this->wantsJson($request)) {
+            return BrandResource::collection($brands);
+        }
+
+        return view('brands.index', [
+            'title' => 'Brands',
+            'organizationId' => $organizationId,
+            'brands' => $brands,
+        ]);
     }
 
-    public function store(CreateBrandRequest $request): JsonResponse
+    public function create(Request $request, string $organizationId)
     {
+        $this->authorize('create', Brand::class);
+
+        return view('brands.create', [
+            'title' => 'Create Brand',
+            'organizationId' => $organizationId,
+            'prefillName' => $request->query('name'),
+        ]);
+    }
+
+    public function store(CreateBrandRequest $request, ?string $organizationId = null)
+    {
+        $organizationId = $this->resolveOrganizationId($request, $organizationId);
+
         $brand = $this->brandService->createBrand(
             $request->validated(),
-            $request->user()
+            $request->user(),
+            (int) $organizationId
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => new BrandResource($brand->load('assets')),
-            'message' => 'Brand created successfully.',
-        ], 201);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => new BrandResource($brand->load('assets')),
+                'message' => 'Brand created successfully.',
+            ], 201);
+        }
+
+        return redirect()
+            ->route('main.brands.show', ['organizationId' => $organizationId, 'brand' => $brand])
+            ->with('success', 'Brand created successfully.');
     }
 
-    public function show(Brand $brand): JsonResponse
+    public function show(Request $request, string $organizationId, Brand $brand)
     {
         $this->authorize('view', $brand);
 
         $brand->load(['organization', 'assets', 'products']);
 
-        return response()->json([
-            'success' => true,
-            'data' => new BrandResource($brand),
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => new BrandResource($brand),
+            ]);
+        }
+
+        return view('brands.show', [
+            'title' => $brand->name,
+            'organizationId' => $organizationId,
+            'brand' => $brand,
         ]);
     }
 
-    public function update(UpdateBrandRequest $request, Brand $brand): JsonResponse
+    public function edit(Request $request, string $organizationId, Brand $brand)
+    {
+        $this->authorize('update', $brand);
+
+        return view('brands.edit', [
+            'title' => 'Edit Brand',
+            'organizationId' => $organizationId,
+            'brand' => $brand,
+            'prefillName' => null,
+        ]);
+    }
+
+    public function update(UpdateBrandRequest $request, string $organizationId, Brand $brand)
     {
         $brand = $this->brandService->updateBrand(
             $brand,
             $request->validated()
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => new BrandResource($brand->load('assets')),
-            'message' => 'Brand updated successfully.',
-        ]);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => new BrandResource($brand->load('assets')),
+                'message' => 'Brand updated successfully.',
+            ]);
+        }
+
+        return redirect()
+            ->route('main.brands.show', ['organizationId' => $organizationId, 'brand' => $brand])
+            ->with('success', 'Brand updated successfully.');
     }
 
-    public function destroy(Brand $brand): JsonResponse
+    public function destroy(Request $request, string $organizationId, Brand $brand)
     {
         $this->authorize('delete', $brand);
 
         $this->brandService->deleteBrand($brand);
 
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Brand deleted successfully.',
+            ]);
+        }
+
+        return redirect()
+            ->route('main.brands.index', ['organizationId' => $organizationId])
+            ->with('success', 'Brand deleted successfully.');
+    }
+
+    public function generateConcept(Request $request, string $organizationId): JsonResponse
+    {
+        $this->authorize('create', Brand::class);
+
+        $validated = $request->validate([
+            'name' => ['nullable', 'string', 'max:255'],
+            'industry' => ['nullable', 'string', 'max:255'],
+            'keywords' => ['nullable', 'array'],
+            'keywords.*' => ['string', 'max:100'],
+        ]);
+
+        $organization = Organization::findOrFail($organizationId);
+
+        $concept = $this->brandService->generateConcept(
+            $organization,
+            $request->user(),
+            $validated
+        );
+
         return response()->json([
             'success' => true,
-            'message' => 'Brand deleted successfully.',
+            'data' => $concept,
         ]);
     }
 
@@ -87,7 +175,7 @@ class BrandController extends Controller
     public function brandAssets(Request $request, string $organizationId)
     {
         $brandId = $request->query('brandId');
-        
+
         if (!$brandId) {
             abort(400, 'Brand ID is required.');
         }
@@ -99,7 +187,7 @@ class BrandController extends Controller
         $this->authorize('view', $brand);
 
         $brand->load('assets');
-        
+
         $guidelines = $this->brandService->getBrandGuidelines($brand);
         $assetsGrouped = $this->brandService->getAssetsGroupedByType($brand);
 
@@ -110,5 +198,20 @@ class BrandController extends Controller
             'assetsGrouped' => $assetsGrouped,
         ]);
     }
-}
 
+    private function resolveOrganizationId(Request $request, ?string $organizationId): ?string
+    {
+        if ($organizationId) {
+            return $organizationId;
+        }
+
+        $fromRoute = $request->route('organizationId');
+        if ($fromRoute) {
+            return (string) $fromRoute;
+        }
+
+        return $request->user()?->primaryOrganization()?->id
+            ? (string) $request->user()->primaryOrganization()->id
+            : null;
+    }
+}

@@ -18,11 +18,11 @@ class ChatbotController extends Controller
         private ChatbotService $chatbotService
     ) {}
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, string $organizationId)
     {
-        $organizationId = auth()->user()->primaryOrganization()->id;
         $query = Chatbot::where('organization_id', $organizationId)
-            ->with(['creator', 'conversations', 'leads']);
+            ->with(['creator'])
+            ->withCount(['conversations', 'leads']);
 
         if ($request->has('is_active')) {
             $query->where('is_active', $request->boolean('is_active'));
@@ -30,7 +30,17 @@ class ChatbotController extends Controller
 
         $chatbots = $query->orderBy('created_at', 'desc')->paginate();
 
-        return ChatbotResource::collection($chatbots);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => ChatbotResource::collection($chatbots->getCollection())->resolve(),
+            ]);
+        }
+
+        return view('chatbots.index', [
+            'organizationId' => $organizationId,
+            'chatbots' => $chatbots,
+        ]);
     }
 
     public function builder(Request $request): \Illuminate\View\View
@@ -254,7 +264,7 @@ class ChatbotController extends Controller
         ]);
     }
 
-    public function analytics(Request $request, Chatbot $chatbot): JsonResponse
+    public function getAnalytics(Request $request, Chatbot $chatbot): JsonResponse
     {
         $this->authorize('view', $chatbot);
 

@@ -20,9 +20,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index('organization_id');
-            $table->index(['trendable_type', 'trendable_id']);
             $table->index('trend_date');
-            $table->unique(['organization_id', 'trendable_type', 'trendable_id', 'trend_date']);
+            $table->unique(['organization_id', 'trendable_type', 'trendable_id', 'trend_date'], 'sentiment_trends_unique');
         });
     }
 

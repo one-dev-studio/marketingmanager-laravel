@@ -24,11 +24,27 @@ class CampaignService
     public function createCampaign(array $data, User $user): Campaign
     {
         return DB::transaction(function () use ($data, $user) {
+            $channels = $data['channels'] ?? [];
+            unset($data['channels'], $data['goal_type']);
+
             $campaign = $this->repository->create([
                 ...$data,
                 'organization_id' => $user->primaryOrganization()->id,
                 'created_by' => $user->id,
+                'status' => $data['status'] ?? 'draft',
             ]);
+
+            foreach ($channels as $channel) {
+                if (! empty($channel['id'])) {
+                    $campaign->channels()->syncWithoutDetaching([
+                        $channel['id'] => [
+                            'budget' => $channel['budget'] ?? 0,
+                            'spent' => 0,
+                            'status' => 'active',
+                        ],
+                    ]);
+                }
+            }
 
             $this->notificationService->notifyCampaignCreated($campaign);
 

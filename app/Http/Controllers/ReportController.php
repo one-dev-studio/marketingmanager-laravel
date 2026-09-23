@@ -18,7 +18,7 @@ class ReportController extends Controller
     /**
      * List all reports
      */
-    public function index(Request $request, string $organizationId): JsonResponse
+    public function index(Request $request, string $organizationId)
     {
         $organization = Organization::findOrFail($organizationId);
         
@@ -27,16 +27,30 @@ class ReportController extends Controller
             ->latest()
             ->paginate(20);
 
-        return response()->json([
-            'success' => true,
-            'data' => $reports,
+        if ($this->wantsJson($request)) {
+            return response()->json(['success' => true, 'data' => $reports]);
+        }
+
+        return view('reports.index', [
+            'title' => 'Reports',
+            'organizationId' => $organizationId,
+            'reports' => $reports,
+        ]);
+    }
+
+    public function create(Request $request, string $organizationId)
+    {
+        return view('reports.builder', [
+            'title' => 'Report builder',
+            'organizationId' => $organizationId,
+            'report' => null,
         ]);
     }
 
     /**
      * Create new report
      */
-    public function store(Request $request, string $organizationId): JsonResponse
+    public function store(Request $request, string $organizationId)
     {
         $organization = Organization::findOrFail($organizationId);
         
@@ -53,24 +67,30 @@ class ReportController extends Controller
             $request->only(['name', 'type', 'config', 'schedule'])
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => $report->load('creator'),
-        ], 201);
+        if ($this->wantsJson($request)) {
+            return response()->json(['success' => true, 'data' => $report->load('creator')], 201);
+        }
+
+        return redirect()->route('main.reports.show', ['organizationId' => $organizationId, 'reportId' => $report->id]);
     }
 
     /**
      * Show report
      */
-    public function show(Request $request, string $organizationId, int $reportId): JsonResponse
+    public function show(Request $request, string $organizationId, int $reportId)
     {
         $report = Report::where('organization_id', $organizationId)
             ->with('creator', 'schedules', 'shares')
             ->findOrFail($reportId);
 
-        return response()->json([
-            'success' => true,
-            'data' => $report,
+        if ($this->wantsJson($request)) {
+            return response()->json(['success' => true, 'data' => $report]);
+        }
+
+        return view('reports.builder', [
+            'title' => $report->name,
+            'organizationId' => $organizationId,
+            'report' => $report,
         ]);
     }
 

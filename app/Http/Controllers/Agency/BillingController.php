@@ -60,7 +60,7 @@ class BillingController extends Controller
 
         $invoice = $this->invoiceService->markAsPaid($invoice);
 
-        return redirect()->route('agency.billing', ['agency' => $agency])
+        return redirect()->route('agency.billing.index', ['agency' => $agency])
             ->with('success', 'Invoice marked as paid successfully.');
     }
 

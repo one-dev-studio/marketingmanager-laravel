@@ -19,7 +19,7 @@ class TaskController extends Controller
         private TaskService $taskService
     ) {}
 
-    public function index(Request $request, string $organizationId): AnonymousResourceCollection
+    public function index(Request $request, string $organizationId)
     {
         $query = Task::where('organization_id', $organizationId)
             ->with(['assignee', 'creator', 'project', 'comments.user', 'attachments']);
@@ -42,7 +42,19 @@ class TaskController extends Controller
 
         $tasks = $query->orderBy('created_at', 'desc')->paginate();
 
-        return TaskResource::collection($tasks);
+        if ($this->wantsJson($request)) {
+            return TaskResource::collection($tasks);
+        }
+
+        $members = \App\Models\User::whereHas('organizations', fn ($q) => $q->where('organizations.id', $organizationId))->get(['id', 'name']);
+        $templates = \App\Models\TaskTemplate::where('organization_id', $organizationId)->get();
+
+        return view('tasks.index', [
+            'title' => 'Tasks',
+            'organizationId' => $organizationId,
+            'members' => $members,
+            'templates' => $templates,
+        ]);
     }
 
     public function store(CreateTaskRequest $request, string $organizationId): JsonResponse

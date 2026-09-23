@@ -66,7 +66,7 @@ class ReportController extends Controller
         // Dispatch job for async processing
         GenerateAgencyReport::dispatch($agency, $organization, $request->report_type);
 
-        return redirect()->route('agency.reports', ['agency' => $agency])
+        return redirect()->route('agency.reports.index', ['agency' => $agency])
             ->with('success', 'Report generation started. It will be available shortly.');
     }
 

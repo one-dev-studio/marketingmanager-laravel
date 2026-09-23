@@ -3,9 +3,11 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
+        \App\Providers\AppServiceProvider::class,
         \App\Providers\LocalizationServiceProvider::class,
     ])
     ->withRouting(
@@ -16,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->redirectGuestsTo(function (Request $request) {
+            return $request->is('admin', 'admin/*') ? route('admin.login') : route('login');
+        });
+
         $middleware->alias([
             'organization' => \App\Http\Middleware\EnsureOrganizationAccess::class,
             'organization.admin' => \App\Http\Middleware\EnsureOrganizationAdmin::class,

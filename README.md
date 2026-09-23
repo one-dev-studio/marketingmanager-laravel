@@ -1,34 +1,45 @@
-# MarketPulse - Laravel 12 Marketing Automation Platform
+# MarketPulse
 
-AI-powered marketing automation platform built with Laravel 12.
+AI-powered marketing automation (Laravel 12+/13, PHP 8.3, Blade + Vue 3 + Alpine + Tailwind).
 
 ## Requirements
 
-- PHP 8.3+
-- Composer
-- MySQL 8.0+ / PostgreSQL 15+
-- Redis 7.0+
-- Node.js & NPM
+- PHP 8.3+, Composer, Node.js
+- MySQL 8 / PostgreSQL 15 or SQLite for local
+- Redis 7 (queues, cache, broadcasting)
+- Optional: Stripe, PayPal, Pusher, Sentry, OpenAI/Gemini keys
 
-## Installation
+## Install
 
-1. Clone the repository
-2. Install dependencies: `composer install`
-3. Copy `.env.example` to `.env`: `cp .env.example .env`
-4. Generate application key: `php artisan key:generate`
-5. Configure database in `.env`
-6. Run migrations: `php artisan migrate`
-7. Seed database: `php artisan db:seed`
-8. Install frontend dependencies: `npm install`
-9. Build assets: `npm run build`
-10. Start development server: `php artisan serve`
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+npm install && npm run build
+php artisan serve
+```
 
-## Project Structure
+Health check: `GET /up`
 
-See SPECIFICATIONS.md for complete feature specifications and architecture details.
+## Deploy
+
+1. Set `APP_ENV=production`, `APP_DEBUG=false`, a real `APP_KEY`, and DB/Redis/mail.
+2. `composer install --no-dev --optimize-autoloader`
+3. `php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache`
+4. `npm ci && npm run build`
+5. Point the web root at `public/`. Queue workers: copy `scripts/supervisor-queue.conf` into Supervisor.
+6. Daily backups: cron `scripts/backup.sh` (30-day retention). Restore by loading the latest `db-*.sql.gz` and extracting `files-*.tar.gz` into `storage/app`.
+7. Optional APM: set `SENTRY_LARAVEL_DSN`. Local debugging: `composer require --dev laravel/telescope` then `php artisan telescope:install`.
+
+## Payments
+
+Set `STRIPE_KEY`, `STRIPE_SECRET`, `STRIPE_WEBHOOK_SECRET` and/or PayPal keys. Webhooks: `POST /webhooks/stripe` and `/webhooks/paypal`. Without live keys the app records subscriptions locally via `PaymentGatewayService`.
+
+## Remaining work
+
+See [TODO.md](TODO.md). Historical planning: [docs/archive/](docs/archive/README.md).
 
 ## License
 
 MIT
-
-

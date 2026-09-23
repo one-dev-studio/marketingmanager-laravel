@@ -14,7 +14,7 @@ class SeoService
 
     public function __construct()
     {
-        $this->serpApiKey = config('services.serp.api_key', '');
+        $this->serpApiKey = config('services.serp.api_key') ?? '';
     }
 
     public function researchKeyword(

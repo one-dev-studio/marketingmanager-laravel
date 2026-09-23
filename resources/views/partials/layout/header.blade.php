@@ -7,7 +7,7 @@
     'showNotifications' => false,
 ])
 
-<header class="sticky top-0 z-30 bg-white/80 backdrop-blur-sm border-b border-gray-200">
+<header class="sticky top-0 z-20 bg-white border-b border-gray-200">
     <div class="px-4 md:px-6 py-4 flex items-center justify-between">
         <div class="flex items-center space-x-4">
             @if($showMobileMenuToggle)
@@ -36,7 +36,7 @@
                 @php
                     $organizationId = request()->route('organizationId');
                 @endphp
-                <x-components.calendar-dialog :organizationId="$organizationId" />
+                <x-calendar-dialog :organizationId="$organizationId" />
             @endif
 
             @if($showReviewIndicator)

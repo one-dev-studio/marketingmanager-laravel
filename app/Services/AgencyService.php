@@ -68,6 +68,20 @@ class AgencyService
         });
     }
 
+    public function createClientOrganization(Agency $agency, array $data): Organization
+    {
+        $organization = Organization::create([
+            'name' => $data['name'],
+            'slug' => $data['slug'] ?? \Illuminate\Support\Str::slug($data['name']).'-'.uniqid(),
+            'status' => 'active',
+        ]);
+
+        $agency->clientOrganizations()->attach($organization->id, ['status' => 'active']);
+        $this->clearClientCache($agency);
+
+        return $organization;
+    }
+
     /**
      * Clear agency client cache
      */

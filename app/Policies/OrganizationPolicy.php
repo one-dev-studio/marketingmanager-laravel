@@ -20,8 +20,16 @@ class OrganizationPolicy
 
     public function update(User $user, Organization $organization): bool
     {
-        return $user->hasAccessToOrganization($organization->id)
-            && $user->hasPermissionTo('organizations.update');
+        if (! $user->hasAccessToOrganization($organization->id)) {
+            return false;
+        }
+
+        if ($user->hasTenantRole(['client', 'viewer'], $organization)) {
+            return false;
+        }
+
+        return $user->hasTenantRole(['admin', 'super_admin'], $organization)
+            || $user->hasPermissionTo('organizations.update');
     }
 
     public function delete(User $user, Organization $organization): bool

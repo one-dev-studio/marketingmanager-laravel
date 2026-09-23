@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Brand;
 
 use App\Http\Controllers\Controller;
+use App\Models\Brand;
+use App\Models\BrandNameSuggestion;
 use App\Services\Brand\BrandNameGeneratorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,6 +14,22 @@ class BrandNameGeneratorController extends Controller
     public function __construct(
         private BrandNameGeneratorService $generatorService
     ) {}
+
+    public function index(Request $request, string $organizationId)
+    {
+        $this->authorize('viewAny', Brand::class);
+
+        $suggestions = BrandNameSuggestion::where('organization_id', $organizationId)
+            ->latest()
+            ->limit(20)
+            ->get();
+
+        return view('brands.choose-name', [
+            'title' => 'Brand name generator',
+            'organizationId' => $organizationId,
+            'suggestions' => $suggestions,
+        ]);
+    }
 
     public function generate(Request $request): JsonResponse
     {

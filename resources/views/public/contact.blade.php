@@ -24,7 +24,7 @@
             <!-- Contact Form -->
             <div class="contact-form-wrapper">
                 <h2 class="form-title">Send us a Message</h2>
-                <form class="contact-form" action="#" method="POST">
+                <form class="contact-form" action="{{ route('contact.submit') }}" method="POST">
                     @csrf
                     <div class="form-row">
                         <div class="form-group">

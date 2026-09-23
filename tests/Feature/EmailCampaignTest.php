@@ -33,7 +33,7 @@ class EmailCampaignTest extends TestCase
             'organization_id' => $this->organization->id,
         ]);
 
-        $response = $this->post("/main/{$this->organization->id}/email-campaigns", [
+        $response = $this->post("/main/{$this->organization->id}/email-marketing/campaigns", [
             'name' => 'Test Email Campaign',
             'subject' => 'Test Subject',
             'contact_list_id' => $contactList->id,
@@ -53,7 +53,7 @@ class EmailCampaignTest extends TestCase
             'organization_id' => $this->organization->id,
         ]);
 
-        $response = $this->get("/main/{$this->organization->id}/email-campaigns");
+        $response = $this->get("/main/{$this->organization->id}/email-marketing/campaigns");
 
         $response->assertStatus(200);
     }
@@ -65,7 +65,7 @@ class EmailCampaignTest extends TestCase
             'status' => 'draft',
         ]);
 
-        $response = $this->post("/main/{$this->organization->id}/email-campaigns/{$campaign->id}/send");
+        $response = $this->post("/main/{$this->organization->id}/email-marketing/campaigns/{$campaign->id}/send");
 
         $response->assertRedirect();
         $this->assertDatabaseHas('email_campaigns', [

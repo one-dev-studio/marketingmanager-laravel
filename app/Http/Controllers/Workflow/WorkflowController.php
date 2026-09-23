@@ -18,11 +18,11 @@ class WorkflowController extends Controller
         private WorkflowService $workflowService
     ) {}
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, string $organizationId)
     {
-        $organizationId = auth()->user()->primaryOrganization()->id;
         $query = Workflow::where('organization_id', $organizationId)
-            ->with(['creator', 'executions']);
+            ->with(['creator'])
+            ->withCount(['executions']);
 
         if ($request->has('type')) {
             $query->where('type', $request->type);
@@ -34,7 +34,17 @@ class WorkflowController extends Controller
 
         $workflows = $query->orderBy('created_at', 'desc')->paginate();
 
-        return WorkflowResource::collection($workflows);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => WorkflowResource::collection($workflows->getCollection())->resolve(),
+            ]);
+        }
+
+        return view('workflows.index', [
+            'organizationId' => $organizationId,
+            'workflows' => $workflows,
+        ]);
     }
 
     public function builder(Request $request): \Illuminate\View\View

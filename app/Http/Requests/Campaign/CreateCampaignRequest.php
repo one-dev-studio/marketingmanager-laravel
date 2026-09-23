@@ -18,6 +18,8 @@ class CreateCampaignRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'start_date' => ['required', 'date', 'after:today'],
             'end_date' => ['nullable', 'date', 'after:start_date'],
+            'brand_id' => ['nullable', 'exists:brands,id'],
+            'goal_type' => ['nullable', 'string'],
             'budget' => ['required', 'numeric', 'min:0'],
             'channels' => ['required', 'array', 'min:1'],
             'channels.*.id' => ['required', 'exists:channels,id'],

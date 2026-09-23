@@ -15,7 +15,7 @@ class CampaignCreationTest extends TestCase
     {
         $user = User::factory()->create();
         $organization = Organization::factory()->create();
-        $user->organizations()->attach($organization);
+        $user->organizations()->attach($organization->id, ['role_id' => \App\Models\Role::where('name', 'admin')->first()?->id ?? 1]);
 
         $response = $this->actingAs($user)
             ->postJson('/api/v1/campaigns', [

@@ -13,7 +13,7 @@ class GeminiProvider implements AiProviderInterface
 
     public function __construct()
     {
-        $this->apiKey = config('services.gemini.api_key', '');
+        $this->apiKey = config('services.gemini.api_key') ?? '';
     }
 
     public function generateContent(string $prompt, array $options = []): array

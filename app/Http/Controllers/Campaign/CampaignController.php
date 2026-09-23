@@ -18,23 +18,28 @@ class CampaignController extends Controller
         private CampaignService $campaignService
     ) {}
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, string $organizationId)
     {
-        $organizationId = auth()->user()->primaryOrganization()->id;
         $brandId = $request->query('brand_id');
-        
+
         $campaigns = Campaign::where('organization_id', $organizationId)
             ->forBrand($brandId)
             ->with(['channels', 'organization', 'creator', 'brand'])
             ->paginate();
 
-        return CampaignResource::collection($campaigns);
+        if ($request->expectsJson()) {
+            return CampaignResource::collection($campaigns);
+        }
+
+        return view('campaigns.index', [
+            'organizationId' => $organizationId,
+            'campaigns' => $campaigns,
+        ]);
     }
 
-    public function create(Request $request)
+    public function create(Request $request, string $organizationId)
     {
-        $organizationId = auth()->user()->primaryOrganization()->id;
-        $brandId = $request->query('brand_id');
+        $brandId = $request->query('brand_id') ?? $request->query('brandId');
         
         $brands = \App\Models\Brand::where('organization_id', $organizationId)->get();
         $products = \App\Models\Product::where('organization_id', $organizationId)
@@ -53,18 +58,24 @@ class CampaignController extends Controller
         ]);
     }
 
-    public function store(CreateCampaignRequest $request): JsonResponse
+    public function store(CreateCampaignRequest $request, string $organizationId)
     {
         $campaign = $this->campaignService->createCampaign(
             $request->validated(),
             $request->user()
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => new CampaignResource($campaign),
-            'message' => 'Campaign created successfully.',
-        ], 201);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => new CampaignResource($campaign),
+                'message' => 'Campaign created successfully.',
+            ], 201);
+        }
+
+        return redirect()
+            ->route('main.campaigns.show', ['organizationId' => $organizationId, 'campaign' => $campaign])
+            ->with('success', 'Campaign created successfully.');
     }
 
     public function show(Request $request, Campaign $campaign)
@@ -88,7 +99,7 @@ class CampaignController extends Controller
         ]);
     }
 
-    public function update(UpdateCampaignRequest $request, Campaign $campaign): JsonResponse
+    public function update(UpdateCampaignRequest $request, string $organizationId, Campaign $campaign)
     {
         $this->authorize('update', $campaign);
 
@@ -97,23 +108,35 @@ class CampaignController extends Controller
             $request->validated()
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => new CampaignResource($campaign),
-            'message' => 'Campaign updated successfully.',
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => new CampaignResource($campaign),
+                'message' => 'Campaign updated successfully.',
+            ]);
+        }
+
+        return redirect()
+            ->route('main.campaigns.show', ['organizationId' => $organizationId, 'campaign' => $campaign])
+            ->with('success', 'Campaign updated successfully.');
     }
 
-    public function destroy(Campaign $campaign): JsonResponse
+    public function destroy(Request $request, string $organizationId, Campaign $campaign)
     {
         $this->authorize('delete', $campaign);
 
         $this->campaignService->deleteCampaign($campaign);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Campaign deleted successfully.',
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Campaign deleted successfully.',
+            ]);
+        }
+
+        return redirect()
+            ->route('main.campaigns.index', ['organizationId' => $organizationId])
+            ->with('success', 'Campaign deleted successfully.');
     }
 
     public function submitForReview(Campaign $campaign): JsonResponse

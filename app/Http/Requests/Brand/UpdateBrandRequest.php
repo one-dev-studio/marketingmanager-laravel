@@ -11,6 +11,18 @@ class UpdateBrandRequest extends FormRequest
         return $this->user()->can('update', $this->route('brand'));
     }
 
+    protected function prepareForValidation(): void
+    {
+        foreach (['keywords', 'avoid_keywords'] as $field) {
+            $value = $this->input($field);
+            if (is_string($value)) {
+                $this->merge([
+                    $field => array_values(array_filter(array_map('trim', explode(',', $value)))),
+                ]);
+            }
+        }
+    }
+
     public function rules(): array
     {
         return [

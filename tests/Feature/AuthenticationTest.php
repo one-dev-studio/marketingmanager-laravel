@@ -23,7 +23,7 @@ class AuthenticationTest extends TestCase
             'password' => 'password123',
         ]);
 
-        $response->assertRedirect('/home');
+        $response->assertRedirect(route('main.organizations'));
         $this->assertAuthenticatedAs($user);
     }
 
@@ -57,14 +57,14 @@ class AuthenticationTest extends TestCase
 
     public function testUserCanRegister(): void
     {
-        $response = $this->post('/register', [
+        $response = $this->post('/signup', [
             'name' => 'Test User',
             'email' => 'newuser@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ]);
 
-        $response->assertRedirect('/home');
+        $response->assertRedirect(route('main.organizations'));
         $this->assertDatabaseHas('users', [
             'email' => 'newuser@example.com',
         ]);
@@ -72,7 +72,7 @@ class AuthenticationTest extends TestCase
 
     public function testUserCannotRegisterWithInvalidData(): void
     {
-        $response = $this->post('/register', [
+        $response = $this->post('/signup', [
             'name' => '',
             'email' => 'invalid-email',
             'password' => '123',

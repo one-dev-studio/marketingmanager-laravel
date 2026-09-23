@@ -34,7 +34,7 @@ class EnsureAgencyAdmin
         }
 
         // Check if user is agency admin
-        $isAgencyAdmin = $user->hasRole('agency-admin', $agency) || $user->hasRole('admin', $agency);
+        $isAgencyAdmin = $user->hasRole(['agency_admin', 'agency-admin', 'admin'], $agency);
         
         if (!$isAgencyAdmin && !$user->isAdmin()) {
             abort(403, 'You do not have permission to access this resource. Agency admin access required.');

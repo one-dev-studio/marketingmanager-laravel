@@ -8,7 +8,12 @@ class OrganizationController extends Controller
 {
     public function index(Request $request)
     {
-        return view('organizations.index');
+        $organizations = $request->user()->organizations()->get();
+
+        return view('organizations.index', [
+            'title' => 'Organizations',
+            'organizations' => $organizations,
+        ]);
     }
 }
 

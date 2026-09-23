@@ -9,12 +9,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE campaigns MODIFY COLUMN status ENUM('draft', 'in_review', 'active', 'paused', 'completed', 'inactive') DEFAULT 'draft'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE campaigns MODIFY COLUMN status ENUM('draft', 'in_review', 'active', 'paused', 'completed', 'inactive') DEFAULT 'draft'");
+        }
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE campaigns MODIFY COLUMN status ENUM('draft', 'active', 'paused', 'completed') DEFAULT 'draft'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE campaigns MODIFY COLUMN status ENUM('draft', 'active', 'paused', 'completed') DEFAULT 'draft'");
+        }
     }
 };
 

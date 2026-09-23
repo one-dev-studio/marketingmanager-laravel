@@ -67,6 +67,11 @@ Respond in JSON format: {\"score\": 0.5, \"label\": \"positive\", \"keywords\": 
         ]);
     }
 
+    public function analyzeTextSentiment(Organization $organization, string $text): SentimentAnalysis
+    {
+        return $this->analyzeSentiment($organization, (object) ['id' => null, 'body' => $text], 'text');
+    }
+
     /**
      * Analyze social media sentiment
      */
@@ -210,6 +215,10 @@ Respond in JSON format: {\"score\": 0.5, \"label\": \"positive\", \"keywords\": 
         
         if ($contentType === PublishedPost::class) {
             return $content->scheduledPost->content ?? '';
+        }
+
+        if ($contentType === 'text' || is_string($content)) {
+            return is_string($content) ? $content : ($content->body ?? $content->content ?? '');
         }
 
         return '';

@@ -37,6 +37,24 @@ class ClientController extends Controller
         ]);
     }
 
+    public function create(Agency $agency)
+    {
+        return view('agency.clients.create', compact('agency'));
+    }
+
+    public function store(Request $request, Agency $agency)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255',
+        ]);
+
+        $organization = $this->agencyService->createClientOrganization($agency, $validated);
+
+        return redirect()->route('agency.clients.show', [$agency, $organization->id])
+            ->with('success', 'Client organization created.');
+    }
+
     /**
      * Display details of a specific client organization
      */
