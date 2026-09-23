@@ -1,0 +1,26 @@
+name: Deploy production
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: ${{ secrets.PRODUCTION_SSH_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            cd "${{ secrets.PRODUCTION_DEPLOY_PATH }}"
+            DEPLOY_RUN_MIGRATIONS=true bash scripts/deploy-production.sh
