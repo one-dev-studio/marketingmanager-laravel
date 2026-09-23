@@ -30,29 +30,75 @@ PREV_HEAD="$(git rev-parse HEAD)"
 log "Previous HEAD: $PREV_HEAD"
 
 git fetch origin "$GIT_BRANCH"
-NEW_HEAD="$(git rev-parse "origin/$GIT_BRANCH")"
-log "Target HEAD: $NEW_HEAD"
 
-git reset --hard "origin/$GIT_BRANCH"
+if [[ -n "${DEPLOY_TARGET_SHA:-}" ]]; then
+  if ! git cat-file -e "${DEPLOY_TARGET_SHA}^{commit}" 2>/dev/null; then
+    log "ERROR: DEPLOY_TARGET_SHA is not a commit in this repository: $DEPLOY_TARGET_SHA"
+    exit 1
+  fi
+  NEW_HEAD="$DEPLOY_TARGET_SHA"
+  log "Target HEAD (from CI): $NEW_HEAD"
+else
+  NEW_HEAD="$(git rev-parse "origin/$GIT_BRANCH")"
+  log "Target HEAD: $NEW_HEAD"
+fi
+
+git reset --hard "$NEW_HEAD"
 
 log "Running composer install"
 "$PHP_BIN" "$COMPOSER_BIN" install --no-dev --optimize-autoloader --no-interaction
 
-should_build_assets=false
-if [[ "${DEPLOY_FORCE_ASSETS:-}" == "true" ]]; then
-  should_build_assets=true
-elif [[ ! -f public/build/manifest.json ]] && [[ ! -f public/build/.vite/manifest.json ]]; then
-  should_build_assets=true
-elif git diff --name-only "$PREV_HEAD" "$NEW_HEAD" | grep -qE '^(package\.json|package-lock\.json|vite\.config\.js|resources/)'; then
-  should_build_assets=true
-fi
+apply_ci_build_assets() {
+  local archive="$1"
 
-if [[ "$should_build_assets" == true ]]; then
-  log "Building frontend assets (npm ci && npm run build)"
+  if [[ ! -f "$archive" ]]; then
+    log "ERROR: CI assets archive not found: $archive"
+    exit 1
+  fi
+
+  local staging_dir="$REPO_ROOT/public/build.new.$$"
+  local backup_dir="$REPO_ROOT/public/build.old.$$"
+
+  log "Applying CI-built frontend assets from $archive"
+  rm -rf "$staging_dir"
+  mkdir -p "$staging_dir"
+
+  if ! tar -xzf "$archive" -C "$staging_dir"; then
+    log "ERROR: Failed to extract assets archive"
+    rm -rf "$staging_dir"
+    exit 1
+  fi
+
+  if [[ ! -f "$staging_dir/manifest.json" ]] && [[ ! -f "$staging_dir/.vite/manifest.json" ]]; then
+    log "ERROR: Extracted assets missing Vite manifest"
+    rm -rf "$staging_dir"
+    exit 1
+  fi
+
+  rm -rf "$backup_dir"
+  if [[ -d public/build ]]; then
+    mv public/build "$backup_dir"
+  fi
+
+  mv "$staging_dir" public/build
+  rm -rf "$backup_dir"
+
+  log "Frontend assets applied (atomic swap complete)"
+}
+
+if [[ "${DEPLOY_BUILD_ASSETS_ON_HOST:-}" == "true" ]]; then
+  log "WARNING: DEPLOY_BUILD_ASSETS_ON_HOST=true — building on production host (emergency opt-in only)"
+  if ! command -v npm &>/dev/null; then
+    log "ERROR: npm not found in PATH"
+    exit 1
+  fi
   npm ci
   npm run build
+elif [[ -n "${DEPLOY_ASSETS_ARCHIVE:-}" ]]; then
+  apply_ci_build_assets "$DEPLOY_ASSETS_ARCHIVE"
 else
-  log "Skipping frontend asset build"
+  log "ERROR: DEPLOY_ASSETS_ARCHIVE is required (CI-built assets). Set DEPLOY_BUILD_ASSETS_ON_HOST=true only for emergency on-host builds."
+  exit 1
 fi
 
 if [[ "${DEPLOY_RUN_MIGRATIONS:-}" != "false" ]]; then

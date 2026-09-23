@@ -7,8 +7,8 @@ CoS-runbook for firing a Marketing Manager production deploy from GitHub. Plain 
 | File | Purpose |
 |------|---------|
 | `.github/workflows/deploy-production-comment.yml` | Listens for a comment on the sticky deploy issue; runs guards; posts start/failure comments; calls the SSH deploy workflow. |
-| `.github/workflows/deploy-production.yml` | SSH deploy to production (`workflow_call` and manual `workflow_dispatch`). Uses GitHub Environment `production`. |
-| `scripts/deploy-production.sh` | Server-side deploy script (git pull, Composer, Vite when needed, migrations, caches, queue restart, health check). |
+| `.github/workflows/deploy-production.yml` | Builds Vite in CI, uploads `public/build` to the server, then SSH deploy (`workflow_call` and manual `workflow_dispatch`). Uses GitHub Environment `production`. |
+| `scripts/deploy-production.sh` | Server-side deploy script (git reset to deployed SHA, Composer, atomic swap of CI-built assets, migrations, caches, queue restart, health check). |
 
 ## Default branch and promote
 
@@ -39,12 +39,14 @@ Anyone else, wrong title, or wrong command → **no** deploy and **no** bot comm
 1. **Guards** — `evaluate` job checks title, command, user, and type.
 2. **Acknowledgement** — A reply is posted: production deploy starting, with the Actions run URL.
 3. **Environment approval** — Job `deploy-production` uses Environment **`production`**; Andrew must approve as required reviewer.
-4. **SSH deploy** — Runner connects with `PRODUCTION_*` secrets and runs `scripts/deploy-production.sh` on the server.
-5. **Failure** — If the workflow fails after a valid trigger, a failure comment is posted with the run URL.
+4. **CI frontend build** — The runner checks out the same commit that will be deployed, runs `npm ci` and `npm run build`, and packages `public/build` as a tarball.
+5. **Artifact upload** — The tarball is copied to `{PRODUCTION_DEPLOY_PATH}/.deploy/` on the server (same SSH credentials as deploy).
+6. **SSH deploy** — The runner runs `scripts/deploy-production.sh` on the server with `DEPLOY_TARGET_SHA` and `DEPLOY_ASSETS_ARCHIVE` set. The script applies assets via an atomic directory swap (`public/build.new` → `public/build`); it does **not** run Vite on the host by default.
+7. **Failure** — If the workflow fails after a valid trigger, a failure comment is posted with the run URL.
 
 ## Manual fallback
 
-Actions → **Deploy production** → **Run workflow** (`workflow_dispatch`). Same Environment gate and SSH path. Use this before comment deploy is live on `main`, or whenever you prefer not to use the sticky issue.
+Actions → **Deploy production** → **Run workflow** (`workflow_dispatch`). Same Environment gate, CI Vite build, artifact upload, and SSH path. Use this before comment deploy is live on `main`, or whenever you prefer not to use the sticky issue.
 
 ## Secrets and Environment
 
@@ -83,9 +85,11 @@ Complete **before** the first real `/deploy marketingmanager production` on the 
 ## Deploy script notes (server)
 
 - Default git branch: `main` (`GIT_BRANCH` override optional).
+- When invoked from GitHub Actions, `DEPLOY_TARGET_SHA` pins the checkout to the CI-built commit (`github.sha`).
 - PHP and Composer from `PATH`.
 - Migrations run unless `DEPLOY_RUN_MIGRATIONS=false` (Actions sets `true`).
-- Frontend: `npm ci` and `npm run build` when assets are missing or changed (or `DEPLOY_FORCE_ASSETS=true`).
+- **Frontend (normal path):** CI uploads `build-artifacts.tar.gz`; the script extracts to a staging directory and atomically replaces `public/build`. No `npm ci` / `npm run build` on the production host.
+- **Frontend (emergency only):** `DEPLOY_BUILD_ASSETS_ON_HOST=true` runs on-host `npm ci` and `npm run build`. Not used by Actions; for manual recovery only.
 - Queues: `php artisan queue:restart` (no Horizon/PM2/supervisor steps in this script).
 - No maintenance mode; script exits non-zero on any failure.
 
