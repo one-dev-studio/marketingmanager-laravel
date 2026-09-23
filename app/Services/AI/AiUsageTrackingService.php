@@ -88,6 +88,24 @@ class AiUsageTrackingService
         float $amount,
         array $metadata = [],
     ): void {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            $this->incrementUsageTrackingOnSqlite($organizationId, $metric, $amount, $metadata);
+
+            return;
+        }
+
+        $this->incrementUsageTrackingAtomically($organizationId, $metric, $amount, $metadata);
+    }
+
+    /**
+     * @param  array<string, mixed>  $metadata
+     */
+    private function incrementUsageTrackingOnSqlite(
+        int $organizationId,
+        string $metric,
+        float $amount,
+        array $metadata = [],
+    ): void {
         $date = now()->toDateString();
 
         $existing = DB::table('usage_tracking')
@@ -111,6 +129,44 @@ class AiUsageTrackingService
                 'metadata' => json_encode($metadata),
                 'updated_at' => now(),
                 'created_at' => $existing?->created_at ?? now(),
+            ]
+        );
+    }
+
+    /**
+     * Atomic upsert increment for MySQL (and compatible drivers).
+     *
+     * @param  array<string, mixed>  $metadata
+     */
+    private function incrementUsageTrackingAtomically(
+        int $organizationId,
+        string $metric,
+        float $amount,
+        array $metadata = [],
+    ): void {
+        $date = now()->toDateString();
+        $now = now();
+        $metadataJson = json_encode($metadata);
+
+        DB::statement(
+            'INSERT INTO usage_tracking (organization_id, feature, metric, date, value, metadata, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+                value = value + ?,
+                metadata = ?,
+                updated_at = ?',
+            [
+                $organizationId,
+                'ai_generation',
+                $metric,
+                $date,
+                $amount,
+                $metadataJson,
+                $now,
+                $now,
+                $amount,
+                $metadataJson,
+                $now,
             ]
         );
     }
