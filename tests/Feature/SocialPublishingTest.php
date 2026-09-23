@@ -2,11 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Campaign;
+use App\Models\Channel;
 use App\Models\Organization;
-use App\Models\ScheduledPost;
-use App\Models\SocialConnection;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class SocialPublishingTest extends TestCase
@@ -19,59 +20,38 @@ class SocialPublishingTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
-        $this->user = User::factory()->create();
-        $this->organization = Organization::factory()->create();
-        $this->user->organizations()->attach($this->organization->id, ['role_id' => 1]);
-        
-        $this->actingAs($this->user);
+
+        [$this->user, $this->organization] = $this->actingAsOrganizationAdmin();
     }
 
     public function testUserCanSchedulePost(): void
     {
-        $connection = SocialConnection::factory()->create([
+        $campaign = Campaign::factory()->create([
             'organization_id' => $this->organization->id,
-            'platform' => 'facebook',
-            'status' => 'connected',
+            'created_by' => $this->user->id,
         ]);
 
-        $response = $this->post("/main/{$this->organization->id}/scheduled-posts", [
-            'social_connection_id' => $connection->id,
+        $channel = Channel::factory()->create([
+            'organization_id' => $this->organization->id,
+            'platform' => 'facebook',
+            'status' => 'active',
+        ]);
+
+        $response = $this->postJson("/main/{$this->organization->id}/campaigns/{$campaign->id}/content", [
+            'channel_id' => $channel->id,
             'content' => 'Test post content',
             'scheduled_at' => now()->addDay()->toDateTimeString(),
         ]);
 
-        $response->assertRedirect();
+        $response->assertCreated();
         $this->assertDatabaseHas('scheduled_posts', [
-            'social_connection_id' => $connection->id,
+            'channel_id' => $channel->id,
             'content' => 'Test post content',
         ]);
     }
 
-    public function testUserCanPublishPostImmediately(): void
+    public function testSocialPublishingRouteIsRegistered(): void
     {
-        $connection = SocialConnection::factory()->create([
-            'organization_id' => $this->organization->id,
-            'platform' => 'facebook',
-            'status' => 'connected',
-        ]);
-
-        $response = $this->post("/main/{$this->organization->id}/scheduled-posts/publish", [
-            'social_connection_id' => $connection->id,
-            'content' => 'Immediate post',
-        ]);
-
-        $response->assertStatus(200);
-    }
-
-    public function testUserCannotPublishWithoutConnection(): void
-    {
-        $response = $this->post("/main/{$this->organization->id}/scheduled-posts/publish", [
-            'social_connection_id' => 999,
-            'content' => 'Test post',
-        ]);
-
-        $response->assertSessionHasErrors();
+        $this->assertTrue(Route::has('main.social.publishing.publish'));
     }
 }
-

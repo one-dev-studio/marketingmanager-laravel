@@ -58,10 +58,17 @@ class CampaignController extends Controller
         ]);
     }
 
-    public function store(CreateCampaignRequest $request, string $organizationId)
+    public function store(CreateCampaignRequest $request, ?string $organizationId = null)
     {
+        $resolvedOrganizationId = (int) (
+            $organizationId ?? $request->route('organizationId') ?? $request->user()->primaryOrganization()?->id
+        );
+
         $campaign = $this->campaignService->createCampaign(
-            $request->validated(),
+            [
+                ...$request->validated(),
+                'organization_id' => $resolvedOrganizationId,
+            ],
             $request->user()
         );
 
@@ -74,11 +81,11 @@ class CampaignController extends Controller
         }
 
         return redirect()
-            ->route('main.campaigns.show', ['organizationId' => $organizationId, 'campaign' => $campaign])
+            ->route('main.campaigns.show', ['organizationId' => $resolvedOrganizationId, 'campaign' => $campaign])
             ->with('success', 'Campaign created successfully.');
     }
 
-    public function show(Request $request, Campaign $campaign)
+    public function show(Request $request, string $organizationId, Campaign $campaign)
     {
         $this->authorize('view', $campaign);
 
@@ -90,8 +97,6 @@ class CampaignController extends Controller
                 'data' => new CampaignResource($campaign),
             ]);
         }
-
-        $organizationId = auth()->user()->primaryOrganization()->id;
 
         return view('campaigns.show', [
             'campaign' => $campaign,

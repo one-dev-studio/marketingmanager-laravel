@@ -54,7 +54,10 @@ class EmailCampaignController extends Controller
     public function store(CreateEmailCampaignRequest $request, string $organizationId)
     {
         $campaign = $this->emailCampaignService->createCampaign(
-            $request->validated(),
+            [
+                ...$request->validated(),
+                'organization_id' => (int) $organizationId,
+            ],
             $request->user()
         );
 
@@ -120,7 +123,7 @@ class EmailCampaignController extends Controller
         ]);
     }
 
-    public function send(Request $request, EmailCampaign $emailCampaign): JsonResponse
+    public function send(Request $request, string $organizationId, EmailCampaign $emailCampaign): JsonResponse
     {
         $this->authorize('send', $emailCampaign);
 
@@ -131,6 +134,7 @@ class EmailCampaignController extends Controller
             ], 400);
         }
 
+        $emailCampaign->markAsSending();
         SendEmailCampaign::dispatch($emailCampaign);
 
         if ($this->wantsJson($request)) {

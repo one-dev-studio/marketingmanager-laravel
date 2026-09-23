@@ -43,12 +43,14 @@ class CampaignTest extends TestCase
     public function testCampaignHasManyScheduledPosts(): void
     {
         $campaign = Campaign::factory()->create();
-        
-        // Assuming ScheduledPost model exists
-        // $scheduledPost1 = ScheduledPost::factory()->create(['campaign_id' => $campaign->id]);
-        // $scheduledPost2 = ScheduledPost::factory()->create(['campaign_id' => $campaign->id]);
 
-        // $this->assertCount(2, $campaign->scheduledPosts);
+        \App\Models\ScheduledPost::factory()->count(2)->create([
+            'campaign_id' => $campaign->id,
+            'organization_id' => $campaign->organization_id,
+            'created_by' => $campaign->created_by,
+        ]);
+
+        $this->assertCount(2, $campaign->fresh()->scheduledPosts);
     }
 
     public function testCampaignStatusIsCasted(): void

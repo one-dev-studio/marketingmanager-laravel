@@ -13,6 +13,10 @@ class ContentPolicy
 
     public function view(User $user, $content): bool
     {
+        if (! $content->organization_id) {
+            return false;
+        }
+
         return $user->hasAccessToOrganization($content->organization_id)
             && $user->hasPermissionTo('content.view');
     }
@@ -24,6 +28,10 @@ class ContentPolicy
 
     public function update(User $user, $content): bool
     {
+        if (! $content->organization_id) {
+            return false;
+        }
+
         return $user->hasAccessToOrganization($content->organization_id)
             && $user->hasPermissionTo('content.update');
     }

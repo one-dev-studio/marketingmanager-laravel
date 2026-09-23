@@ -21,12 +21,7 @@ class BrandCrudTest extends TestCase
     {
         parent::setUp();
 
-        $this->user = User::factory()->create();
-        $this->organization = Organization::factory()->create();
-        $this->user->organizations()->attach($this->organization->id, ['role_id' => 1]);
-        $this->user->assignRole('admin');
-
-        $this->actingAs($this->user);
+        [$this->user, $this->organization] = $this->actingAsOrganizationAdmin();
     }
 
     public function testIndexReturnsBrandsView(): void
@@ -125,9 +120,11 @@ class BrandCrudTest extends TestCase
 
     public function testViewerCannotCreateBrand(): void
     {
-        $viewer = User::factory()->create();
-        $viewer->organizations()->attach($this->organization->id, ['role_id' => 1]);
-        $viewer->assignRole('viewer');
+        [$viewer] = $this->createOrganizationAdmin(
+            organization: $this->organization,
+            tenantRoleName: 'viewer',
+            spatieRoleName: 'viewer',
+        );
 
         $this->actingAs($viewer);
 

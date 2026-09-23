@@ -176,7 +176,7 @@ class User extends Authenticatable
             return $this->hasTenantRole($roles, $guard);
         }
 
-        if (is_array($roles)) {
+        if (is_array($roles) || $roles instanceof \Illuminate\Support\Enumerable) {
             foreach ($roles as $role) {
                 if ($this->hasRole($role, $guard)) {
                     return true;

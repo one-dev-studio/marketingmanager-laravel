@@ -32,32 +32,18 @@ class AiUsageTrackingService
             'usage_date' => now()->toDateString(),
         ]);
 
-        DB::table('usage_tracking')->updateOrInsert(
-            [
-                'organization_id' => $organization->id,
-                'feature' => 'ai_generation',
-                'metric' => 'tokens',
-                'date' => now()->toDateString(),
-            ],
-            [
-                'value' => DB::raw("COALESCE(value, 0) + {$tokensUsed}"),
-                'metadata' => json_encode(['provider' => $provider]),
-                'updated_at' => now(),
-            ]
+        $this->incrementUsageTracking(
+            $organization->id,
+            'tokens',
+            (float) $tokensUsed,
+            ['provider' => $provider],
         );
 
-        DB::table('usage_tracking')->updateOrInsert(
-            [
-                'organization_id' => $organization->id,
-                'feature' => 'ai_generation',
-                'metric' => 'cost',
-                'date' => now()->toDateString(),
-            ],
-            [
-                'value' => DB::raw("COALESCE(value, 0) + {$cost}"),
-                'metadata' => json_encode(['provider' => $provider]),
-                'updated_at' => now(),
-            ]
+        $this->incrementUsageTracking(
+            $organization->id,
+            'cost',
+            $cost,
+            ['provider' => $provider],
         );
 
         return $usageLog;
@@ -91,6 +77,42 @@ class AiUsageTrackingService
             'start_date' => $startDate->toDateString(),
             'stats' => $stats,
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $metadata
+     */
+    private function incrementUsageTracking(
+        int $organizationId,
+        string $metric,
+        float $amount,
+        array $metadata = [],
+    ): void {
+        $date = now()->toDateString();
+
+        $existing = DB::table('usage_tracking')
+            ->where('organization_id', $organizationId)
+            ->where('feature', 'ai_generation')
+            ->where('metric', $metric)
+            ->where('date', $date)
+            ->first();
+
+        $nextValue = (float) ($existing?->value ?? 0) + $amount;
+
+        DB::table('usage_tracking')->updateOrInsert(
+            [
+                'organization_id' => $organizationId,
+                'feature' => 'ai_generation',
+                'metric' => $metric,
+                'date' => $date,
+            ],
+            [
+                'value' => $nextValue,
+                'metadata' => json_encode($metadata),
+                'updated_at' => now(),
+                'created_at' => $existing?->created_at ?? now(),
+            ]
+        );
     }
 }
 
