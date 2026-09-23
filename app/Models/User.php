@@ -12,7 +12,10 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable;
+    use HasRoles {
+        hasRole as spatieHasRole;
+    }
 
     protected $fillable = [
         'name',
@@ -160,6 +163,75 @@ class User extends Authenticatable
         }
 
         return $this->organizations()->where('organizations.id', $organizationId)->exists();
+    }
+
+    /**
+     * Spatie's hasRole($roles, $guard) treats the second argument as a guard name.
+     * This app stores tenant roles on user_roles / agency_team_members, so when an
+     * Organization or Agency is passed, check that pivot instead.
+     */
+    public function hasRole($roles, $guard = null): bool
+    {
+        if ($guard instanceof Organization || $guard instanceof Agency) {
+            return $this->hasTenantRole($roles, $guard);
+        }
+
+        if (is_array($roles) || $roles instanceof \Illuminate\Support\Enumerable) {
+            foreach ($roles as $role) {
+                if ($this->hasRole($role, $guard)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        if (! is_string($roles) && ! is_int($roles) && ! $roles instanceof \Spatie\Permission\Contracts\Role) {
+            return false;
+        }
+
+        return $this->spatieHasRole($roles, is_string($guard) ? $guard : null);
+    }
+
+    public function hasTenantRole(string|array $roles, Organization|Agency $tenant): bool
+    {
+        $names = $this->normalizeRoleNames($roles);
+
+        if ($tenant instanceof Organization) {
+            $pivotRole = $this->organizations()
+                ->where('organizations.id', $tenant->id)
+                ->first()
+                ?->pivot
+                ?->role_id;
+
+            if (! $pivotRole) {
+                return false;
+            }
+
+            $roleName = Role::find($pivotRole)?->name;
+
+            return $roleName !== null && in_array($roleName, $names, true);
+        }
+
+        $pivotRole = $this->agencies()
+            ->where('agencies.id', $tenant->id)
+            ->first()
+            ?->pivot
+            ?->role;
+
+        return $pivotRole !== null && in_array($pivotRole, $names, true);
+    }
+
+    private function normalizeRoleNames(string|array $roles): array
+    {
+        $names = [];
+        foreach ((array) $roles as $role) {
+            $names[] = $role;
+            $names[] = str_replace('-', '_', $role);
+            $names[] = str_replace('_', '-', $role);
+        }
+
+        return array_values(array_unique($names));
     }
 
     public function isAgencyMember(int $agencyId): bool

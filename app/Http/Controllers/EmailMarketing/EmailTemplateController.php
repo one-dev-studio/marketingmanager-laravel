@@ -12,28 +12,33 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class EmailTemplateController extends Controller
 {
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, string $organizationId)
     {
-        $organizationId = auth()->user()->primaryOrganization()->id;
         $query = EmailTemplate::where(function ($q) use ($organizationId) {
             $q->where('organization_id', $organizationId)
                 ->orWhere('is_public', true);
         });
 
-        if ($request->has('category')) {
-            $query->where('category', $request->category);
-        }
-
-        if ($request->has('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%")
-                    ->orWhere('description', 'like', "%{$request->search}%");
-            });
-        }
-
         $templates = $query->orderBy('created_at', 'desc')->paginate();
 
-        return EmailTemplateResource::collection($templates);
+        if ($this->wantsJson($request)) {
+            return EmailTemplateResource::collection($templates);
+        }
+
+        return view('email.templates.index', [
+            'title' => 'Email Templates',
+            'organizationId' => $organizationId,
+            'templates' => $templates,
+        ]);
+    }
+
+    public function builder(Request $request, string $organizationId, ?EmailTemplate $emailTemplate = null)
+    {
+        return view('email.templates.builder', [
+            'title' => 'Template Builder',
+            'organizationId' => $organizationId,
+            'template' => $emailTemplate,
+        ]);
     }
 
     public function store(CreateEmailTemplateRequest $request): JsonResponse
@@ -51,11 +56,20 @@ class EmailTemplateController extends Controller
             'created_by' => $request->user()->id,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => new EmailTemplateResource($template),
-            'message' => 'Email template created successfully.',
-        ], 201);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => new EmailTemplateResource($template),
+                'message' => 'Email template created successfully.',
+            ], 201);
+        }
+
+        return redirect()
+            ->route('main.email-marketing.templates.builder', [
+                'organizationId' => $request->route('organizationId'),
+                'emailTemplate' => $template,
+            ])
+            ->with('success', 'Template saved.');
     }
 
     public function show(EmailTemplate $emailTemplate): JsonResponse

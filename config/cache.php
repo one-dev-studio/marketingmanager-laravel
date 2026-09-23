@@ -19,6 +19,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Serializable Cache Classes
+    |--------------------------------------------------------------------------
+    |
+    | When set to false, Laravel will only unserialize explicitly allowed
+    | classes from the cache to help prevent deserialization attacks. If your
+    | application stores PHP objects in cache, list the allowed classes here.
+    |
+    */
+
+    'serializable_classes' => false,
+
+    /*
+    |--------------------------------------------------------------------------
     | Cache Stores
     |--------------------------------------------------------------------------
     |

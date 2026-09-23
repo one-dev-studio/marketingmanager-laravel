@@ -3,43 +3,35 @@
 namespace App\Http\Controllers\Organization;
 
 use App\Http\Controllers\Controller;
-use App\Models\Organization;
-use App\Services\Organization\OrganizationSettingsService;
 use App\Http\Requests\Organization\UpdateSettingsRequest;
-use Illuminate\Http\JsonResponse;
+use App\Services\Organization\OrganizationSettingsService;
 use Illuminate\Http\Request;
 
-/**
- * Organization Settings Controller
- * Handles organization-wide settings management
- * Requires organization admin access
- */
 class SettingsController extends Controller
 {
     public function __construct(
         private OrganizationSettingsService $settingsService
     ) {}
 
-    /**
-     * Display organization settings
-     */
-    public function index(Request $request, Organization $organization)
+    public function index(Request $request, string $organizationId)
     {
+        $organization = $this->resolveOrganization($request, $organizationId);
         $this->authorize('update', $organization);
 
         $settings = $this->settingsService->getAllSettings($organization);
 
         return view('organization.settings.index', [
+            'title' => 'Organization Settings',
+            'organizationId' => $organizationId,
             'organization' => $organization,
             'settings' => $settings,
         ]);
     }
 
-    /**
-     * Update general settings
-     */
-    public function update(UpdateSettingsRequest $request, Organization $organization): JsonResponse
+    public function update(UpdateSettingsRequest $request, string $organizationId)
     {
+        $organization = $this->resolveOrganization($request, $organizationId);
+
         $organization = $this->settingsService->updateGeneralSettings(
             $organization,
             $request->validated()
@@ -51,42 +43,37 @@ class SettingsController extends Controller
             }
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Settings updated successfully.',
-            'data' => $organization->fresh(),
-        ]);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Settings updated successfully.',
+                'data' => $organization->fresh(),
+            ]);
+        }
+
+        return back()->with('success', 'Settings saved.');
     }
 
-    /**
-     * Get a specific setting
-     */
-    public function getSetting(Request $request, Organization $organization, string $key): JsonResponse
+    public function getSetting(Request $request, string $organizationId, string $key)
     {
+        $organization = $this->resolveOrganization($request, $organizationId);
         $this->authorize('view', $organization);
-
-        $value = $this->settingsService->getSetting($organization, $key);
 
         return response()->json([
             'success' => true,
             'data' => [
                 'key' => $key,
-                'value' => $value,
+                'value' => $this->settingsService->getSetting($organization, $key),
             ],
         ]);
     }
 
-    /**
-     * Update a specific setting
-     */
-    public function updateSetting(Request $request, Organization $organization, string $key): JsonResponse
+    public function updateSetting(Request $request, string $organizationId, string $key)
     {
+        $organization = $this->resolveOrganization($request, $organizationId);
         $this->authorize('update', $organization);
 
-        $request->validate([
-            'value' => ['required'],
-        ]);
-
+        $request->validate(['value' => ['required']]);
         $this->settingsService->updateSetting($organization, $key, $request->input('value'));
 
         return response()->json([
@@ -95,13 +82,10 @@ class SettingsController extends Controller
         ]);
     }
 
-    /**
-     * Delete a specific setting
-     */
-    public function deleteSetting(Request $request, Organization $organization, string $key): JsonResponse
+    public function deleteSetting(Request $request, string $organizationId, string $key)
     {
+        $organization = $this->resolveOrganization($request, $organizationId);
         $this->authorize('update', $organization);
-
         $this->settingsService->deleteSetting($organization, $key);
 
         return response()->json([
@@ -110,4 +94,3 @@ class SettingsController extends Controller
         ]);
     }
 }
-

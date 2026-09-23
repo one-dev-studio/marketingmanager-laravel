@@ -15,6 +15,17 @@ Route::get('/features', [PublicController::class, 'features'])->name('features')
 Route::get('/pricing', [PublicController::class, 'pricing'])->name('pricing');
 Route::get('/about', [PublicController::class, 'about'])->name('about');
 Route::get('/contact', [PublicController::class, 'contact'])->name('contact');
+Route::post('/contact', [PublicController::class, 'submitContact'])->name('contact.submit');
+Route::get('/privacy', [PublicController::class, 'legal'])->defaults('page', 'privacy')->name('privacy');
+Route::get('/terms', [PublicController::class, 'legal'])->defaults('page', 'terms')->name('terms');
+Route::get('/cookies', [PublicController::class, 'legal'])->defaults('page', 'cookies')->name('cookies');
+Route::get('/gdpr', [PublicController::class, 'legal'])->defaults('page', 'gdpr')->name('gdpr');
+Route::get('/help', [PublicController::class, 'legal'])->defaults('page', 'help')->name('help');
+Route::get('/blog', [PublicController::class, 'legal'])->defaults('page', 'blog')->name('blog');
+Route::get('/careers', [PublicController::class, 'legal'])->defaults('page', 'careers')->name('careers');
+Route::get('/integrations', [PublicController::class, 'legal'])->defaults('page', 'integrations')->name('integrations');
+Route::get('/developer', [PublicController::class, 'legal'])->defaults('page', 'api')->name('developer');
+Route::get('/sitemap.xml', [PublicController::class, 'sitemap'])->name('sitemap');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
@@ -32,6 +43,10 @@ Route::middleware('guest')->group(function () {
 Route::prefix('admin')->middleware('guest:admin')->group(function () {
     Route::get('/login', [App\Http\Controllers\Admin\Auth\LoginController::class, 'showLoginForm'])->name('admin.login');
     Route::post('/login', [App\Http\Controllers\Admin\Auth\LoginController::class, 'login']);
+});
+
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
 });
 
 // Email verification routes
@@ -206,7 +221,7 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
         });
         
         // Paid Campaigns
-        Route::prefix('paid-campaigns')->name('paid-campaigns.')->group(function () {
+        Route::middleware('not.client')->prefix('paid-campaigns')->name('paid-campaigns.')->group(function () {
             Route::get('/', [App\Http\Controllers\Campaign\PaidCampaignController::class, 'index'])->name('index');
             Route::post('/', [App\Http\Controllers\Campaign\PaidCampaignController::class, 'store'])->name('store');
             Route::get('/{paidCampaign}', [App\Http\Controllers\Campaign\PaidCampaignController::class, 'show'])->name('show');
@@ -229,11 +244,14 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
         // Content Approval
         Route::prefix('content-approvals')->name('content-approvals.')->group(function () {
             Route::get('/', [App\Http\Controllers\ContentApprovalController::class, 'index'])->name('index');
+            Route::get('/queue', [App\Http\Controllers\ContentApprovalController::class, 'queue'])->name('queue');
+            Route::post('/bulk', [App\Http\Controllers\ContentApprovalController::class, 'bulk'])->name('bulk');
             Route::get('/{approval}', [App\Http\Controllers\ContentApprovalController::class, 'show'])->name('show');
             Route::post('/{scheduledPost}/request', [App\Http\Controllers\ContentApprovalController::class, 'requestApproval'])->name('request');
             Route::post('/{approval}/approve', [App\Http\Controllers\ContentApprovalController::class, 'approve'])->name('approve');
             Route::post('/{approval}/reject', [App\Http\Controllers\ContentApprovalController::class, 'reject'])->name('reject');
             Route::get('/{scheduledPost}/history', [App\Http\Controllers\ContentApprovalController::class, 'getApprovalHistory'])->name('history');
+            Route::get('/{approval}/annotations', [App\Http\Controllers\ContentApprovalController::class, 'annotations'])->name('annotations');
         });
         
         // Dashboard API endpoints
@@ -254,9 +272,43 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
         });
         
         // Tools Pages (Content Ideation)
-        Route::prefix('tools')->name('tools.')->group(function () {
+        Route::middleware('not.client')->prefix('tools')->name('tools.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Tools\ToolsHubController::class, 'index'])->name('index');
+            Route::get('/seo-analysis', [App\Http\Controllers\Tools\ToolsHubController::class, 'seoAnalysis'])->name('seo-analysis');
+            Route::get('/email-template', [App\Http\Controllers\Tools\ToolsHubController::class, 'emailTemplate'])->name('email-template');
+            Route::get('/image-generator', [App\Http\Controllers\Tools\ToolsHubController::class, 'imageGenerator'])->name('image-generator');
+            Route::get('/blog', [App\Http\Controllers\Tools\ToolsHubController::class, 'blog'])->name('blog');
+            Route::get('/press-release', [App\Http\Controllers\Tools\ToolsHubController::class, 'pressRelease'])->name('press-release');
             Route::get('/label-inspiration', [App\Http\Controllers\AI\LabelInspirationController::class, 'index'])->name('label-inspiration');
             Route::get('/product-catalog', [App\Http\Controllers\AI\ProductCatalogController::class, 'index'])->name('product-catalog');
+        });
+
+        Route::middleware('not.client')->prefix('intelligence')->name('intelligence.')->group(function () {
+            Route::get('/sentiment', [App\Http\Controllers\Intelligence\IntelligenceController::class, 'sentiment'])->name('sentiment');
+            Route::get('/predictive', [App\Http\Controllers\Intelligence\IntelligenceController::class, 'predictive'])->name('predictive');
+        });
+
+        Route::middleware('not.client')->prefix('paid-ads')->name('paid-ads.')->group(function () {
+            Route::get('/campaigns', [App\Http\Controllers\Campaign\PaidCampaignController::class, 'index'])->name('campaigns');
+            Route::get('/ad-copy', [App\Http\Controllers\Tools\ToolsHubController::class, 'adCopy'])->name('ad-copy');
+            Route::get('/keyword-research', [App\Http\Controllers\Tools\ToolsHubController::class, 'keywordResearch'])->name('keyword-research');
+        });
+
+        Route::middleware('not.client')->prefix('competitions')->name('competitions.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Campaign\ContestController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\Campaign\ContestController::class, 'create'])->name('create');
+            Route::post('/', [App\Http\Controllers\Campaign\ContestController::class, 'store'])->name('store');
+            Route::get('/{contest}', [App\Http\Controllers\Campaign\ContestController::class, 'show'])->name('show');
+            Route::post('/{contest}/entries', [App\Http\Controllers\Campaign\ContestController::class, 'storeEntry'])->name('entries.store');
+            Route::post('/{contest}/close', [App\Http\Controllers\Campaign\ContestController::class, 'close'])->name('close');
+        });
+
+        Route::middleware('not.client')->prefix('reputation')->name('reviews.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Review\ReviewController::class, 'index'])->name('index');
+            Route::get('/{review}', [App\Http\Controllers\Review\ReviewController::class, 'show'])->name('show');
+            Route::post('/{review}/responses', [App\Http\Controllers\Review\ReviewController::class, 'createResponse'])->name('responses.store');
+            Route::post('/import', [App\Http\Controllers\Review\ReviewController::class, 'importReviews'])->name('import');
+            Route::get('/sources/list', [App\Http\Controllers\Review\ReviewController::class, 'sources'])->name('sources');
         });
         
         // AI Content Generation
@@ -307,8 +359,9 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
         // Email Marketing
         Route::prefix('email-marketing')->name('email-marketing.')->group(function () {
             // Email Campaigns
-            Route::prefix('campaigns')->name('campaigns.')->group(function () {
+            Route::middleware('not.client')->prefix('campaigns')->name('campaigns.')->group(function () {
                 Route::get('/', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'index'])->name('index');
+                Route::get('/create', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'create'])->name('create');
                 Route::post('/', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'store'])->name('store');
                 Route::get('/{emailCampaign}', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'show'])->name('show');
                 Route::put('/{emailCampaign}', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'update'])->name('update');
@@ -324,6 +377,7 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
             // Contacts
             Route::prefix('contacts')->name('contacts.')->group(function () {
                 Route::get('/', [App\Http\Controllers\EmailMarketing\ContactController::class, 'index'])->name('index');
+                Route::get('/create', [App\Http\Controllers\EmailMarketing\ContactController::class, 'create'])->name('create');
                 Route::post('/', [App\Http\Controllers\EmailMarketing\ContactController::class, 'store'])->name('store');
                 Route::post('/import', [App\Http\Controllers\EmailMarketing\ContactController::class, 'import'])->name('import');
                 Route::get('/{contact}', [App\Http\Controllers\EmailMarketing\ContactController::class, 'show'])->name('show');
@@ -338,8 +392,9 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
             });
             
             // Email Templates
-            Route::prefix('templates')->name('templates.')->group(function () {
+            Route::middleware('not.client')->prefix('templates')->name('templates.')->group(function () {
                 Route::get('/', [App\Http\Controllers\EmailMarketing\EmailTemplateController::class, 'index'])->name('index');
+                Route::get('/builder/{emailTemplate?}', [App\Http\Controllers\EmailMarketing\EmailTemplateController::class, 'builder'])->name('builder');
                 Route::post('/', [App\Http\Controllers\EmailMarketing\EmailTemplateController::class, 'store'])->name('store');
                 Route::get('/{emailTemplate}', [App\Http\Controllers\EmailMarketing\EmailTemplateController::class, 'show'])->name('show');
                 Route::put('/{emailTemplate}', [App\Http\Controllers\EmailMarketing\EmailTemplateController::class, 'update'])->name('update');
@@ -391,8 +446,9 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
         });
         
         // Reports
-        Route::prefix('reports')->name('reports.')->group(function () {
+        Route::middleware('not.client')->prefix('reports')->name('reports.')->group(function () {
             Route::get('/', [App\Http\Controllers\ReportController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\ReportController::class, 'create'])->name('create');
             Route::post('/', [App\Http\Controllers\ReportController::class, 'store'])->name('store');
             Route::get('/{reportId}', [App\Http\Controllers\ReportController::class, 'show'])->name('show');
             Route::put('/{reportId}', [App\Http\Controllers\ReportController::class, 'update'])->name('update');
@@ -407,11 +463,21 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
         Route::prefix('brands')->name('brands.')->group(function () {
             Route::get('/', [App\Http\Controllers\Brand\BrandController::class, 'index'])->name('index');
             Route::post('/', [App\Http\Controllers\Brand\BrandController::class, 'store'])->name('store');
+            Route::get('/create', [App\Http\Controllers\Brand\BrandController::class, 'create'])->name('create');
+            Route::get('/choose-name', [App\Http\Controllers\Brand\BrandNameGeneratorController::class, 'index'])->name('choose-name');
+            Route::post('/generate-concept', [App\Http\Controllers\Brand\BrandController::class, 'generateConcept'])->name('generate-concept');
+
+            Route::prefix('name-generator')->name('name-generator.')->group(function () {
+                Route::post('/generate', [App\Http\Controllers\Brand\BrandNameGeneratorController::class, 'generate'])->name('generate');
+                Route::post('/check-domain', [App\Http\Controllers\Brand\BrandNameGeneratorController::class, 'checkDomain'])->name('check-domain');
+                Route::post('/check-handles', [App\Http\Controllers\Brand\BrandNameGeneratorController::class, 'checkSocialHandles'])->name('check-handles');
+            });
+
+            Route::get('/{brand}/edit', [App\Http\Controllers\Brand\BrandController::class, 'edit'])->name('edit');
             Route::get('/{brand}', [App\Http\Controllers\Brand\BrandController::class, 'show'])->name('show');
             Route::put('/{brand}', [App\Http\Controllers\Brand\BrandController::class, 'update'])->name('update');
             Route::delete('/{brand}', [App\Http\Controllers\Brand\BrandController::class, 'destroy'])->name('destroy');
-            
-            // Brand Assets
+
             Route::prefix('{brand}/assets')->name('assets.')->group(function () {
                 Route::get('/', [App\Http\Controllers\Brand\BrandAssetController::class, 'index'])->name('index');
                 Route::get('/{brandAsset}', [App\Http\Controllers\Brand\BrandAssetController::class, 'show'])->name('show');
@@ -419,20 +485,15 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
                 Route::put('/{brandAsset}', [App\Http\Controllers\Brand\BrandAssetController::class, 'update'])->name('update');
                 Route::delete('/{brandAsset}', [App\Http\Controllers\Brand\BrandAssetController::class, 'destroy'])->name('destroy');
             });
-            
-            // Brand Name Generator
-            Route::prefix('name-generator')->name('name-generator.')->group(function () {
-                Route::post('/generate', [App\Http\Controllers\Brand\BrandNameGeneratorController::class, 'generate'])->name('generate');
-                Route::post('/check-domain', [App\Http\Controllers\Brand\BrandNameGeneratorController::class, 'checkDomain'])->name('check-domain');
-                Route::post('/check-handles', [App\Http\Controllers\Brand\BrandNameGeneratorController::class, 'checkSocialHandles'])->name('check-handles');
-            });
         });
         
         // Product Management
         Route::prefix('products')->name('products.')->group(function () {
             Route::get('/', [App\Http\Controllers\Product\ProductController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\Product\ProductController::class, 'create'])->name('create');
             Route::post('/', [App\Http\Controllers\Product\ProductController::class, 'store'])->name('store');
             Route::post('/import', [App\Http\Controllers\Product\ProductController::class, 'import'])->name('import');
+            Route::get('/{product}/edit', [App\Http\Controllers\Product\ProductController::class, 'edit'])->name('edit');
             Route::get('/{product}', [App\Http\Controllers\Product\ProductController::class, 'show'])->name('show');
             Route::put('/{product}', [App\Http\Controllers\Product\ProductController::class, 'update'])->name('update');
             Route::delete('/{product}', [App\Http\Controllers\Product\ProductController::class, 'destroy'])->name('destroy');
@@ -486,7 +547,10 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
             // Channels
             Route::prefix('channels')->name('channels.')->group(function () {
                 Route::get('/', [App\Http\Controllers\ChannelController::class, 'index'])->name('index');
+                Route::get('/create', [App\Http\Controllers\ChannelController::class, 'create'])->name('create');
                 Route::post('/', [App\Http\Controllers\ChannelController::class, 'store'])->name('store');
+                Route::get('/{channel}/edit', [App\Http\Controllers\ChannelController::class, 'edit'])->name('edit');
+                Route::post('/{channel}/test', [App\Http\Controllers\ChannelController::class, 'testConnection'])->name('test');
                 Route::get('/{channel}', [App\Http\Controllers\ChannelController::class, 'show'])->name('show');
                 Route::put('/{channel}', [App\Http\Controllers\ChannelController::class, 'update'])->name('update');
                 Route::delete('/{channel}', [App\Http\Controllers\ChannelController::class, 'destroy'])->name('destroy');
@@ -495,7 +559,7 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
         });
         
         // Press Release Management
-        Route::prefix('press-releases')->name('press-releases.')->group(function () {
+        Route::middleware('not.client')->prefix('press-releases')->name('press-releases.')->group(function () {
             Route::get('/', [App\Http\Controllers\PressRelease\PressReleaseController::class, 'index'])->name('index');
             Route::post('/', [App\Http\Controllers\PressRelease\PressReleaseController::class, 'store'])->name('store');
             Route::get('/{pressRelease}', [App\Http\Controllers\PressRelease\PressReleaseController::class, 'show'])->name('show');
@@ -517,7 +581,7 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
         });
         
         // Competitor Analysis
-        Route::prefix('competitors')->name('competitors.')->group(function () {
+        Route::middleware('not.client')->prefix('competitors')->name('competitors.')->group(function () {
             Route::get('/', [App\Http\Controllers\Competitor\CompetitorController::class, 'index'])->name('index');
             Route::post('/', [App\Http\Controllers\Competitor\CompetitorController::class, 'store'])->name('store');
             Route::get('/{competitor}', [App\Http\Controllers\Competitor\CompetitorController::class, 'show'])->name('show');
@@ -556,7 +620,11 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
         // Landing Page Builder
         Route::middleware('not.client')->prefix('landing-pages')->name('landing-pages.')->group(function () {
             Route::get('/', [App\Http\Controllers\LandingPage\LandingPageController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\LandingPage\LandingPageController::class, 'create'])->name('create');
             Route::post('/', [App\Http\Controllers\LandingPage\LandingPageController::class, 'store'])->name('store');
+            Route::get('/{landingPage}/builder', [App\Http\Controllers\LandingPage\LandingPageController::class, 'builder'])->name('builder');
+            Route::get('/{landingPage}/preview', [App\Http\Controllers\LandingPage\LandingPageController::class, 'preview'])->name('preview');
+            Route::get('/{landingPage}/analytics', [App\Http\Controllers\LandingPage\LandingPageController::class, 'analytics'])->name('analytics');
             Route::get('/{landingPage}', [App\Http\Controllers\LandingPage\LandingPageController::class, 'show'])->name('show');
             Route::put('/{landingPage}', [App\Http\Controllers\LandingPage\LandingPageController::class, 'update'])->name('update');
             Route::delete('/{landingPage}', [App\Http\Controllers\LandingPage\LandingPageController::class, 'destroy'])->name('destroy');
@@ -566,9 +634,13 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
         });
         
         // Surveys & Feedback
-        Route::prefix('surveys')->name('surveys.')->group(function () {
+        Route::middleware('not.client')->prefix('surveys')->name('surveys.')->group(function () {
             Route::get('/', [App\Http\Controllers\Survey\SurveyController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\Survey\SurveyController::class, 'create'])->name('create');
             Route::post('/', [App\Http\Controllers\Survey\SurveyController::class, 'store'])->name('store');
+            Route::get('/{survey}/builder', [App\Http\Controllers\Survey\SurveyController::class, 'builder'])->name('builder');
+            Route::get('/{survey}/analytics', [App\Http\Controllers\Survey\SurveyController::class, 'analytics'])->name('analytics');
+            Route::get('/{survey}/export', [App\Http\Controllers\Survey\SurveyController::class, 'export'])->name('export');
             Route::get('/{survey}', [App\Http\Controllers\Survey\SurveyController::class, 'show'])->name('show');
             Route::put('/{survey}', [App\Http\Controllers\Survey\SurveyController::class, 'update'])->name('update');
             Route::delete('/{survey}', [App\Http\Controllers\Survey\SurveyController::class, 'destroy'])->name('destroy');
@@ -612,6 +684,9 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
             
             // Automations
             Route::get('/automations', [App\Http\Controllers\Organization\AutomationController::class, 'index'])->name('automations');
+            Route::post('/automations', [App\Http\Controllers\Organization\AutomationController::class, 'store'])->name('automations.store');
+            Route::post('/automations/{automationRule}/toggle', [App\Http\Controllers\Organization\AutomationController::class, 'toggle'])->name('automations.toggle');
+            Route::post('/automations/{automationRule}/test', [App\Http\Controllers\Organization\AutomationController::class, 'test'])->name('automations.test');
         });
     });
 });
@@ -661,6 +736,8 @@ Route::middleware(['auth', 'verified', 'role:agency'])->prefix('agency')->name('
         
         Route::prefix('clients')->name('clients.')->group(function () {
             Route::get('/', [App\Http\Controllers\Agency\ClientController::class, 'index'])->name('index');
+            Route::middleware('agency.admin')->get('/create', [App\Http\Controllers\Agency\ClientController::class, 'create'])->name('create');
+            Route::middleware('agency.admin')->post('/', [App\Http\Controllers\Agency\ClientController::class, 'store'])->name('store');
             Route::middleware('agency.client')->get('/{organizationId}', [App\Http\Controllers\Agency\ClientController::class, 'show'])->name('show');
         });
         
@@ -709,7 +786,13 @@ Route::prefix('webhooks')->name('webhooks.')->group(function () {
     Route::post('/twitter', [App\Http\Controllers\SocialMedia\WebhookController::class, 'handleTwitter'])->name('twitter');
     Route::post('/tiktok', [App\Http\Controllers\SocialMedia\WebhookController::class, 'handleTikTok'])->name('tiktok');
     Route::post('/pinterest', [App\Http\Controllers\SocialMedia\WebhookController::class, 'handlePinterest'])->name('pinterest');
+    Route::post('/stripe', [App\Http\Controllers\Billing\PaymentWebhookController::class, 'stripe'])->name('stripe');
+    Route::post('/paypal', [App\Http\Controllers\Billing\PaymentWebhookController::class, 'paypal'])->name('paypal');
 });
+
+Route::get('/p/{slug}', [App\Http\Controllers\LandingPage\PublicLandingPageController::class, 'show'])->name('public.landing-page');
+Route::get('/s/{survey}', [App\Http\Controllers\Survey\PublicSurveyController::class, 'show'])->name('public.survey');
+Route::post('/s/{survey}', [App\Http\Controllers\Survey\PublicSurveyController::class, 'submit'])->name('public.survey.submit');
 
 // Email tracking routes (no auth required)
 Route::prefix('email')->name('email.')->group(function () {

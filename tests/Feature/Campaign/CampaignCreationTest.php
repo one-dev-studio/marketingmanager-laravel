@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Campaign;
 
-use App\Models\User;
-use App\Models\Organization;
+use App\Models\Channel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class CampaignCreationTest extends TestCase
@@ -13,16 +13,22 @@ class CampaignCreationTest extends TestCase
 
     public function test_user_can_create_campaign(): void
     {
-        $user = User::factory()->create();
-        $organization = Organization::factory()->create();
-        $user->organizations()->attach($organization);
+        [$user, $organization] = $this->createOrganizationAdmin();
+        $channel = Channel::factory()->create([
+            'organization_id' => $organization->id,
+            'status' => 'active',
+        ]);
 
-        $response = $this->actingAs($user)
-            ->postJson('/api/v1/campaigns', [
-                'name' => 'Test Campaign',
-                'start_date' => now()->addDay()->toDateString(),
-                'budget' => 1000,
-            ]);
+        Sanctum::actingAs($user);
+
+        $response = $this->postJson('/api/v1/campaigns', [
+            'name' => 'Test Campaign',
+            'start_date' => now()->addDay()->toDateString(),
+            'budget' => 1000,
+            'channels' => [
+                ['id' => $channel->id, 'budget' => 1000],
+            ],
+        ]);
 
         $response->assertStatus(201)
             ->assertJsonStructure([
@@ -40,5 +46,3 @@ class CampaignCreationTest extends TestCase
         ]);
     }
 }
-
-

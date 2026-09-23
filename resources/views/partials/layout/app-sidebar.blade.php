@@ -55,6 +55,10 @@
     }
     
     // Icon helper
+    $safeRoute = fn (string $name, array $params = [], string $fallback = '#') => \Illuminate\Support\Facades\Route::has($name)
+        ? route($name, $params)
+        : $fallback;
+
     $icon = function($name) {
         $icons = [
             'home' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>',
@@ -134,7 +138,7 @@
                 </x-partials.layout.sidebar-menu-item>
 
                 <x-partials.layout.sidebar-menu-item 
-                    href="{{ route('main.files', ['organizationId' => $organizationId]) }}?brandId={{ $brandId }}"
+                    href="{{ route('main.files.index', ['organizationId' => $organizationId]) }}?brandId={{ $brandId }}"
                     :icon="$icon('files')"
                     :is-active="request()->routeIs('main.files')"
                 >
@@ -142,9 +146,9 @@
                 </x-partials.layout.sidebar-menu-item>
 
                 <x-partials.layout.sidebar-menu-item 
-                    href="{{ route('main.analytics', ['organizationId' => $organizationId]) }}?brandId={{ $brandId }}"
+                    href="{{ route('main.analytics.index', ['organizationId' => $organizationId]) }}?brandId={{ $brandId }}"
                     :icon="$icon('analytics')"
-                    :is-active="request()->routeIs('main.analytics')"
+                    :is-active="request()->routeIs('main.analytics.*')"
                 >
                     Analytics
                 </x-partials.layout.sidebar-menu-item>
@@ -164,7 +168,7 @@
                         Campaigns
                     </x-partials.layout.sidebar-menu-item>
                     <x-partials.layout.sidebar-menu-item 
-                        href="{{ route('main.campaigns.competitions.index', ['organizationId' => $organizationId]) }}"
+                        href="{{ route('main.campaigns.index', ['organizationId' => $organizationId]) }}"
                         :is-active="request()->routeIs('main.campaigns.competitions.*')"
                     >
                         Competitions
@@ -172,7 +176,7 @@
                 </x-partials.layout.sidebar-collapsible>
 
                 <x-partials.layout.sidebar-menu-item 
-                    href="{{ route('main.projects', ['organizationId' => $organizationId]) }}"
+                    href="{{ route('main.projects.index', ['organizationId' => $organizationId]) }}"
                     :icon="$icon('projects')"
                     :is-active="request()->routeIs('main.projects.*')"
                 >
@@ -180,7 +184,7 @@
                 </x-partials.layout.sidebar-menu-item>
 
                 <x-partials.layout.sidebar-menu-item 
-                    href="{{ route('main.tasks', ['organizationId' => $organizationId]) }}"
+                    href="{{ route('main.tasks.index', ['organizationId' => $organizationId]) }}"
                     :icon="$icon('tasks')"
                     :is-active="request()->routeIs('main.tasks.*')"
                 >
@@ -269,13 +273,13 @@
                         Ad Campaigns
                     </x-partials.layout.sidebar-menu-item>
                     <x-partials.layout.sidebar-menu-item 
-                        href="{{ route('main.ai.ad-copy', ['organizationId' => $organizationId]) }}"
+                        href="{{ $safeRoute('main.ai.ad-copy', ['organizationId' => $organizationId]) }}"
                         :is-active="request()->routeIs('main.ai.ad-copy')"
                     >
                         Ad Copy Gen
                     </x-partials.layout.sidebar-menu-item>
                     <x-partials.layout.sidebar-menu-item 
-                        href="{{ route('main.ai.keyword-research', ['organizationId' => $organizationId]) }}"
+                        href="{{ $safeRoute('main.ai.keyword-research', ['organizationId' => $organizationId]) }}"
                         :is-active="request()->routeIs('main.ai.keyword-research')"
                     >
                         Keyword Res
@@ -288,13 +292,13 @@
                     :default-open="request()->routeIs('main.tools.*')"
                 >
                     <x-partials.layout.sidebar-menu-item 
-                        href="{{ route('main.tools.seo-analysis', ['organizationId' => $organizationId]) }}"
+                        href="{{ $safeRoute('main.tools.seo-analysis', ['organizationId' => $organizationId]) }}"
                         :is-active="request()->routeIs('main.tools.seo-analysis')"
                     >
                         SEO Analysis
                     </x-partials.layout.sidebar-menu-item>
                     <x-partials.layout.sidebar-menu-item 
-                        href="{{ route('main.tools.email-template', ['organizationId' => $organizationId]) }}"
+                        href="{{ $safeRoute('main.tools.email-template', ['organizationId' => $organizationId]) }}"
                         :is-active="request()->routeIs('main.tools.email-template')"
                     >
                         Email Template
@@ -306,7 +310,7 @@
                         Label Insp
                     </x-partials.layout.sidebar-menu-item>
                     <x-partials.layout.sidebar-menu-item 
-                        href="{{ route('main.tools.image-generator', ['organizationId' => $organizationId]) }}"
+                        href="{{ $safeRoute('main.tools.image-generator', ['organizationId' => $organizationId]) }}"
                         :is-active="request()->routeIs('main.tools.image-generator')"
                     >
                         Image Gen
@@ -325,13 +329,13 @@
                     :default-open="request()->routeIs('main.intelligence.*') || request()->routeIs('main.competitors.*')"
                 >
                     <x-partials.layout.sidebar-menu-item 
-                        href="{{ route('main.intelligence.sentiment', ['organizationId' => $organizationId]) }}"
+                        href="{{ $safeRoute('main.intelligence.sentiment', ['organizationId' => $organizationId]) }}"
                         :is-active="request()->routeIs('main.intelligence.sentiment')"
                     >
                         Sentiment
                     </x-partials.layout.sidebar-menu-item>
                     <x-partials.layout.sidebar-menu-item 
-                        href="{{ route('main.intelligence.predictive', ['organizationId' => $organizationId]) }}"
+                        href="{{ $safeRoute('main.intelligence.predictive', ['organizationId' => $organizationId]) }}"
                         :is-active="request()->routeIs('main.intelligence.predictive')"
                     >
                         Predictive

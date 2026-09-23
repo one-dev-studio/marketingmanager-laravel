@@ -21,7 +21,6 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index('user_id');
-            $table->index(['notifiable_type', 'notifiable_id']);
             $table->index('is_read');
             $table->index('created_at');
             $table->index(['user_id', 'is_read', 'created_at']);

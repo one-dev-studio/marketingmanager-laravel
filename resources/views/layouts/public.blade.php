@@ -37,6 +37,8 @@
                     <a href="{{ route('pricing') }}" class="nav-link">Pricing</a>
                     <a href="{{ route('about') }}" class="nav-link">About</a>
                     <a href="{{ route('contact') }}" class="nav-link">Contact</a>
+                    <a href="{{ route('login') }}" class="nav-link navbar-menu-auth">Login</a>
+                    <a href="{{ route('register') }}" class="nav-link navbar-menu-auth">Get Started</a>
                 </div>
 
                 <div class="navbar-actions">
@@ -79,8 +81,8 @@
                     <ul class="footer-links">
                         <li><a href="{{ route('features') }}">Features</a></li>
                         <li><a href="{{ route('pricing') }}">Pricing</a></li>
-                        <li><a href="#">Integrations</a></li>
-                        <li><a href="#">API</a></li>
+                        <li><a href="{{ route('integrations') }}">Integrations</a></li>
+                        <li><a href="{{ route('developer') }}">API</a></li>
                     </ul>
                 </div>
 
@@ -88,19 +90,20 @@
                     <h4 class="footer-title">Company</h4>
                     <ul class="footer-links">
                         <li><a href="{{ route('about') }}">About</a></li>
-                        <li><a href="#">Blog</a></li>
-                        <li><a href="#">Careers</a></li>
+                        <li><a href="{{ route('blog') }}">Blog</a></li>
+                        <li><a href="{{ route('careers') }}">Careers</a></li>
                         <li><a href="{{ route('contact') }}">Contact</a></li>
+                        <li><a href="{{ route('help') }}">Help Center</a></li>
                     </ul>
                 </div>
 
                 <div class="footer-col">
                     <h4 class="footer-title">Legal</h4>
                     <ul class="footer-links">
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Terms of Service</a></li>
-                        <li><a href="#">Cookie Policy</a></li>
-                        <li><a href="#">GDPR</a></li>
+                        <li><a href="{{ route('privacy') }}">Privacy Policy</a></li>
+                        <li><a href="{{ route('terms') }}">Terms of Service</a></li>
+                        <li><a href="{{ route('cookies') }}">Cookie Policy</a></li>
+                        <li><a href="{{ route('gdpr') }}">GDPR</a></li>
                     </ul>
                 </div>
             </div>
@@ -156,6 +159,15 @@
         });
     </script>
     
+    <div id="cookie-banner" class="fixed bottom-0 inset-x-0 bg-gray-900 text-white p-4 text-sm flex justify-between gap-4" style="display:none">
+        <p>We use cookies for analytics and to improve the site. <a href="{{ route('privacy') }}" class="underline">Learn more</a>.</p>
+        <button type="button" onclick="localStorage.setItem('mp_cookies','1');document.getElementById('cookie-banner').style.display='none'">Accept</button>
+    </div>
+    <script>
+        if (!localStorage.getItem('mp_cookies')) {
+            document.getElementById('cookie-banner').style.display = 'flex';
+        }
+    </script>
     @stack('scripts')
 </body>
 </html>

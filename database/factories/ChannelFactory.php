@@ -14,8 +14,8 @@ class ChannelFactory extends Factory
     {
         return [
             'organization_id' => Organization::factory(),
-            'name' => fake()->words(2, true),
-            'type' => fake()->randomElement(['social_media', 'email', 'whatsapp', 'amplify', 'paid_ads', 'press_release', 'influencer']),
+            'display_name' => fake()->words(2, true),
+            'type' => fake()->randomElement(['social', 'email', 'whatsapp', 'amplify', 'paid_ads', 'press_release', 'influencer']),
             'platform' => fake()->randomElement(['facebook', 'instagram', 'twitter', 'linkedin', 'email']),
             'status' => 'active',
         ];

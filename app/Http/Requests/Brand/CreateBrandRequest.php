@@ -11,6 +11,11 @@ class CreateBrandRequest extends FormRequest
         return $this->user()->can('create', \App\Models\Brand::class);
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->mergeKeywordArrays();
+    }
+
     public function rules(): array
     {
         return [
@@ -36,6 +41,18 @@ class CreateBrandRequest extends FormRequest
             'logo.image' => 'Logo must be an image file.',
             'logo.max' => 'Logo size must not exceed 2MB.',
         ];
+    }
+
+    private function mergeKeywordArrays(): void
+    {
+        foreach (['keywords', 'avoid_keywords'] as $field) {
+            $value = $this->input($field);
+            if (is_string($value)) {
+                $this->merge([
+                    $field => array_values(array_filter(array_map('trim', explode(',', $value)))),
+                ]);
+            }
+        }
     }
 }
 

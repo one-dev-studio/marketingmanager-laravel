@@ -15,7 +15,7 @@ class EmailCampaignService
     {
         return DB::transaction(function () use ($data, $user) {
             $campaign = EmailCampaign::create([
-                'organization_id' => $user->primaryOrganization()->id,
+                'organization_id' => $data['organization_id'] ?? $user->primaryOrganization()?->id,
                 'campaign_id' => $data['campaign_id'] ?? null,
                 'name' => $data['name'],
                 'description' => $data['description'] ?? null,

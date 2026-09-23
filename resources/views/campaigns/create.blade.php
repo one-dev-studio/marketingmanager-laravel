@@ -3,27 +3,98 @@
 @section('page-title', 'Create Campaign')
 
 @section('content')
-<div id="campaign-creation-app" 
-     data-organization-id="{{ $organizationId }}"
-     data-brand-id="{{ $brandId }}">
-    <campaign-creation-wizard
-        :organization-id="{{ $organizationId }}"
-        :brand-id="{{ $brandId ?: 'null' }}"
-        :brands="{{ json_encode($brands) }}"
-        :products="{{ json_encode($products) }}"
-        :channels="{{ json_encode($channels) }}"
-    ></campaign-creation-wizard>
+<div class="max-w-4xl mx-auto space-y-6" x-data="{ currentStep: 0, steps: ['Plan', 'Content', 'Review'] }">
+    <div class="flex items-center justify-between max-w-2xl mx-auto mb-4">
+        <template x-for="(step, index) in steps" :key="index">
+            <div class="flex items-center flex-1">
+                <div class="flex flex-col items-center flex-1">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-semibold"
+                         :class="currentStep === index ? 'bg-blue-600 text-white' : (currentStep > index ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600')"
+                         x-text="currentStep > index ? '✓' : index + 1"></div>
+                    <span class="mt-2 text-sm" x-text="step"></span>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <form method="POST" action="{{ route('main.campaigns.store', ['organizationId' => $organizationId]) }}" class="bg-white border rounded-lg p-6 space-y-4">
+        @csrf
+        <div x-show="currentStep === 0" class="space-y-4">
+            <h2 class="text-xl font-semibold">Plan your campaign</h2>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Campaign name</label>
+                <input name="name" required class="mt-1 w-full rounded-md border-gray-300" placeholder="Summer launch">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Campaign goal</label>
+                <textarea name="description" rows="3" class="mt-1 w-full rounded-md border-gray-300" placeholder="What do you want to achieve?"></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Goal type</label>
+                <select name="goal_type" class="mt-1 w-full rounded-md border-gray-300">
+                    <option value="product_launch">Product Launch</option>
+                    <option value="brand_awareness">Brand Awareness</option>
+                    <option value="lead_generation">Lead Generation</option>
+                    <option value="event_promotion">Event Promotion</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Brand</label>
+                <select name="brand_id" class="mt-1 w-full rounded-md border-gray-300">
+                    <option value="">Select brand</option>
+                    @foreach($brands as $brand)
+                        <option value="{{ $brand->id }}" @selected((string) $brandId === (string) $brand->id)>{{ $brand->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Channels</label>
+                <div class="grid grid-cols-2 gap-2">
+                    @forelse($channels as $i => $channel)
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="channels[{{ $i }}][id]" value="{{ $channel->id }}">
+                            {{ $channel->display_name }}
+                        </label>
+                    @empty
+                        <p class="text-sm text-gray-500">No active channels. Add a channel first.</p>
+                    @endforelse
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Start date</label>
+                    <input type="date" name="start_date" required value="{{ now()->addDay()->toDateString() }}" class="mt-1 w-full rounded-md border-gray-300">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">End date</label>
+                    <input type="date" name="end_date" value="{{ now()->addMonths(1)->toDateString() }}" class="mt-1 w-full rounded-md border-gray-300">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Budget</label>
+                <input type="number" name="budget" min="0" step="0.01" value="0" required class="mt-1 w-full rounded-md border-gray-300">
+            </div>
+            <button type="button" class="bg-blue-600 text-white px-4 py-2 rounded-md" @click="currentStep = 1">Continue to content</button>
+        </div>
+
+        <div x-show="currentStep === 1" x-cloak class="space-y-4">
+            <h2 class="text-xl font-semibold">Content</h2>
+            <p class="text-sm text-gray-600">Save the campaign plan now. You can generate channel content from the campaign page next.</p>
+            <div class="flex gap-2">
+                <button type="button" class="border px-4 py-2 rounded-md" @click="currentStep = 0">Back</button>
+                <button type="button" class="bg-blue-600 text-white px-4 py-2 rounded-md" @click="currentStep = 2">Continue to review</button>
+            </div>
+        </div>
+
+        <div x-show="currentStep === 2" x-cloak class="space-y-4">
+            <h2 class="text-xl font-semibold">Review &amp; create</h2>
+            <p class="text-sm text-gray-600">Create the campaign as a draft, then submit content for review from the campaign list.</p>
+            <div class="flex gap-2">
+                <button type="button" class="border px-4 py-2 rounded-md" @click="currentStep = 1">Back</button>
+                <button class="bg-blue-600 text-white px-4 py-2 rounded-md">Create campaign</button>
+            </div>
+        </div>
+    </form>
 </div>
 @endsection
-
-@push('scripts')
-<script type="module">
-import { createApp } from 'vue';
-import CampaignCreationWizard from '/resources/js/components/CampaignCreationWizard.vue';
-
-const app = createApp({});
-app.component('campaign-creation-wizard', CampaignCreationWizard);
-app.mount('#campaign-creation-app');
-</script>
-@endpush
-

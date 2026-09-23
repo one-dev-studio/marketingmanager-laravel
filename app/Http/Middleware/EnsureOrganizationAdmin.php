@@ -32,9 +32,7 @@ class EnsureOrganizationAdmin
             abort(404, 'Organization not found.');
         }
 
-        // Check if user has admin role in organization
-        $isOrgAdmin = $user->hasRole('admin', $organization) 
-            || $user->hasRole('super-admin', $organization);
+        $isOrgAdmin = $user->hasRole(['admin', 'super_admin', 'super-admin'], $organization);
         
         if (!$isOrgAdmin && !$user->isAdmin()) {
             abort(403, 'You do not have permission to access this resource. Organization admin access required.');

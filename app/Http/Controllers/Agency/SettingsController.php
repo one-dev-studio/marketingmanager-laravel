@@ -43,7 +43,7 @@ class SettingsController extends Controller
     {
         $agency = $this->settingsService->updateProfile($agency, $request->validated());
 
-        return redirect()->route('agency.settings', ['agency' => $agency])
+        return redirect()->route('agency.settings.index', ['agency' => $agency])
             ->with('success', 'Agency profile updated successfully.');
     }
 
@@ -54,7 +54,7 @@ class SettingsController extends Controller
     {
         $agency = $this->settingsService->updateBranding($agency, $request->validated());
 
-        return redirect()->route('agency.settings', ['agency' => $agency])
+        return redirect()->route('agency.settings.index', ['agency' => $agency])
             ->with('success', 'Agency branding updated successfully.');
     }
 
@@ -65,7 +65,7 @@ class SettingsController extends Controller
     {
         $agency = $this->settingsService->updateDefaults($agency, $request->validated());
 
-        return redirect()->route('agency.settings', ['agency' => $agency])
+        return redirect()->route('agency.settings.index', ['agency' => $agency])
             ->with('success', 'Default settings updated successfully.');
     }
 
@@ -76,7 +76,7 @@ class SettingsController extends Controller
     {
         $agency = $this->settingsService->updateIntegrations($agency, $request->validated());
 
-        return redirect()->route('agency.settings', ['agency' => $agency])
+        return redirect()->route('agency.settings.index', ['agency' => $agency])
             ->with('success', 'Integration settings updated successfully.');
     }
 
@@ -87,7 +87,7 @@ class SettingsController extends Controller
     {
         $agency = $this->settingsService->updateNotificationPreferences($agency, $request->validated());
 
-        return redirect()->route('agency.settings', ['agency' => $agency])
+        return redirect()->route('agency.settings.index', ['agency' => $agency])
             ->with('success', 'Notification preferences updated successfully.');
     }
 }

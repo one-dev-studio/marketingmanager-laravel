@@ -24,7 +24,7 @@ return new class extends Migration
             $table->index('landing_page_id');
             $table->index('variant_id');
             $table->index('analytics_date');
-            $table->unique(['landing_page_id', 'variant_id', 'analytics_date']);
+            $table->unique(['landing_page_id', 'variant_id', 'analytics_date'], 'page_analytics_unique');
         });
     }
 

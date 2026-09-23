@@ -18,9 +18,8 @@ class SurveyController extends Controller
         private SurveyService $surveyService
     ) {}
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, string $organizationId)
     {
-        $organizationId = auth()->user()->primaryOrganization()->id;
         $query = Survey::where('organization_id', $organizationId)
             ->with(['creator', 'questions']);
 
@@ -30,7 +29,32 @@ class SurveyController extends Controller
 
         $surveys = $query->orderBy('created_at', 'desc')->paginate();
 
-        return SurveyResource::collection($surveys);
+        if ($request->expectsJson()) {
+            return SurveyResource::collection($surveys);
+        }
+
+        return view('surveys.index', [
+            'organizationId' => $organizationId,
+            'surveys' => $surveys,
+        ]);
+    }
+
+    public function create(Request $request, string $organizationId)
+    {
+        return view('surveys.create', ['organizationId' => $organizationId]);
+    }
+
+    public function builder(Request $request, string $organizationId, Survey $survey)
+    {
+        return view('surveys.builder', [
+            'organizationId' => $organizationId,
+            'survey' => $survey->load('questions'),
+        ]);
+    }
+
+    public function export(Request $request, string $organizationId, Survey $survey)
+    {
+        return $this->exportResponses($request, $survey);
     }
 
     public function store(CreateSurveyRequest $request): JsonResponse
@@ -40,11 +64,18 @@ class SurveyController extends Controller
             $request->user()
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => new SurveyResource($survey),
-            'message' => 'Survey created successfully.',
-        ], 201);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => new SurveyResource($survey),
+                'message' => 'Survey created successfully.',
+            ], 201);
+        }
+
+        return redirect()->route('main.surveys.builder', [
+            'organizationId' => $request->route('organizationId'),
+            'survey' => $survey,
+        ]);
     }
 
     public function show(Survey $survey): JsonResponse
@@ -181,7 +212,7 @@ class SurveyController extends Controller
         ], 201);
     }
 
-    public function analytics(Request $request, Survey $survey): JsonResponse
+    public function analytics(Request $request, string $organizationId, Survey $survey)
     {
         $this->authorize('view', $survey);
 
@@ -190,9 +221,14 @@ class SurveyController extends Controller
             'end_date' => $request->end_date,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => $analytics,
+        if ($this->wantsJson($request)) {
+            return response()->json(['success' => true, 'data' => $analytics]);
+        }
+
+        return view('surveys.analytics', [
+            'organizationId' => $organizationId,
+            'survey' => $survey,
+            'analytics' => $analytics,
         ]);
     }
 

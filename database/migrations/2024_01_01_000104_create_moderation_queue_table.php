@@ -19,7 +19,6 @@ return new class extends Migration
             $table->timestamp('reviewed_at')->nullable();
             $table->timestamps();
 
-            $table->index(['moderatable_type', 'moderatable_id']);
             $table->index('type');
             $table->index('status');
             $table->index(['status', 'created_at']);

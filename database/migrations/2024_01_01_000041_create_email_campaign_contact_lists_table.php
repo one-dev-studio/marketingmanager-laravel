@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('contact_list_id')->constrained()->onDelete('cascade');
             $table->timestamps();
 
-            $table->unique(['email_campaign_id', 'contact_list_id']);
+            $table->unique(['email_campaign_id', 'contact_list_id'], 'email_campaign_contact_list_unique');
             $table->index('email_campaign_id');
             $table->index('contact_list_id');
         });

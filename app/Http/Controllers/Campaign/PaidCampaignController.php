@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class PaidCampaignController extends Controller
 {
-    public function index(Request $request, string $organizationId): JsonResponse
+    public function index(Request $request, string $organizationId)
     {
         $query = PaidCampaign::where('organization_id', $organizationId);
 
@@ -25,9 +25,16 @@ class PaidCampaignController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate();
 
-        return response()->json([
-            'success' => true,
-            'data' => $paidCampaigns,
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => $paidCampaigns,
+            ]);
+        }
+
+        return view('paid-ads.campaigns', [
+            'organizationId' => $organizationId,
+            'paidCampaigns' => $paidCampaigns,
         ]);
     }
 
@@ -54,11 +61,16 @@ class PaidCampaignController extends Controller
             'spent' => 0,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => $paidCampaign->load(['campaign', 'organization']),
-            'message' => 'Paid campaign created successfully.',
-        ], 201);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => $paidCampaign->load(['campaign', 'organization']),
+                'message' => 'Paid campaign created successfully.',
+            ], 201);
+        }
+
+        return redirect()->route('main.paid-ads.campaigns', ['organizationId' => $organizationId])
+            ->with('success', 'Paid campaign created.');
     }
 
     public function show(string $organizationId, PaidCampaign $paidCampaign): JsonResponse

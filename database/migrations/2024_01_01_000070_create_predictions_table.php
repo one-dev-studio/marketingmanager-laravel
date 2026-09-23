@@ -23,7 +23,6 @@ return new class extends Migration
 
             $table->index('organization_id');
             $table->index('prediction_model_id');
-            $table->index(['predictable_type', 'predictable_id']);
             $table->index('prediction_type');
             $table->index('prediction_date');
         });

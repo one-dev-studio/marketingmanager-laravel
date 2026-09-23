@@ -30,11 +30,7 @@ class BrandPolicy
             return false;
         }
 
-        $hasPermission = $user->hasPermissionTo('brands.view');
-        if (!$hasPermission) {
-            $this->logUnauthorizedAccess('view', $brand, $user);
-        }
-        return $hasPermission;
+        return $user->hasAccessToOrganization($brand->organization_id);
     }
 
     /**

@@ -1,34 +1,16 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('automation_rules', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('organization_id')->constrained()->onDelete('cascade');
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->json('trigger_conditions');
-            $table->json('actions');
-            $table->boolean('is_active')->default(true);
-            $table->integer('priority')->default(0);
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->timestamps();
-
-            $table->index('organization_id');
-            $table->index('is_active');
-            $table->index(['organization_id', 'is_active', 'priority']);
-        });
+        // automation_rules is created by 2024_01_01_000054_create_automation_rules_table
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('automation_rules');
+        //
     }
 };
-

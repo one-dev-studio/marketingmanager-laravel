@@ -19,9 +19,8 @@ class PressReleaseController extends Controller
         private PressReleaseService $pressReleaseService
     ) {}
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, string $organizationId)
     {
-        $organizationId = auth()->user()->primaryOrganization()->id;
         $query = PressRelease::where('organization_id', $organizationId)
             ->with(['campaign', 'creator', 'distributions.pressContact']);
 
@@ -31,21 +30,34 @@ class PressReleaseController extends Controller
 
         $pressReleases = $query->orderBy('created_at', 'desc')->paginate();
 
-        return PressReleaseResource::collection($pressReleases);
+        if ($this->wantsJson($request)) {
+            return PressReleaseResource::collection($pressReleases);
+        }
+
+        return view('press-releases.index', [
+            'title' => 'Press Releases',
+            'organizationId' => $organizationId,
+            'pressReleases' => $pressReleases,
+            'templates' => PressReleaseTemplate::query()->orderBy('name')->get(),
+        ]);
     }
 
-    public function store(CreatePressReleaseRequest $request): JsonResponse
+    public function store(CreatePressReleaseRequest $request, string $organizationId)
     {
         $pressRelease = $this->pressReleaseService->createPressRelease(
             $request->validated(),
             $request->user()
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => new PressReleaseResource($pressRelease),
-            'message' => 'Press release created successfully.',
-        ], 201);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => new PressReleaseResource($pressRelease),
+                'message' => 'Press release created successfully.',
+            ], 201);
+        }
+
+        return redirect()->route('main.press-releases.index', ['organizationId' => $organizationId])->with('success', 'Created.');
     }
 
     public function show(PressRelease $pressRelease): JsonResponse

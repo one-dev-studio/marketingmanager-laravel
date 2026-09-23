@@ -6,6 +6,7 @@ use App\Models\Campaign;
 use App\Models\Organization;
 use App\Models\User;
 use App\Repositories\Contracts\CampaignRepositoryInterface;
+use App\Services\AI\ContentGenerationService;
 use App\Services\Campaign\CampaignNotificationService;
 use App\Services\Campaign\CampaignService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,6 +20,7 @@ class CampaignServiceTest extends TestCase
     private CampaignService $service;
     private $repositoryMock;
     private $notificationServiceMock;
+    private $contentGenerationServiceMock;
 
     protected function setUp(): void
     {
@@ -26,10 +28,12 @@ class CampaignServiceTest extends TestCase
         
         $this->repositoryMock = Mockery::mock(CampaignRepositoryInterface::class);
         $this->notificationServiceMock = Mockery::mock(CampaignNotificationService::class);
+        $this->contentGenerationServiceMock = Mockery::mock(ContentGenerationService::class);
         
         $this->service = new CampaignService(
             $this->repositoryMock,
-            $this->notificationServiceMock
+            $this->notificationServiceMock,
+            $this->contentGenerationServiceMock,
         );
     }
 

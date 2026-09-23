@@ -21,7 +21,6 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index('organization_id');
-            $table->index(['analysable_type', 'analysable_id']);
             $table->index('sentiment');
             $table->index('analysis_date');
             $table->index(['organization_id', 'sentiment']);

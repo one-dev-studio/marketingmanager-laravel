@@ -9,7 +9,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('landing_pages', function (Blueprint $table) {
-            $table->string('custom_domain')->nullable()->after('slug');
             $table->json('seo_settings')->nullable()->after('custom_domain');
             $table->json('template_data')->nullable()->after('seo_settings');
         });
@@ -37,7 +36,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('landing_pages', function (Blueprint $table) {
-            $table->dropColumn(['custom_domain', 'seo_settings', 'template_data']);
+            $table->dropColumn(['seo_settings', 'template_data']);
         });
 
         Schema::dropIfExists('landing_page_templates');

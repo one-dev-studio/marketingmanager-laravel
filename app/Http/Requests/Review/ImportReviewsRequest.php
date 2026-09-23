@@ -11,6 +11,14 @@ class ImportReviewsRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('reviews_json') && ! $this->filled('reviews')) {
+            $decoded = json_decode((string) $this->input('reviews_json'), true);
+            $this->merge(['reviews' => is_array($decoded) ? $decoded : []]);
+        }
+    }
+
     public function rules(): array
     {
         return [

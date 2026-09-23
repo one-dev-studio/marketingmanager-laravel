@@ -3,6 +3,7 @@
 @section('page-title', 'Workflows')
 
 @section('content')
+@php($orgId = $organizationId ?? request()->route('organizationId'))
 <div class="container mx-auto px-4 py-6" x-data="workflowManager()">
     <!-- Header -->
     <div class="mb-6">
@@ -12,7 +13,7 @@
                 <p class="mt-1 text-sm text-gray-600">Create and manage automated workflows for your marketing processes</p>
             </div>
             <a
-                href="{{ route('workflows.builder') }}"
+                href="{{ route('main.workflows.builder', ['organizationId' => $orgId]) }}"
                 class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
                 <span class="flex items-center">
@@ -74,7 +75,7 @@
         </div>
 
         <!-- Empty State -->
-        <div x-show="!loading && workflows.length === 0" class="text-center py-12">
+        <div x-show="!loading && workflows.length === 0" x-cloak class="text-center py-12">
             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
             </svg>
@@ -132,7 +133,7 @@
                         <!-- Actions -->
                         <div class="flex items-center space-x-2">
                             <a
-                                :href="'{{ route('workflows.builder') }}?id=' + workflow.id"
+                                :href="`{{ route('main.workflows.builder', ['organizationId' => $orgId]) }}?id=${workflow.id}`"
                                 class="text-gray-400 hover:text-gray-600 p-2"
                                 title="Edit workflow"
                             >
@@ -183,13 +184,12 @@
 <script>
 function workflowManager() {
     return {
-        workflows: [],
+        workflows: @json($workflows->getCollection()->values()),
         searchQuery: '',
         statusFilter: '',
         loading: false,
 
         init() {
-            this.loadWorkflows();
         },
 
         loadWorkflows() {
@@ -201,16 +201,14 @@ function workflowManager() {
                 params.append('is_active', this.statusFilter === 'active' ? '1' : '0');
             }
 
-            fetch(`{{ route('workflows.index') }}?${params}`, {
+            fetch(`{{ route('main.workflows.index', ['organizationId' => $orgId]) }}?${params}`, {
                 headers: {
                     'Accept': 'application/json',
                 }
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    this.workflows = data.data;
-                }
+                this.workflows = data.data || [];
             })
             .catch(error => {
                 console.error('Error loading workflows:', error);
@@ -230,12 +228,12 @@ function workflowManager() {
 
         duplicateWorkflow(workflow) {
             // Redirect to builder with duplicated workflow data
-            window.location.href = `{{ route('workflows.builder') }}?duplicate=${workflow.id}`;
+            window.location.href = `{{ route('main.workflows.builder', ['organizationId' => $orgId]) }}?duplicate=${workflow.id}`;
         },
 
         async toggleWorkflowStatus(workflow) {
             try {
-                const response = await fetch(`{{ route('workflows.update', '') }}/${workflow.id}`, {
+                const response = await fetch(`/main/{{ $orgId }}/workflows/${workflow.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -265,7 +263,7 @@ function workflowManager() {
             }
 
             try {
-                const response = await fetch(`{{ route('workflows.destroy', '') }}/${workflow.id}`, {
+                const response = await fetch(`/main/{{ $orgId }}/workflows/${workflow.id}`, {
                     method: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content

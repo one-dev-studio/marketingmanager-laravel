@@ -10,7 +10,6 @@ use App\Models\Competitor;
 use App\Services\Competitor\CompetitorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class CompetitorController extends Controller
 {
@@ -18,9 +17,9 @@ class CompetitorController extends Controller
         private CompetitorService $competitorService
     ) {}
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request)
     {
-        $organizationId = auth()->user()->primaryOrganization()->id;
+        $organizationId = $request->route('organizationId') ?? auth()->user()->primaryOrganization()->id;
         $query = Competitor::where('organization_id', $organizationId)
             ->with(['analyses', 'posts']);
 
@@ -30,7 +29,14 @@ class CompetitorController extends Controller
 
         $competitors = $query->orderBy('name')->paginate();
 
-        return CompetitorResource::collection($competitors);
+        if ($this->wantsJson($request)) {
+            return CompetitorResource::collection($competitors);
+        }
+
+        return view('intelligence.competitors', [
+            'organizationId' => $organizationId,
+            'competitors' => $competitors,
+        ]);
     }
 
     public function store(CreateCompetitorRequest $request): JsonResponse
