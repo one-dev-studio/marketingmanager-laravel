@@ -19,9 +19,8 @@ class EmailCampaignController extends Controller
         private EmailCampaignService $emailCampaignService
     ) {}
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, string $organizationId)
     {
-        $organizationId = auth()->user()->primaryOrganization()->id;
         $query = EmailCampaign::where('organization_id', $organizationId)
             ->with(['emailTemplate', 'contactLists']);
 
@@ -31,32 +30,68 @@ class EmailCampaignController extends Controller
 
         $campaigns = $query->orderBy('created_at', 'desc')->paginate();
 
-        return EmailCampaignResource::collection($campaigns);
+        if ($this->wantsJson($request)) {
+            return EmailCampaignResource::collection($campaigns);
+        }
+
+        return view('email.campaigns.index', [
+            'title' => 'Email Campaigns',
+            'organizationId' => $organizationId,
+            'campaigns' => $campaigns,
+        ]);
     }
 
-    public function store(CreateEmailCampaignRequest $request): JsonResponse
+    public function create(Request $request, string $organizationId)
+    {
+        return view('email.campaigns.create', [
+            'title' => 'Create Email Campaign',
+            'organizationId' => $organizationId,
+            'templates' => \App\Models\EmailTemplate::where('organization_id', $organizationId)->orderBy('name')->get(),
+            'lists' => \App\Models\ContactList::where('organization_id', $organizationId)->orderBy('name')->get(),
+        ]);
+    }
+
+    public function store(CreateEmailCampaignRequest $request, string $organizationId)
     {
         $campaign = $this->emailCampaignService->createCampaign(
-            $request->validated(),
+            [
+                ...$request->validated(),
+                'organization_id' => (int) $organizationId,
+            ],
             $request->user()
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => new EmailCampaignResource($campaign),
-            'message' => 'Email campaign created successfully.',
-        ], 201);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => new EmailCampaignResource($campaign),
+                'message' => 'Email campaign created successfully.',
+            ], 201);
+        }
+
+        return redirect()
+            ->route('main.email-marketing.campaigns.show', ['organizationId' => $organizationId, 'emailCampaign' => $campaign])
+            ->with('success', 'Email campaign created.');
     }
 
-    public function show(Request $request, EmailCampaign $emailCampaign): JsonResponse
+    public function show(Request $request, string $organizationId, EmailCampaign $emailCampaign)
     {
         $this->authorize('view', $emailCampaign);
 
         $emailCampaign->load(['emailTemplate', 'contactLists', 'recipients.contact']);
+        $emailCampaign->updateMetrics();
 
-        return response()->json([
-            'success' => true,
-            'data' => new EmailCampaignResource($emailCampaign),
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => new EmailCampaignResource($emailCampaign),
+            ]);
+        }
+
+        return view('email.campaigns.show', [
+            'title' => $emailCampaign->name,
+            'organizationId' => $organizationId,
+            'campaign' => $emailCampaign,
         ]);
     }
 
@@ -88,7 +123,7 @@ class EmailCampaignController extends Controller
         ]);
     }
 
-    public function send(Request $request, EmailCampaign $emailCampaign): JsonResponse
+    public function send(Request $request, string $organizationId, EmailCampaign $emailCampaign): JsonResponse
     {
         $this->authorize('send', $emailCampaign);
 
@@ -99,12 +134,17 @@ class EmailCampaignController extends Controller
             ], 400);
         }
 
+        $emailCampaign->markAsSending();
         SendEmailCampaign::dispatch($emailCampaign);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Email campaign queued for sending.',
-        ]);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Email campaign queued for sending.',
+            ]);
+        }
+
+        return back()->with('success', 'Campaign queued for sending.');
     }
 
     public function schedule(Request $request, EmailCampaign $emailCampaign): JsonResponse

@@ -13,11 +13,10 @@ return new class extends Migration
             $table->foreignId('organization_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->json('conditions')->nullable();
+            $table->json('trigger_conditions')->nullable();
             $table->json('actions')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->integer('execution_count')->default(0);
-            $table->timestamp('last_executed_at')->nullable();
+            $table->integer('priority')->default(0);
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
 

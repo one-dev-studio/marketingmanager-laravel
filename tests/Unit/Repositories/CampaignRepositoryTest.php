@@ -4,6 +4,7 @@ namespace Tests\Unit\Repositories;
 
 use App\Models\Campaign;
 use App\Models\Organization;
+use App\Models\User;
 use App\Repositories\Eloquent\CampaignRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -40,8 +41,10 @@ class CampaignRepositoryTest extends TestCase
     public function testCreateCampaign(): void
     {
         $organization = Organization::factory()->create();
+        $user = User::factory()->create();
         $data = [
             'organization_id' => $organization->id,
+            'created_by' => $user->id,
             'name' => 'Test Campaign',
             'status' => 'draft',
         ];

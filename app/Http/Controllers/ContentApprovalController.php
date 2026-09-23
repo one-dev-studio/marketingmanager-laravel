@@ -238,5 +238,84 @@ class ContentApprovalController extends Controller
             'data' => $approvals,
         ]);
     }
+
+    public function queue(Request $request, string $organizationId): JsonResponse
+    {
+        $organization = Organization::findOrFail($organizationId);
+        $policy = new ReviewPolicy();
+        if (! $policy->viewAny($request->user(), $organization)) {
+            abort(403);
+        }
+
+        $pending = ContentApproval::where('organization_id', $organizationId)
+            ->where('status', ContentApproval::STATUS_PENDING)
+            ->with(['scheduledPost.campaign', 'scheduledPost.channel', 'requestedBy'])
+            ->orderBy('requested_at')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'items' => $pending,
+                'total' => $pending->count(),
+                'next_id' => $pending->first()?->id,
+            ],
+        ]);
+    }
+
+    public function bulk(Request $request, string $organizationId): JsonResponse
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:approve,reject',
+            'approval_ids' => 'required|array|min:1',
+            'approval_ids.*' => 'integer',
+            'comments' => 'nullable|string',
+            'rejection_reason' => 'required_if:action,reject|nullable|string',
+        ]);
+
+        $approvals = ContentApproval::where('organization_id', $organizationId)
+            ->whereIn('id', $validated['approval_ids'])
+            ->get();
+
+        foreach ($approvals as $approval) {
+            $request->merge([
+                'comments' => $validated['comments'] ?? null,
+                'rejection_reason' => $validated['rejection_reason'] ?? 'Bulk rejection',
+            ]);
+            if ($validated['action'] === 'approve') {
+                $this->approve($request, $organizationId, $approval);
+            } else {
+                $this->reject($request, $organizationId, $approval);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Bulk review completed.',
+            'processed' => $approvals->count(),
+        ]);
+    }
+
+    public function annotations(Request $request, string $organizationId, ContentApproval $approval): JsonResponse
+    {
+        if ($approval->organization_id != $organizationId) {
+            abort(404);
+        }
+
+        $this->authorize('view', $approval);
+
+        $path = $approval->scheduledPost?->content['pdf_path']
+            ?? $approval->scheduledPost?->media_path
+            ?? null;
+
+        $annotations = $path
+            ? app(\App\Services\PdfAnnotationService::class)->detectAnnotations($path)
+            : [];
+
+        return response()->json([
+            'success' => true,
+            'data' => $annotations,
+        ]);
+    }
 }
 

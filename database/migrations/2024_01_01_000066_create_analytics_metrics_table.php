@@ -18,8 +18,6 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
 
-            $table->index('organization_id');
-            $table->index(['metricable_type', 'metricable_id']);
             $table->index('metric_name');
             $table->index('metric_date');
             $table->index(['organization_id', 'metric_date']);

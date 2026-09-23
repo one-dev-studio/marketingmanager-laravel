@@ -18,7 +18,7 @@ class ProjectController extends Controller
         private ProjectService $projectService
     ) {}
 
-    public function index(Request $request, string $organizationId): AnonymousResourceCollection
+    public function index(Request $request, string $organizationId)
     {
         $query = Project::where('organization_id', $organizationId)
             ->with(['projectManager', 'creator', 'client', 'members.user', 'tasks']);
@@ -38,21 +38,37 @@ class ProjectController extends Controller
             return $project;
         });
 
-        return ProjectResource::collection($projects);
+        if ($this->wantsJson($request)) {
+            return ProjectResource::collection($projects);
+        }
+
+        return view('projects.index', [
+            'title' => 'Projects',
+            'organizationId' => $organizationId,
+            'projects' => $projects,
+            'templates' => \App\Models\ProjectTemplate::where('organization_id', $organizationId)->get(),
+            'members' => \App\Models\User::whereHas('organizations', fn ($q) => $q->where('organizations.id', $organizationId))->get(['id', 'name']),
+        ]);
     }
 
-    public function store(CreateProjectRequest $request, string $organizationId): JsonResponse
+    public function store(CreateProjectRequest $request, string $organizationId)
     {
         $project = $this->projectService->createProject(
             $request->validated(),
             $request->user()
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => new ProjectResource($project->load(['projectManager', 'creator', 'client', 'members.user'])),
-            'message' => 'Project created successfully.',
-        ], 201);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => new ProjectResource($project->load(['projectManager', 'creator', 'client', 'members.user'])),
+                'message' => 'Project created successfully.',
+            ], 201);
+        }
+
+        return redirect()
+            ->route('main.projects.index', ['organizationId' => $organizationId])
+            ->with('success', 'Project created.');
     }
 
     public function show(Project $project): JsonResponse

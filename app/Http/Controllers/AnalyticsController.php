@@ -33,15 +33,18 @@ class AnalyticsController extends Controller
      * Display analytics page
      * Requires brand context (brandId query parameter)
      */
-    public function index(Request $request, string $organizationId): JsonResponse
+    public function index(Request $request, string $organizationId)
     {
         $brand = $request->get('brand');
         
         if (!$brand) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Brand context is required.',
-            ], 400);
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Brand context is required.',
+                ], 400);
+            }
+            abort(400, 'Brand context is required.');
         }
 
         $organization = Organization::findOrFail($organizationId);
@@ -55,20 +58,31 @@ class AnalyticsController extends Controller
             ->with('campaign')
             ->get()
             ->pluck('campaign')
+            ->filter()
             ->unique('id')
             ->values();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'brand' => $brand instanceof Brand ? $brand->name : null,
-                'campaigns' => $campaigns->map(function ($campaign) {
-                    return [
-                        'id' => $campaign->id,
-                        'name' => $campaign->name,
-                    ];
-                }),
-            ],
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'brand' => $brand instanceof Brand ? $brand->name : null,
+                    'campaigns' => $campaigns->map(function ($campaign) {
+                        return [
+                            'id' => $campaign->id,
+                            'name' => $campaign->name,
+                        ];
+                    }),
+                ],
+            ]);
+        }
+
+        return view('analytics.index', [
+            'title' => 'Analytics',
+            'organizationId' => $organizationId,
+            'brand' => $brand,
+            'campaigns' => $campaigns,
+            'reports' => \App\Models\AnalyticsReport::where('organization_id', $organizationId)->latest()->limit(10)->get(),
         ]);
     }
 
@@ -205,13 +219,18 @@ class AnalyticsController extends Controller
         $organization = Organization::findOrFail($organizationId);
         
         $request->validate([
-            'content_type' => ['required', 'string', 'in:review,social_media'],
+            'content_type' => ['nullable', 'string', 'in:review,social_media,text'],
             'content_id' => ['nullable', 'integer'],
+            'text' => ['nullable', 'string'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date'],
         ]);
 
-        if ($request->content_type === 'social_media') {
+        $contentType = $request->content_type ?? ($request->filled('text') ? 'text' : 'social_media');
+
+        if ($contentType === 'text' && $request->filled('text')) {
+            $result = $this->sentimentService->analyzeTextSentiment($organization, $request->text);
+        } elseif ($contentType === 'social_media') {
             $startDate = $request->start_date ? Carbon::parse($request->start_date) : null;
             $endDate = $request->end_date ? Carbon::parse($request->end_date) : null;
             

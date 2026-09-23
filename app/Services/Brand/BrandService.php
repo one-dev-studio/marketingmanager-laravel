@@ -4,23 +4,30 @@ namespace App\Services\Brand;
 
 use App\Models\Brand;
 use App\Models\BrandAsset;
+use App\Models\Organization;
 use App\Models\User;
+use App\Services\AI\ContentGenerationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
+use RuntimeException;
 
 class BrandService
 {
-    public function createBrand(array $data, User $user): Brand
+    public function __construct(
+        private ContentGenerationService $contentGenerationService
+    ) {}
+
+    public function createBrand(array $data, User $user, int $organizationId): Brand
     {
-        return DB::transaction(function () use ($data, $user) {
+        return DB::transaction(function () use ($data, $organizationId) {
             $logoPath = null;
             if (isset($data['logo']) && $data['logo'] instanceof UploadedFile) {
-                $logoPath = $this->storeLogo($data['logo'], $user->primaryOrganization()->id);
+                $logoPath = $this->storeLogo($data['logo'], $organizationId);
             }
 
             $brand = Brand::create([
-                'organization_id' => $user->primaryOrganization()->id,
+                'organization_id' => $organizationId,
                 'name' => $data['name'],
                 'summary' => $data['summary'] ?? null,
                 'audience' => $data['audience'] ?? null,
@@ -138,6 +145,81 @@ class BrandService
             'font' => $assets['font'] ?? [],
             'color' => $assets['color'] ?? [],
             'other' => $assets['other'] ?? [],
+        ];
+    }
+
+    /**
+     * Generate a brand concept (summary, audience, guidelines, keywords) via AI.
+     */
+    public function generateConcept(Organization $organization, User $user, array $input): array
+    {
+        $name = trim((string) ($input['name'] ?? ''));
+        $industry = trim((string) ($input['industry'] ?? ''));
+        $keywords = array_values(array_filter($input['keywords'] ?? []));
+
+        $prompt = "Create a marketing brand concept.\n";
+        if ($name !== '') {
+            $prompt .= "Working name: {$name}\n";
+        }
+        if ($industry !== '') {
+            $prompt .= "Industry or category: {$industry}\n";
+        }
+        if ($keywords !== []) {
+            $prompt .= 'Seed keywords: '.implode(', ', $keywords)."\n";
+        }
+        $prompt .= <<<'PROMPT'
+
+Return ONLY valid JSON with these keys:
+- summary: string (1-3 sentences)
+- audience: string (who the brand is for)
+- guidelines: string (voice, visual, and messaging rules)
+- tone_of_voice: string (short label, max 255 characters)
+- keywords: array of strings (words to use)
+- avoid_keywords: array of strings (words to avoid)
+PROMPT;
+
+        $generation = $this->contentGenerationService->generateContent(
+            $organization,
+            $user,
+            'other',
+            $prompt,
+            [
+                'system_prompt' => 'You are a brand strategist. Reply with JSON only. No markdown.',
+                'max_tokens' => 1200,
+                'temperature' => 0.7,
+            ],
+            [
+                'name' => $name,
+                'industry' => $industry,
+                'keywords' => $keywords,
+            ]
+        );
+
+        return $this->parseConceptJson((string) $generation->generated_content);
+    }
+
+    private function parseConceptJson(string $content): array
+    {
+        $json = $content;
+        if (preg_match('/\{.*\}/s', $content, $matches)) {
+            $json = $matches[0];
+        }
+
+        $decoded = json_decode($json, true);
+        if (! is_array($decoded)) {
+            throw new RuntimeException('AI did not return a valid brand concept.');
+        }
+
+        $keywords = $decoded['keywords'] ?? [];
+        $avoid = $decoded['avoid_keywords'] ?? [];
+
+        return [
+            'summary' => (string) ($decoded['summary'] ?? ''),
+            'audience' => (string) ($decoded['audience'] ?? ''),
+            'guidelines' => (string) ($decoded['guidelines'] ?? ''),
+            'tone_of_voice' => substr((string) ($decoded['tone_of_voice'] ?? ''), 0, 255),
+            'keywords' => array_values(array_filter(array_map('strval', is_array($keywords) ? $keywords : []))),
+            'avoid_keywords' => array_values(array_filter(array_map('strval', is_array($avoid) ? $avoid : []))),
         ];
     }
 

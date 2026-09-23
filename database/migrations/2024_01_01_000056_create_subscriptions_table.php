@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('stripe_subscription_id')->nullable()->unique();
             $table->string('stripe_customer_id')->nullable();
             $table->timestamp('trial_ends_at')->nullable();
-            $table->timestamp('starts_at');
+            $table->timestamp('starts_at')->useCurrent();
             $table->timestamp('ends_at')->nullable();
             $table->timestamp('cancelled_at')->nullable();
             $table->timestamps();

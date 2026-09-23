@@ -3,6 +3,7 @@
 @section('page-title', 'Chatbots')
 
 @section('content')
+@php($orgId = $organizationId ?? request()->route('organizationId'))
 <div class="container mx-auto px-4 py-6" x-data="chatbotManager()">
     <!-- Header -->
     <div class="mb-6">
@@ -12,7 +13,7 @@
                 <p class="mt-1 text-sm text-gray-600">Create and manage AI-powered chatbots for your website</p>
             </div>
             <a
-                href="{{ route('chatbots.builder') }}"
+                href="{{ route('main.chatbots.builder', ['organizationId' => $orgId]) }}"
                 class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
                 <span class="flex items-center">
@@ -74,7 +75,7 @@
         </div>
 
         <!-- Empty State -->
-        <div x-show="!loading && chatbots.length === 0" class="text-center py-12">
+        <div x-show="!loading && chatbots.length === 0" x-cloak class="text-center py-12">
             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
@@ -134,7 +135,7 @@
                         <!-- Actions -->
                         <div class="flex items-center space-x-2">
                             <a
-                                :href="'{{ route('chatbots.show', '') }}/' + chatbot.id"
+                                :href="`/main/{{ $orgId }}/chatbots/${chatbot.id}`"
                                 class="text-gray-400 hover:text-gray-600 p-2"
                                 title="View chatbot"
                             >
@@ -145,7 +146,7 @@
                             </a>
 
                             <a
-                                :href="'{{ route('chatbots.deployment') }}?id=' + chatbot.id"
+                                :href="`{{ route('main.chatbots.deployment', ['organizationId' => $orgId]) }}?id=${chatbot.id}`"
                                 class="text-gray-400 hover:text-gray-600 p-2"
                                 title="Deploy chatbot"
                             >
@@ -155,7 +156,7 @@
                             </a>
 
                             <a
-                                :href="'{{ route('chatbots.analytics') }}?id=' + chatbot.id"
+                                :href="`{{ route('main.chatbots.analytics', ['organizationId' => $orgId]) }}?id=${chatbot.id}`"
                                 class="text-gray-400 hover:text-gray-600 p-2"
                                 title="View analytics"
                             >
@@ -165,7 +166,7 @@
                             </a>
 
                             <a
-                                :href="'{{ route('chatbots.builder') }}?id=' + chatbot.id"
+                                :href="`{{ route('main.chatbots.builder', ['organizationId' => $orgId]) }}?id=${chatbot.id}`"
                                 class="text-gray-400 hover:text-gray-600 p-2"
                                 title="Edit chatbot"
                             >
@@ -175,7 +176,7 @@
                             </a>
 
                             <a
-                                :href="'{{ route('chatbots.builder') }}?duplicate=' + chatbot.id"
+                                :href="`{{ route('main.chatbots.builder', ['organizationId' => $orgId]) }}?duplicate=${chatbot.id}`"
                                 class="text-gray-400 hover:text-gray-600 p-2"
                                 title="Duplicate chatbot"
                             >
@@ -216,13 +217,12 @@
 <script>
 function chatbotManager() {
     return {
-        chatbots: [],
+        chatbots: @json($chatbots->getCollection()->values()),
         searchQuery: '',
         statusFilter: '',
         loading: false,
 
         init() {
-            this.loadChatbots();
         },
 
         loadChatbots() {
@@ -234,16 +234,14 @@ function chatbotManager() {
                 params.append('is_active', this.statusFilter === 'active' ? '1' : '0');
             }
 
-            fetch(`{{ route('chatbots.index') }}?${params}`, {
+            fetch(`{{ route('main.chatbots.index', ['organizationId' => $orgId]) }}?${params}`, {
                 headers: {
                     'Accept': 'application/json',
                 }
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    this.chatbots = data.data;
-                }
+                this.chatbots = data.data || data.data?.data || [];
             })
             .catch(error => {
                 console.error('Error loading chatbots:', error);
@@ -263,12 +261,12 @@ function chatbotManager() {
 
         duplicateChatbot(chatbot) {
             // Redirect to builder with duplicated chatbot data
-            window.location.href = `{{ route('chatbots.builder') }}?duplicate=${chatbot.id}`;
+            window.location.href = `{{ route('main.chatbots.builder', ['organizationId' => $orgId]) }}?duplicate=${chatbot.id}`;
         },
 
         async toggleChatbotStatus(chatbot) {
             try {
-                const response = await fetch(`{{ route('chatbots.update', '') }}/${chatbot.id}`, {
+                const response = await fetch(`/main/{{ $orgId }}/chatbots/${chatbot.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -298,7 +296,7 @@ function chatbotManager() {
             }
 
             try {
-                const response = await fetch(`{{ route('chatbots.destroy', '') }}/${chatbot.id}`, {
+                const response = await fetch(`/main/{{ $orgId }}/chatbots/${chatbot.id}`, {
                     method: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content

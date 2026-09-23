@@ -46,7 +46,7 @@ class TeamController extends Controller
         
         $this->teamService->addTeamMember($agency, $user, $request->role);
 
-        return redirect()->route('agency.team', ['agency' => $agency])
+        return redirect()->route('agency.team.index', ['agency' => $agency])
             ->with('success', 'Team member added successfully.');
     }
 
@@ -57,7 +57,7 @@ class TeamController extends Controller
     {
         $this->teamService->updateTeamMemberRole($agency, $user, $request->role);
 
-        return redirect()->route('agency.team', ['agency' => $agency])
+        return redirect()->route('agency.team.index', ['agency' => $agency])
             ->with('success', 'Team member role updated successfully.');
     }
 
@@ -68,7 +68,7 @@ class TeamController extends Controller
     {
         $this->teamService->removeTeamMember($agency, $user);
 
-        return redirect()->route('agency.team', ['agency' => $agency])
+        return redirect()->route('agency.team.index', ['agency' => $agency])
             ->with('success', 'Team member removed successfully.');
     }
 

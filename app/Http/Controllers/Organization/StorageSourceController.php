@@ -23,59 +23,58 @@ class StorageSourceController extends Controller
     /**
      * Display storage sources
      */
-    public function index(Request $request, Organization $organization)
+    public function index(Request $request, string $organizationId)
     {
+        $organization = $this->resolveOrganization($request, $organizationId);
         $this->authorize('update', $organization);
 
         $sources = $this->storageService->getStorageSources($organization);
+        $quota = $this->storageService->quota($organization);
 
         return view('organization.storage-sources.index', [
+            'title' => 'Storage Sources',
+            'organizationId' => $organizationId,
             'organization' => $organization,
             'sources' => $sources,
+            'quota' => $quota,
         ]);
     }
 
-    /**
-     * Connect storage source
-     */
-    public function connect(ConnectStorageSourceRequest $request, Organization $organization): JsonResponse
+    public function connect(ConnectStorageSourceRequest $request, string $organizationId)
     {
+        $organization = $this->resolveOrganization($request, $organizationId);
         $this->storageService->connectStorageSource(
             $organization,
             $request->input('provider'),
             $request->validated()
         );
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Storage source connected successfully.',
-        ], 201);
+        if ($this->wantsJson($request)) {
+            return response()->json(['success' => true, 'message' => 'Storage source connected successfully.'], 201);
+        }
+
+        return back()->with('success', 'Storage source connected.');
     }
 
-    /**
-     * Disconnect storage source
-     */
-    public function disconnect(Request $request, Organization $organization, string $provider): JsonResponse
+    public function disconnect(Request $request, string $organizationId, string $provider)
     {
+        $organization = $this->resolveOrganization($request, $organizationId);
         $this->authorize('update', $organization);
-
-        $request->validate([
-            'provider' => ['required', 'string', 'in:s3,google_drive,dropbox'],
-        ]);
-
         $this->storageService->disconnectStorageSource($organization, $provider);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Storage source disconnected successfully.',
-        ]);
+        if ($this->wantsJson($request)) {
+            return response()->json(['success' => true, 'message' => 'Storage source disconnected successfully.']);
+        }
+
+        return back()->with('success', 'Disconnected.');
     }
 
     /**
      * Get storage source details
      */
-    public function show(Request $request, Organization $organization, string $provider): JsonResponse
+    public function show(Request $request, string $organizationId, string $provider): JsonResponse
     {
+        $organization = $this->resolveOrganization($request, $organizationId);
         $this->authorize('view', $organization);
 
         $credentials = $this->storageService->getStorageSourceCredentials($organization, $provider);
@@ -100,8 +99,9 @@ class StorageSourceController extends Controller
     /**
      * Update storage source settings
      */
-    public function updateSettings(Request $request, Organization $organization, string $provider): JsonResponse
+    public function updateSettings(Request $request, string $organizationId, string $provider): JsonResponse
     {
+        $organization = $this->resolveOrganization($request, $organizationId);
         $this->authorize('update', $organization);
 
         $request->validate([

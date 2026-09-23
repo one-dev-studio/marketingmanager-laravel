@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 
 class PublishingController extends Controller
 {
-    public function publishNow(Request $request, ScheduledPost $scheduledPost)
+    public function publishNow(Request $request, string $organizationId, ScheduledPost $scheduledPost)
     {
         $this->authorize('update', $scheduledPost);
 
@@ -34,7 +34,7 @@ class PublishingController extends Controller
         ]);
     }
 
-    public function publishToMultiple(Request $request, ScheduledPost $scheduledPost)
+    public function publishToMultiple(Request $request, string $organizationId, ScheduledPost $scheduledPost)
     {
         $this->authorize('update', $scheduledPost);
 

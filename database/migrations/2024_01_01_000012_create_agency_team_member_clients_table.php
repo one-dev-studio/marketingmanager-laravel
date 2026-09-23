@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('organization_id')->constrained()->onDelete('cascade');
             $table->timestamps();
 
-            $table->unique(['agency_id', 'user_id', 'organization_id']);
+            $table->unique(['agency_id', 'user_id', 'organization_id'], 'agency_team_client_unique');
             $table->index(['agency_id', 'user_id']);
             $table->index('organization_id');
         });

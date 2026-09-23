@@ -18,7 +18,7 @@ class BrandFactory extends Factory
             'summary' => fake()->paragraph(),
             'audience' => fake()->sentence(),
             'tone_of_voice' => fake()->randomElement(['professional', 'casual', 'friendly', 'formal']),
-            'keywords' => implode(',', fake()->words(5)),
+            'keywords' => fake()->words(5),
             'status' => 'active',
         ];
     }

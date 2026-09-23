@@ -25,18 +25,48 @@ return [
             'direction' => 'ltr',
             'enabled' => true,
         ],
-        // Future locales can be added here
-        // 'es' => [
-        //     'name' => 'Spanish',
-        //     'native_name' => 'Español',
-        //     'script' => 'Latn',
-        //     'regional' => [
-        //         'es_ES' => ['name' => 'Spanish (Spain)', 'currency' => 'EUR', 'country_code' => 'ES'],
-        //         'es_MX' => ['name' => 'Spanish (Mexico)', 'currency' => 'MXN', 'country_code' => 'MX'],
-        //     ],
-        //     'direction' => 'ltr',
-        //     'enabled' => false,
-        // ],
+        'es' => [
+            'name' => 'Spanish',
+            'native_name' => 'Español',
+            'script' => 'Latn',
+            'regional' => [
+                'es_ES' => ['name' => 'Spanish (Spain)', 'currency' => 'EUR', 'country_code' => 'ES'],
+                'es_MX' => ['name' => 'Spanish (Mexico)', 'currency' => 'MXN', 'country_code' => 'MX'],
+            ],
+            'direction' => 'ltr',
+            'enabled' => true,
+        ],
+        'fr' => [
+            'name' => 'French',
+            'native_name' => 'Français',
+            'script' => 'Latn',
+            'regional' => [
+                'fr_FR' => ['name' => 'French (France)', 'currency' => 'EUR', 'country_code' => 'FR'],
+            ],
+            'direction' => 'ltr',
+            'enabled' => true,
+        ],
+        'de' => [
+            'name' => 'German',
+            'native_name' => 'Deutsch',
+            'script' => 'Latn',
+            'regional' => [
+                'de_DE' => ['name' => 'German (Germany)', 'currency' => 'EUR', 'country_code' => 'DE'],
+            ],
+            'direction' => 'ltr',
+            'enabled' => true,
+        ],
+        'pt' => [
+            'name' => 'Portuguese',
+            'native_name' => 'Português',
+            'script' => 'Latn',
+            'regional' => [
+                'pt_PT' => ['name' => 'Portuguese (Portugal)', 'currency' => 'EUR', 'country_code' => 'PT'],
+                'pt_BR' => ['name' => 'Portuguese (Brazil)', 'currency' => 'BRL', 'country_code' => 'BR'],
+            ],
+            'direction' => 'ltr',
+            'enabled' => true,
+        ],
     ],
 
     /*

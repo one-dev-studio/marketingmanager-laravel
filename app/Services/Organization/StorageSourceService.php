@@ -104,5 +104,24 @@ class StorageSourceService
             $setting->update(['value' => json_encode($data)]);
         });
     }
+
+    public function quota(Organization $organization): array
+    {
+        $usedBytes = 0;
+        if (class_exists(\App\Models\FileFolder::class)) {
+            $usedBytes = (int) \Illuminate\Support\Facades\DB::table('files')
+                ->where('organization_id', $organization->id)
+                ->sum('size');
+        }
+
+        $limit = 5 * 1024 * 1024 * 1024;
+
+        return [
+            'used_bytes' => $usedBytes,
+            'limit_bytes' => $limit,
+            'used_human' => number_format($usedBytes / 1024 / 1024, 1) . ' MB',
+            'limit_human' => '5 GB',
+        ];
+    }
 }
 

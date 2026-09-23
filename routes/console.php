@@ -9,17 +9,13 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote')->hourly();
 
 // Social Media Integration scheduled tasks
-Schedule::group(function () {
-    // Monitor social media connections (every hour)
-    Schedule::command('social:monitor-connections')->hourly();
-    
-    // Refresh expired social media tokens (every hour)
-    Schedule::command('social:tokens-refresh')->hourly();
-})->name('social-media');
+Schedule::hourly()->group(function () {
+    Schedule::command('social:monitor-connections');
+    Schedule::command('social:tokens-refresh');
+});
 
 // Publishing scheduled tasks
-Schedule::group(function () {
-    // Publish scheduled posts (every minute)
+Schedule::everyMinute()->group(function () {
     Schedule::call(function () {
         $scheduledPosts = \App\Models\ScheduledPost::where('status', 'pending')
             ->where('scheduled_at', '<=', now())
@@ -31,20 +27,18 @@ Schedule::group(function () {
                 \App\Jobs\PublishScheduledPost::dispatch($post, $connection);
             }
         }
-    })->everyMinute()->name('publish-scheduled-posts');
-})->name('publishing');
+    })->name('publish-scheduled-posts');
+});
 
 // Email Campaign scheduled tasks
-Schedule::group(function () {
-    // Process email campaign queue (every 5 minutes)
+Schedule::everyFiveMinutes()->group(function () {
     Schedule::call(function () {
         \App\Jobs\ProcessEmailCampaignQueue::dispatch();
-    })->everyFiveMinutes()->name('process-email-campaigns');
-})->name('email-marketing');
+    })->name('process-email-campaigns');
+});
 
 // Report Generation scheduled tasks
-Schedule::group(function () {
-    // Generate scheduled reports (daily at 8 AM)
+Schedule::dailyAt('08:00')->group(function () {
     Schedule::call(function () {
         $schedules = \App\Models\ReportSchedule::where('next_run_at', '<=', now())
             ->with(['report.organization', 'report.creator'])
@@ -72,31 +66,27 @@ Schedule::group(function () {
                 'last_run_at' => now(),
             ]);
         }
-    })->dailyAt('08:00')->name('generate-scheduled-reports');
-})->name('reporting');
+    })->name('generate-scheduled-reports');
+});
 
 // Competitor Monitoring scheduled tasks
-Schedule::group(function () {
-    // Monitor competitors (daily at 6 AM)
+Schedule::dailyAt('06:00')->group(function () {
     Schedule::call(function () {
         \App\Jobs\MonitorCompetitors::dispatch();
-    })->dailyAt('06:00')->name('monitor-competitors');
-})->name('competitor-monitoring');
+    })->name('monitor-competitors');
+});
 
 // Agency Billing scheduled tasks
-Schedule::group(function () {
-    // Send invoice reminders (daily at 9 AM)
+Schedule::dailyAt('09:00')->group(function () {
     Schedule::call(function () {
         $agencies = \App\Models\Agency::all();
         foreach ($agencies as $agency) {
             $clientOrganizationIds = app(\App\Services\AgencyService::class)
                 ->getClientOrganizationIds($agency);
-            
-            if (!empty($clientOrganizationIds)) {
+
+            if (! empty($clientOrganizationIds)) {
                 \App\Jobs\SendInvoiceReminders::dispatch($clientOrganizationIds);
             }
         }
-    })->dailyAt('09:00')->name('invoice-reminders');
-})->name('agency-billing');
-
-
+    })->name('invoice-reminders');
+});

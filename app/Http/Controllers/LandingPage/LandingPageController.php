@@ -18,9 +18,8 @@ class LandingPageController extends Controller
         private LandingPageService $landingPageService
     ) {}
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, string $organizationId)
     {
-        $organizationId = auth()->user()->primaryOrganization()->id;
         $query = LandingPage::where('organization_id', $organizationId)
             ->with(['creator', 'variants']);
 
@@ -30,21 +29,61 @@ class LandingPageController extends Controller
 
         $landingPages = $query->orderBy('created_at', 'desc')->paginate();
 
-        return LandingPageResource::collection($landingPages);
+        if ($request->expectsJson()) {
+            return LandingPageResource::collection($landingPages);
+        }
+
+        return view('landing-pages.index', [
+            'organizationId' => $organizationId,
+            'landingPages' => $landingPages,
+        ]);
     }
 
-    public function store(CreateLandingPageRequest $request): JsonResponse
+    public function create(Request $request, string $organizationId)
+    {
+        return view('landing-pages.create', ['organizationId' => $organizationId]);
+    }
+
+    public function builder(Request $request, string $organizationId, LandingPage $landingPage)
+    {
+        return view('landing-pages.builder', [
+            'organizationId' => $organizationId,
+            'page' => $landingPage->load('variants', 'analytics'),
+        ]);
+    }
+
+    public function preview(Request $request, string $organizationId, LandingPage $landingPage)
+    {
+        return view('landing-pages.preview', ['page' => $landingPage]);
+    }
+
+    public function analytics(Request $request, string $organizationId, LandingPage $landingPage)
+    {
+        return view('landing-pages.analytics', [
+            'organizationId' => $organizationId,
+            'page' => $landingPage->load('analytics', 'variants'),
+        ]);
+    }
+
+    public function store(CreateLandingPageRequest $request)
     {
         $landingPage = $this->landingPageService->createLandingPage(
             $request->validated(),
             $request->user()
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => new LandingPageResource($landingPage),
-            'message' => 'Landing page created successfully.',
-        ], 201);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => new LandingPageResource($landingPage),
+                'message' => 'Landing page created successfully.',
+            ], 201);
+        }
+
+        return redirect()->route('main.landing-pages.builder', [
+            'organizationId' => $request->route('organizationId'),
+            'landingPage' => $landingPage,
+        ]);
     }
 
     public function show(LandingPage $landingPage): JsonResponse
@@ -87,17 +126,21 @@ class LandingPageController extends Controller
         ]);
     }
 
-    public function publish(LandingPage $landingPage): JsonResponse
+    public function publish(Request $request, LandingPage $landingPage)
     {
         $this->authorize('update', $landingPage);
 
         $landingPage = $this->landingPageService->publishLandingPage($landingPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => new LandingPageResource($landingPage),
-            'message' => 'Landing page published successfully.',
-        ]);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => new LandingPageResource($landingPage),
+                'message' => 'Landing page published successfully.',
+            ]);
+        }
+
+        return back()->with('success', 'Landing page published.');
     }
 
     public function createVariant(Request $request, LandingPage $landingPage): JsonResponse

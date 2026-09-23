@@ -84,9 +84,10 @@ class TeamServiceTest extends TestCase
 
         $roles = $this->service->getAvailableRoles();
 
-        $this->assertCount(2, $roles);
-        $this->assertTrue($roles->pluck('name')->contains('Client'));
-        $this->assertTrue($roles->pluck('name')->contains('Admin'));
+        $this->assertCount(3, $roles);
+        $this->assertTrue($roles->pluck('name')->contains('client'));
+        $this->assertTrue($roles->pluck('name')->contains('admin'));
+        $this->assertTrue($roles->pluck('name')->contains('viewer'));
     }
 }
 

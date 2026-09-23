@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('organization_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->enum('status', ['draft', 'active', 'paused', 'completed'])->default('draft');
+            $table->enum('status', ['draft', 'in_review', 'active', 'paused', 'completed', 'inactive'])->default('draft');
             $table->dateTime('start_date')->nullable();
             $table->dateTime('end_date')->nullable();
             $table->decimal('budget', 15, 2)->default(0);

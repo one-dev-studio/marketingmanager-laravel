@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('visitor_name')->nullable();
             $table->string('visitor_email')->nullable();
             $table->string('ip_address', 45)->nullable();
-            $table->timestamp('started_at');
+            $table->timestamp('started_at')->useCurrent();
             $table->timestamp('ended_at')->nullable();
             $table->timestamps();
 

@@ -26,6 +26,8 @@ class BrandsProductsController extends Controller
      */
     public function brands(Request $request): AnonymousResourceCollection
     {
+        $request->headers->set('Accept', 'application/json');
+
         return $this->brandController->index($request);
     }
 
@@ -34,8 +36,10 @@ class BrandsProductsController extends Controller
      */
     public function getBrand(Request $request, $brandId): JsonResponse
     {
+        $request->headers->set('Accept', 'application/json');
         $brand = \App\Models\Brand::findOrFail($brandId);
-        return $this->brandController->show($brand);
+
+        return $this->brandController->show($request, (string) $brand->organization_id, $brand);
     }
 
     /**
@@ -43,6 +47,8 @@ class BrandsProductsController extends Controller
      */
     public function createBrand(Request $request): JsonResponse
     {
+        $request->headers->set('Accept', 'application/json');
+
         return $this->brandController->store($request);
     }
 
@@ -51,8 +57,10 @@ class BrandsProductsController extends Controller
      */
     public function updateBrand(Request $request, $brandId): JsonResponse
     {
+        $request->headers->set('Accept', 'application/json');
         $brand = \App\Models\Brand::findOrFail($brandId);
-        return $this->brandController->update($request, $brand);
+
+        return $this->brandController->update($request, (string) $brand->organization_id, $brand);
     }
 
     /**
@@ -60,8 +68,10 @@ class BrandsProductsController extends Controller
      */
     public function deleteBrand(Request $request, $brandId): JsonResponse
     {
+        $request->headers->set('Accept', 'application/json');
         $brand = \App\Models\Brand::findOrFail($brandId);
-        return $this->brandController->destroy($request, $brand);
+
+        return $this->brandController->destroy($request, (string) $brand->organization_id, $brand);
     }
 
     /**

@@ -30,7 +30,7 @@ class ReviewController extends Controller
     /**
      * Get all reviews for organization
      */
-    public function index(Request $request, string $organizationId): AnonymousResourceCollection
+    public function index(Request $request, string $organizationId)
     {
         $organization = Organization::findOrFail($organizationId);
         $brandId = $request->query('brand_id');
@@ -61,7 +61,20 @@ class ReviewController extends Controller
             );
         }
 
-        return ReviewResource::collection($reviews);
+        if ($this->wantsJson($request)) {
+            return ReviewResource::collection($reviews);
+        }
+
+        $aggregation = $this->reviewManagementService->getReviewAggregation($organization, $brand, $sourceSlug);
+        $sources = $this->reviewManagementService->getActiveReviewSources();
+
+        return view('reviews.index', [
+            'title' => 'Customer Reviews',
+            'organizationId' => $organizationId,
+            'reviews' => $reviews,
+            'aggregation' => $aggregation,
+            'sources' => $sources,
+        ]);
     }
 
     /**

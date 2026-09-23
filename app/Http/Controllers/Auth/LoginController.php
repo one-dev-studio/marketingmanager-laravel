@@ -50,7 +50,9 @@ class LoginController extends Controller
     {
         return match($user->user_type) {
             'admin' => redirect()->route('admin.dashboard'),
-            'agency' => redirect()->route('agency.dashboard', ['agencyId' => $user->primaryAgency()?->id ?? 1]),
+            'agency' => $user->primaryAgency()
+                ? redirect()->route('agency.dashboard', $user->primaryAgency())
+                : redirect()->route('main.organizations'),
             'customer' => redirect()->route('main.organizations'),
             default => redirect()->route('main.organizations'),
         };

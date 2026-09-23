@@ -17,11 +17,11 @@
         x-data="{ sidebarCollapsed: false }"
     >
         @php
-            $agencyId = request()->route('agencyId');
+            $agency = request()->route('agency');
             $pageTitle = $title ?? 'Agency Dashboard';
         @endphp
 
-        @include('partials.layout.agency-sidebar')
+        <x-partials.layout.agency-sidebar />
 
         <x-partials.layout.sidebar-inset>
             <x-partials.layout.header 

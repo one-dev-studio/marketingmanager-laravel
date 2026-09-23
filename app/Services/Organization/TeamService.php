@@ -74,7 +74,7 @@ class TeamService
 
     public function getAvailableRoles(): \Illuminate\Database\Eloquent\Collection
     {
-        return Role::whereIn('name', ['Client', 'Admin'])
+        return Role::whereIn('name', ['admin', 'viewer', 'client'])
             ->orderBy('name')
             ->get();
     }

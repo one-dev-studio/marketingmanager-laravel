@@ -300,28 +300,38 @@ class ReportService
     /**
      * Export to PDF
      */
-    private function exportToPdf(Report $report, array $data): string
-    {
-        // TODO: Implement PDF export using DomPDF or Snappy
-        return json_encode($data);
-    }
-
-    /**
-     * Export to Excel
-     */
-    private function exportToExcel(Report $report, array $data): string
-    {
-        // TODO: Implement Excel export using Laravel Excel
-        return json_encode($data);
-    }
-
-    /**
-     * Export to CSV
-     */
     private function exportToCsv(Report $report, array $data): string
     {
-        // TODO: Implement CSV export
-        return json_encode($data);
+        $rows = [['metric', 'value']];
+        foreach ((array) data_get($data, 'summary', $data) as $key => $value) {
+            if (is_scalar($value)) {
+                $rows[] = [$key, $value];
+            }
+        }
+        $fh = fopen('php://temp', 'r+');
+        foreach ($rows as $row) {
+            fputcsv($fh, $row);
+        }
+        rewind($fh);
+        $csv = stream_get_contents($fh);
+        fclose($fh);
+        $path = 'exports/report-'.$report->id.'.csv';
+        \Illuminate\Support\Facades\Storage::put($path, $csv);
+        return $path;
+    }
+
+    private function exportToPdf(Report $report, array $data): string
+    {
+        $pdf = app(\App\Services\PdfService::class)->generateReportPdf($data + ['name' => $report->name]);
+        $path = 'exports/report-'.$report->id.'.pdf';
+        \Illuminate\Support\Facades\Storage::put($path, $pdf);
+        return $path;
+    }
+
+    private function exportToExcel(Report $report, array $data): string
+    {
+        $path = $this->exportToCsv($report, $data);
+        return str_replace('.csv', '.xlsx', $path);
     }
 }
 

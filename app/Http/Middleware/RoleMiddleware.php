@@ -19,11 +19,23 @@ class RoleMiddleware
             abort(401, 'Unauthenticated.');
         }
 
-        if (!$user->hasAnyRole($roles)) {
-            abort(403, 'You do not have the required role to access this resource.');
+        if ($user->hasAnyRole($roles)) {
+            return $next($request);
         }
 
-        return $next($request);
+        foreach ($roles as $role) {
+            if ($role === 'agency' && $user->isAgency()) {
+                return $next($request);
+            }
+            if ($role === 'admin' && $user->isAdmin()) {
+                return $next($request);
+            }
+            if ($role === 'customer' && $user->isCustomer()) {
+                return $next($request);
+            }
+        }
+
+        abort(403, 'You do not have the required role to access this resource.');
     }
 }
 
