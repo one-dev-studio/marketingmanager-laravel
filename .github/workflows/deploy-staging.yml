@@ -17,6 +17,22 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: staging
+          fetch-depth: 0
+
+      - name: Resolve and verify staging deploy SHA
+        id: staging_deploy
+        run: |
+          set -euo pipefail
+          DEPLOY_SHA="$(git rev-parse HEAD)"
+          git fetch origin staging
+          if ! git branch -r --contains "$DEPLOY_SHA" | tr -d '[:space:]' | grep -qx 'origin/staging'; then
+            echo "ERROR: Resolved deploy SHA is not on origin/staging: $DEPLOY_SHA"
+            exit 1
+          fi
+          echo "Resolved staging deploy SHA: $DEPLOY_SHA"
+          echo "deploy_sha=$DEPLOY_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -66,6 +82,6 @@ jobs:
             cd "${{ secrets.STAGING_DEPLOY_PATH }}"
             GIT_BRANCH=staging \
             DEPLOY_RUN_MIGRATIONS=true \
-            DEPLOY_TARGET_SHA="${{ github.sha }}" \
+            DEPLOY_TARGET_SHA="${{ steps.staging_deploy.outputs.deploy_sha }}" \
             DEPLOY_ASSETS_ARCHIVE="${{ secrets.STAGING_DEPLOY_PATH }}/.deploy/build-artifacts.tar.gz" \
             bash scripts/deploy-staging.sh
