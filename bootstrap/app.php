@@ -1,5 +1,22 @@
 <?php
 
+use App\Http\Middleware\ApiRateLimit;
+use App\Http\Middleware\EnsureAgencyAccess;
+use App\Http\Middleware\EnsureAgencyAdmin;
+use App\Http\Middleware\EnsureBrandContext;
+use App\Http\Middleware\EnsureClientAccess;
+use App\Http\Middleware\EnsureNotClientRole;
+use App\Http\Middleware\EnsureOrganizationAccess;
+use App\Http\Middleware\EnsureOrganizationAdmin;
+use App\Http\Middleware\NormalizeSubdirectoryRedirects;
+use App\Http\Middleware\PermissionMiddleware;
+use App\Http\Middleware\RequireConfirmation;
+use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\SetTenantContext;
+use App\Providers\AppServiceProvider;
+use App\Providers\LocalizationServiceProvider;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -7,8 +24,8 @@ use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
-        \App\Providers\AppServiceProvider::class,
-        \App\Providers\LocalizationServiceProvider::class,
+        AppServiceProvider::class,
+        LocalizationServiceProvider::class,
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -23,32 +40,35 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $middleware->alias([
-            'organization' => \App\Http\Middleware\EnsureOrganizationAccess::class,
-            'organization.admin' => \App\Http\Middleware\EnsureOrganizationAdmin::class,
-            'not.client' => \App\Http\Middleware\EnsureNotClientRole::class,
-            'agency' => \App\Http\Middleware\EnsureAgencyAccess::class,
-            'agency.admin' => \App\Http\Middleware\EnsureAgencyAdmin::class,
-            'locale' => \App\Http\Middleware\SetLocale::class,
-            'tenant' => \App\Http\Middleware\SetTenantContext::class,
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
-            'permission' => \App\Http\Middleware\PermissionMiddleware::class,
-            'brand.context' => \App\Http\Middleware\EnsureBrandContext::class,
-            'require.confirmation' => \App\Http\Middleware\RequireConfirmation::class,
-            'agency.client' => \App\Http\Middleware\EnsureClientAccess::class,
-            'api.rate_limit' => \App\Http\Middleware\ApiRateLimit::class,
+            'organization' => EnsureOrganizationAccess::class,
+            'organization.admin' => EnsureOrganizationAdmin::class,
+            'not.client' => EnsureNotClientRole::class,
+            'agency' => EnsureAgencyAccess::class,
+            'agency.admin' => EnsureAgencyAdmin::class,
+            'locale' => SetLocale::class,
+            'tenant' => SetTenantContext::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
+            'brand.context' => EnsureBrandContext::class,
+            'require.confirmation' => RequireConfirmation::class,
+            'agency.client' => EnsureClientAccess::class,
+            'api.rate_limit' => ApiRateLimit::class,
         ]);
-        
+
         // Add SetLocale middleware to web group by default
         $middleware->web(append: [
-            \App\Http\Middleware\SetLocale::class,
+            SetLocale::class,
         ]);
 
         // Add security headers to all responses
         $middleware->web(append: [
-            \App\Http\Middleware\SecurityHeaders::class,
+            SecurityHeaders::class,
+        ]);
+
+        $middleware->web(append: [
+            NormalizeSubdirectoryRedirects::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();
-
