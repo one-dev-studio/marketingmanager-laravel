@@ -41,9 +41,9 @@ GitHub only runs `issue_comment` workflows from the repository **default branch*
 1. **Guards** — `evaluate` job checks title, command, user, and type.
 2. **Acknowledgement** — A reply is posted: staging deploy starting, with the Actions run URL.
 3. **Environment approval** — Job `deploy-staging` uses Environment **`staging`**; Andrew must approve as required reviewer.
-4. **CI frontend build** — The runner checks out the commit being deployed, runs `npm ci` and `npm run build`, and packages `public/build` as a tarball.
+4. **CI frontend build** — The runner checks out branch **`staging`** (not `main`; `issue_comment` workflows still load YAML from `main`), verifies the resolved SHA is on `origin/staging`, runs `npm ci` and `npm run build`, and packages `public/build` as a tarball.
 5. **Artifact upload** — The tarball is copied to `{STAGING_DEPLOY_PATH}/.deploy/` on the server.
-6. **SSH deploy** — The runner runs `scripts/deploy-staging.sh` with `DEPLOY_TARGET_SHA` and `DEPLOY_ASSETS_ARCHIVE` set. Git resets to `origin/staging` (or the pinned SHA), Composer `--no-dev`, migrations, caches, queue restart, and health check.
+6. **SSH deploy** — The runner runs `scripts/deploy-staging.sh` with `DEPLOY_TARGET_SHA` (the checked-out staging SHA, not `github.sha` from the default branch) and `DEPLOY_ASSETS_ARCHIVE` set. Git resets to that SHA (must be on `origin/staging`), Composer `--no-dev`, migrations, caches, queue restart, and health check.
 7. **Failure** — If the workflow fails after a valid trigger, a failure comment is posted with the run URL.
 
 ## Manual fallback

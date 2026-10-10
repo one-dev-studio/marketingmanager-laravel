@@ -37,6 +37,12 @@ if [[ -n "${DEPLOY_TARGET_SHA:-}" ]]; then
     exit 1
   fi
   NEW_HEAD="$DEPLOY_TARGET_SHA"
+  if [[ "$GIT_BRANCH" == "staging" ]]; then
+    if ! git branch -r --contains "$NEW_HEAD" | tr -d '[:space:]' | grep -qx 'origin/staging'; then
+      log "ERROR: DEPLOY_TARGET_SHA must be on origin/staging for staging deploys: $NEW_HEAD"
+      exit 1
+    fi
+  fi
   log "Target HEAD (from CI): $NEW_HEAD"
 else
   NEW_HEAD="$(git rev-parse "origin/$GIT_BRANCH")"
