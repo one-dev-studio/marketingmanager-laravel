@@ -1,0 +1,71 @@
+name: Deploy staging
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Build frontend assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: Package build artifacts
+        run: tar -czf build-artifacts.tar.gz -C public/build .
+
+      - name: Ensure remote staging directory exists
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: ${{ secrets.STAGING_SSH_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            mkdir -p "${{ secrets.STAGING_DEPLOY_PATH }}/.deploy"
+
+      - name: Upload build artifacts to server
+        uses: appleboy/scp-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: ${{ secrets.STAGING_SSH_PORT || 22 }}
+          source: build-artifacts.tar.gz
+          target: ${{ secrets.STAGING_DEPLOY_PATH }}/.deploy
+          overwrite: true
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: ${{ secrets.STAGING_SSH_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            cd "${{ secrets.STAGING_DEPLOY_PATH }}"
+            GIT_BRANCH=staging \
+            DEPLOY_RUN_MIGRATIONS=true \
+            DEPLOY_TARGET_SHA="${{ github.sha }}" \
+            DEPLOY_ASSETS_ARCHIVE="${{ secrets.STAGING_DEPLOY_PATH }}/.deploy/build-artifacts.tar.gz" \
+            bash scripts/deploy-staging.sh
