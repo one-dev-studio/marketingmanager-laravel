@@ -2,21 +2,22 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\Gate;
-use App\Repositories\Contracts\CampaignRepositoryInterface;
-use App\Repositories\Eloquent\CampaignRepository;
 use App\Models\ContentApproval;
-use App\Models\TaskTemplate;
 use App\Models\ProjectTemplate;
 use App\Models\ScheduledPost;
+use App\Models\TaskTemplate;
 use App\Models\User;
+use App\Policies\AdminUserPolicy;
 use App\Policies\ContentPolicy;
+use App\Policies\ProjectTemplatePolicy;
 use App\Policies\ReviewPolicy;
 use App\Policies\TaskTemplatePolicy;
-use App\Policies\ProjectTemplatePolicy;
-use App\Policies\AdminUserPolicy;
+use App\Repositories\Contracts\CampaignRepositoryInterface;
+use App\Repositories\Eloquent\CampaignRepository;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,6 +41,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $appUrl = config('app.url');
+        if (is_string($appUrl) && $appUrl !== '') {
+            URL::forceRootUrl($appUrl);
+        }
+
         Blade::anonymousComponentPath(resource_path('views/partials/layout'), 'partials.layout');
 
         // Register policy mappings
@@ -48,5 +54,3 @@ class AppServiceProvider extends ServiceProvider
         }
     }
 }
-
-

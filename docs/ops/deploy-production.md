@@ -93,6 +93,10 @@ Complete **before** the first real `/deploy marketingmanager production` on the 
 - Queues: `php artisan queue:restart` (no Horizon/PM2/supervisor steps in this script).
 - No maintenance mode; script exits non-zero on any failure.
 
+## Staging (related)
+
+Staging subdirectory deploy is documented separately: [deploy-staging.md](./deploy-staging.md). Production workflows and `scripts/deploy-production.sh` are not modified by staging deploy.
+
 ## Out of scope (v1)
 
 - Expanding the allowlist beyond `andrew-za`
