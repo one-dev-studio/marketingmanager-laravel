@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Organization\UpdateSettingsRequest;
 use App\Services\Organization\OrganizationSettingsService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class SettingsController extends Controller
 {
@@ -13,18 +15,27 @@ class SettingsController extends Controller
         private OrganizationSettingsService $settingsService
     ) {}
 
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response
     {
         $organization = $this->resolveOrganization($request, $organizationId);
         $this->authorize('update', $organization);
 
         $settings = $this->settingsService->getAllSettings($organization);
 
-        return view('organization.settings.index', [
-            'title' => 'Organization Settings',
+        return Inertia::render('Organization/Settings', [
             'organizationId' => $organizationId,
-            'organization' => $organization,
-            'settings' => $settings,
+            'organization' => [
+                'name' => $organization->name,
+                'timezone' => $organization->timezone,
+                'locale' => $organization->locale,
+                'settings' => [
+                    'slack_webhook' => (string) ($settings['slack_webhook'] ?? ''),
+                    'notify_email' => ! empty($settings['notify_email']),
+                    'notify_in_app' => ! empty($settings['notify_in_app']),
+                    'notify_push' => ! empty($settings['notify_push']),
+                    'require_2fa' => ! empty($settings['require_2fa']),
+                ],
+            ],
         ]);
     }
 
