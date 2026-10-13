@@ -71,7 +71,7 @@ Andrew must create the **`staging`** Environment in GitHub and add the secrets a
    - `APP_URL=https://oneinternetmedia.com/marketingmanager`
    - `APP_ENV=staging` (or `production` if you prefer a single non-debug profile)
    - Database, cache, queue, and mail settings appropriate for staging.
-3. Map the web server so `https://oneinternetmedia.com/marketingmanager` serves the clone’s **`public/`** directory (Apache `Alias` / nginx `location`, or docroot symlink). The repo ships `public/.htaccess` with `RewriteBase /marketingmanager/`.
+3. Map the web server so `https://oneinternetmedia.com/marketingmanager` serves the clone’s **`public/`** directory (Apache `Alias` / nginx `location`, or docroot symlink). For Apache subdirectory installs, set `RewriteBase /marketingmanager/` in the **vhost** (not in repo `.htaccess`).
 4. Run `php artisan key:generate` once on the server if `APP_KEY` is empty.
 5. Ensure `php`, `composer`, and `curl` are on `PATH` for the deploy user.
 
@@ -98,4 +98,4 @@ Subdirectory routing in PHP: `public/index.php` loads `APP_URL` and normalizes `
 ## Production impact
 
 - Production workflows and `scripts/deploy-production.sh` are unchanged; production still defaults to `GIT_BRANCH=main`.
-- `public/.htaccess` uses `RewriteBase /marketingmanager/` for this staging subdirectory. Root production docroots on the same codebase should override `RewriteBase` in server config if they are not served under `/marketingmanager/`.
+- Root-domain staging/production docroots use standard Laravel `public/.htaccess` (no `RewriteBase`). Legacy Apache subdirectory hosts set `RewriteBase` in server config when needed.
