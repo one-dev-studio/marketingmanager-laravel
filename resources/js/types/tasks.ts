@@ -21,6 +21,7 @@ export interface TaskComment {
 export interface TaskKanbanItem {
     id: number;
     organization_id: number;
+    organization_name?: string | null;
     title: string;
     description: string | null;
     status: string;

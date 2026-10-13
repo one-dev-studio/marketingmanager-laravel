@@ -1,15 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Competitor;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Competitor\CreateCompetitorRequest;
 use App\Http\Requests\Competitor\UpdateCompetitorRequest;
+use App\Http\Resources\Competitor\CompetitorInertiaResource;
 use App\Http\Resources\Competitor\CompetitorResource;
 use App\Models\Competitor;
 use App\Services\Competitor\CompetitorService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class CompetitorController extends Controller
 {
@@ -17,11 +24,11 @@ class CompetitorController extends Controller
         private CompetitorService $competitorService
     ) {}
 
-    public function index(Request $request)
+    public function index(Request $request): Response|AnonymousResourceCollection
     {
         $organizationId = $request->route('organizationId') ?? auth()->user()->primaryOrganization()->id;
         $query = Competitor::where('organization_id', $organizationId)
-            ->with(['analyses', 'posts']);
+            ->withCount('analyses');
 
         if ($request->has('is_active')) {
             $query->where('is_active', $request->boolean('is_active'));
@@ -33,24 +40,33 @@ class CompetitorController extends Controller
             return CompetitorResource::collection($competitors);
         }
 
-        return view('intelligence.competitors', [
-            'organizationId' => $organizationId,
-            'competitors' => $competitors,
+        return Inertia::render('Competitors/Index', [
+            'organizationId' => (string) $organizationId,
+            'competitors' => $competitors->through(
+                fn (Competitor $competitor) => CompetitorInertiaResource::listItem($competitor)
+            ),
         ]);
     }
 
-    public function store(CreateCompetitorRequest $request): JsonResponse
+    public function store(CreateCompetitorRequest $request): JsonResponse|RedirectResponse
     {
-        $competitor = $this->competitorService->createCompetitor(
+        $organizationId = $request->route('organizationId') ?? $request->user()->primaryOrganization()->id;
+
+        $this->competitorService->createCompetitor(
             $request->validated(),
             $request->user()
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => new CompetitorResource($competitor),
-            'message' => 'Competitor created successfully.',
-        ], 201);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Competitor created successfully.',
+            ], 201);
+        }
+
+        return redirect()
+            ->route('main.competitors.index', ['organizationId' => $organizationId])
+            ->with('success', 'Competitor created successfully.');
     }
 
     public function show(Competitor $competitor): JsonResponse
@@ -178,4 +194,3 @@ class CompetitorController extends Controller
         ]);
     }
 }
-

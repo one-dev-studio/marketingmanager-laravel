@@ -1,11 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Tools;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Tools\ToolAiInertiaResource;
 use App\Http\Resources\Tools\ToolHubInertiaResource;
-use App\Models\Brand;
-use App\Models\Campaign;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,43 +28,33 @@ class ToolsHubController extends Controller
         ]);
     }
 
-    public function emailTemplate(Request $request, string $organizationId)
+    public function emailTemplate(Request $request, string $organizationId): Response
     {
-        return view('tools.email-template', $this->toolPayload($organizationId, 'Email Template'));
+        return Inertia::render('Tools/AiTool', ToolAiInertiaResource::page($organizationId, 'email-template'));
     }
 
-    public function imageGenerator(Request $request, string $organizationId)
+    public function imageGenerator(Request $request, string $organizationId): Response
     {
-        return view('tools.image-generator', $this->toolPayload($organizationId, 'Image Generator'));
+        return Inertia::render('Tools/AiTool', ToolAiInertiaResource::page($organizationId, 'image-generator'));
     }
 
-    public function blog(Request $request, string $organizationId)
+    public function blog(Request $request, string $organizationId): Response
     {
-        return view('tools.blog', $this->toolPayload($organizationId, 'Blog Post'));
+        return Inertia::render('Tools/AiTool', ToolAiInertiaResource::page($organizationId, 'blog'));
     }
 
-    public function pressRelease(Request $request, string $organizationId)
+    public function pressRelease(Request $request, string $organizationId): Response
     {
-        return view('tools.press-release-ai', $this->toolPayload($organizationId, 'Press Release'));
+        return Inertia::render('Tools/AiTool', ToolAiInertiaResource::page($organizationId, 'press-release'));
     }
 
-    public function adCopy(Request $request, string $organizationId)
+    public function adCopy(Request $request, string $organizationId): Response
     {
-        return view('tools.ad-copy', $this->toolPayload($organizationId, 'Ad Copy'));
+        return Inertia::render('Tools/AiTool', ToolAiInertiaResource::page($organizationId, 'ad-copy'));
     }
 
-    public function keywordResearch(Request $request, string $organizationId)
+    public function keywordResearch(Request $request, string $organizationId): Response
     {
-        return view('tools.keyword-research', $this->toolPayload($organizationId, 'Keyword Research'));
-    }
-
-    private function toolPayload(string $organizationId, string $title): array
-    {
-        return [
-            'title' => $title,
-            'organizationId' => $organizationId,
-            'brands' => Brand::where('organization_id', $organizationId)->orderBy('name')->get(),
-            'campaigns' => Campaign::where('organization_id', $organizationId)->orderBy('name')->get(['id', 'name']),
-        ];
+        return Inertia::render('Tools/AiTool', ToolAiInertiaResource::page($organizationId, 'keyword-research'));
     }
 }
