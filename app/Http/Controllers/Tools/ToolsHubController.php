@@ -3,23 +3,28 @@
 namespace App\Http\Controllers\Tools;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Tools\ToolHubInertiaResource;
 use App\Models\Brand;
 use App\Models\Campaign;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ToolsHubController extends Controller
 {
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response
     {
-        return view('tools.index', [
-            'title' => 'Content Ideation',
+        return Inertia::render('Tools/Index', [
             'organizationId' => $organizationId,
+            'tools' => ToolHubInertiaResource::hubLinks(),
         ]);
     }
 
-    public function seoAnalysis(Request $request, string $organizationId)
+    public function seoAnalysis(Request $request, string $organizationId): Response
     {
-        return view('tools.seo-analysis', $this->toolPayload($organizationId, 'SEO Analysis'));
+        return Inertia::render('Tools/SeoAnalysis', [
+            'organizationId' => $organizationId,
+        ]);
     }
 
     public function emailTemplate(Request $request, string $organizationId)
