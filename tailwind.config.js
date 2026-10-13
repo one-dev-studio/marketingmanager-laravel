@@ -3,6 +3,8 @@ export default {
     content: [
         "./resources/**/*.blade.php",
         "./resources/**/*.js",
+        "./resources/**/*.ts",
+        "./resources/**/*.tsx",
         "./resources/**/*.vue",
     ],
     theme: {
@@ -26,6 +28,7 @@ export default {
     plugins: [
         require('@tailwindcss/forms'),
         require('@tailwindcss/typography'),
+        require('tailwindcss-animate'),
     ],
 }
 
