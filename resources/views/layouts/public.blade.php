@@ -1,3 +1,4 @@
+@use('App\Http\Support\SubdirectoryRequestUriNormalizer')
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -14,7 +15,7 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
 
     <!-- Styles -->
-    <link href="{{ asset('css/public.css') }}" rel="stylesheet">
+    <link href="{{ SubdirectoryRequestUriNormalizer::rootRelativePublicPath('css/public.css') }}" rel="stylesheet">
     
     @stack('styles')
 </head>

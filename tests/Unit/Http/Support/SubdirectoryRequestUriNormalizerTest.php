@@ -19,6 +19,21 @@ class SubdirectoryRequestUriNormalizerTest extends TestCase
         );
     }
 
+    public function test_root_relative_public_path(): void
+    {
+        $this->assertSame(
+            '/css/public.css',
+            SubdirectoryRequestUriNormalizer::rootRelativePublicPath('css/public.css', 'http://localhost')
+        );
+        $this->assertSame(
+            '/marketingmanager/css/public.css',
+            SubdirectoryRequestUriNormalizer::rootRelativePublicPath(
+                'css/public.css',
+                'https://oneinternetmedia.com/marketingmanager'
+            )
+        );
+    }
+
     #[DataProvider('stripPrefixProvider')]
     public function test_strip_prefix_from_request_uri(string $requestUri, string $expected): void
     {
