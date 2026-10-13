@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -9,17 +11,19 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ResetPasswordController extends Controller
 {
     /**
      * Show the password reset form
      */
-    public function showResetForm(Request $request, string $token)
+    public function showResetForm(Request $request, string $token): Response
     {
-        return view('auth.passwords.reset', [
+        return Inertia::render('Auth/ResetPassword', [
             'token' => $token,
-            'email' => $request->email,
+            'email' => $request->string('email')->toString(),
         ]);
     }
 

@@ -25,7 +25,7 @@ class QaBlockersTest extends TestCase
         $this->actingAs($user)
             ->get(route('profile.show'))
             ->assertOk()
-            ->assertSee('Profile');
+            ->assertInertia(fn ($page) => $page->component('Profile/Show'));
     }
 
     public function testOrgAdminCanOpenSettingsTeamAndBilling(): void

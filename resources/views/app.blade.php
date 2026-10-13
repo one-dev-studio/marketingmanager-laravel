@@ -6,6 +6,8 @@
 
     <title inertia>{{ config('app.name', 'MarketPulse') }}</title>
 
+    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+
     @routes
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/inertia/app.tsx'])

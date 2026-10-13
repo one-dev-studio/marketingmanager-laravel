@@ -1,13 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Services\Auth\SessionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
 use Illuminate\Validation\Rules\Password as PasswordRule;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ProfileController extends Controller
 {
@@ -18,14 +21,24 @@ class ProfileController extends Controller
     /**
      * Show user profile page
      */
-    public function show()
+    public function show(): Response
     {
         $user = Auth::user();
         $sessions = $this->sessionService->getActiveSessions($user);
 
-        return view('profile.show', [
-            'user' => $user,
-            'sessions' => $sessions,
+        return Inertia::render('Profile/Show', [
+            'user' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'timezone' => $user->timezone ?? 'UTC',
+                'locale' => $user->locale,
+                'country_code' => $user->country_code,
+            ],
+            'sessions' => $sessions->map(static fn ($session) => [
+                'browser' => $session->browser,
+                'ip_address' => $session->ip_address,
+                'last_activity' => $session->last_activity?->toIso8601String(),
+            ])->values()->all(),
         ]);
     }
 
