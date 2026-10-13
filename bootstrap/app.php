@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureClientAccess;
 use App\Http\Middleware\EnsureNotClientRole;
 use App\Http\Middleware\EnsureOrganizationAccess;
 use App\Http\Middleware\EnsureOrganizationAdmin;
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\NormalizeSubdirectoryRedirects;
 use App\Http\Middleware\PermissionMiddleware;
 use App\Http\Middleware\RequireConfirmation;
@@ -58,6 +59,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Add SetLocale middleware to web group by default
         $middleware->web(append: [
             SetLocale::class,
+            HandleInertiaRequests::class,
         ]);
 
         // Add security headers to all responses

@@ -1,9 +1,86 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\ContentController;
+use App\Http\Controllers\Admin\CostingController;
+use App\Http\Controllers\Admin\LogController;
+use App\Http\Controllers\Admin\PackageController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Agency\CalendarController;
+use App\Http\Controllers\Agency\ClientController;
+use App\Http\Controllers\AI\AiContentController;
+use App\Http\Controllers\AI\AiImageController;
+use App\Http\Controllers\AI\AiUsageController;
+use App\Http\Controllers\AI\LabelInspirationController;
+use App\Http\Controllers\AI\ProductCatalogController;
+use App\Http\Controllers\AI\SeoController;
+use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Auth\TwoFactorController;
+use App\Http\Controllers\Billing\PaymentWebhookController;
+use App\Http\Controllers\Brand\BrandAssetController;
+use App\Http\Controllers\Brand\BrandController;
+use App\Http\Controllers\Brand\BrandNameGeneratorController;
 use App\Http\Controllers\Campaign\CampaignController;
-use App\Http\Controllers\PublicController;
+use App\Http\Controllers\Campaign\CampaignTemplateController;
+use App\Http\Controllers\Campaign\CompetitionController;
+use App\Http\Controllers\Campaign\ContentManagementController;
+use App\Http\Controllers\Campaign\ContestController;
+use App\Http\Controllers\Campaign\PaidCampaignController;
+use App\Http\Controllers\ChannelController;
+use App\Http\Controllers\Chat\ChatReactionController;
+use App\Http\Controllers\Chatbot\ChatbotController;
+use App\Http\Controllers\CollaborationController;
+use App\Http\Controllers\Competitor\CompetitorController;
+use App\Http\Controllers\ContentApprovalController;
+use App\Http\Controllers\ContentCalendarController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardWidgetController;
+use App\Http\Controllers\EmailMarketing\ContactController;
+use App\Http\Controllers\EmailMarketing\ContactListController;
+use App\Http\Controllers\EmailMarketing\EmailCampaignController;
+use App\Http\Controllers\EmailMarketing\EmailTemplateController;
+use App\Http\Controllers\EmailMarketing\EmailTrackingController;
+use App\Http\Controllers\FileController;
+use App\Http\Controllers\Inertia\DemoController;
+use App\Http\Controllers\Intelligence\IntelligenceController;
+use App\Http\Controllers\LandingPage\LandingPageController;
+use App\Http\Controllers\LandingPage\PublicLandingPageController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\Notification\NotificationController;
+use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\Organization\AutomationController;
+use App\Http\Controllers\Organization\BillingController;
+use App\Http\Controllers\Organization\SettingsController;
+use App\Http\Controllers\Organization\StorageSourceController;
+use App\Http\Controllers\Organization\TeamController;
+use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\PressRelease\PressContactController;
+use App\Http\Controllers\PressRelease\PressReleaseController;
+use App\Http\Controllers\Product\ProductCategoryController;
+use App\Http\Controllers\Product\ProductController;
+use App\Http\Controllers\Product\ProductImageController;
+use App\Http\Controllers\Product\ProductVariantController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Project\ProjectController;
+use App\Http\Controllers\Project\ProjectTemplateController;
+use App\Http\Controllers\PublicController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\Review\ReviewController;
+use App\Http\Controllers\SocialMedia\PublishingController;
+use App\Http\Controllers\SocialMedia\SocialAuthController;
+use App\Http\Controllers\SocialMedia\SocialConnectionController;
+use App\Http\Controllers\SocialMedia\WebhookController;
+use App\Http\Controllers\Survey\PublicSurveyController;
+use App\Http\Controllers\Survey\SurveyController;
+use App\Http\Controllers\Task\TaskController;
+use App\Http\Controllers\Task\TaskTemplateController;
+use App\Http\Controllers\Tools\ToolsHubController;
+use App\Http\Controllers\Workflow\WorkflowController;
+use Illuminate\Support\Facades\Route;
 
 // Locale switching routes
 Route::get('/locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
@@ -27,17 +104,21 @@ Route::get('/integrations', [PublicController::class, 'legal'])->defaults('page'
 Route::get('/developer', [PublicController::class, 'legal'])->defaults('page', 'api')->name('developer');
 Route::get('/sitemap.xml', [PublicController::class, 'sitemap'])->name('sitemap');
 
+// Phase 0: Inertia + React scaffold proof (unlisted; does not replace existing flows)
+Route::get('/inertia/demo', [DemoController::class, 'show'])
+    ->name('inertia.demo');
+
 Route::middleware('guest')->group(function () {
-    Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login']);
-    Route::get('/signup', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
-    Route::post('/signup', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
-    
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login']);
+    Route::get('/signup', [RegisterController::class, 'showRegistrationForm'])->name('register');
+    Route::post('/signup', [RegisterController::class, 'register']);
+
     // Password reset routes
-    Route::get('/password/reset', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
-    Route::post('/password/email', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
-    Route::get('/password/reset/{token}', [App\Http\Controllers\Auth\ResetPasswordController::class, 'showResetForm'])->name('password.reset');
-    Route::post('/password/reset', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('password.update');
+    Route::get('/password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('/password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+    Route::get('/password/reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/password/reset', [ResetPasswordController::class, 'reset'])->name('password.update');
 });
 
 Route::prefix('admin')->middleware('guest:admin')->group(function () {
@@ -46,7 +127,7 @@ Route::prefix('admin')->middleware('guest:admin')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::post('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });
 
 // Email verification routes
@@ -54,125 +135,125 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/email/verify', function () {
         return view('auth.verify-email');
     })->name('verification.notice');
-    Route::get('/email/verify/{id}/{hash}', [App\Http\Controllers\Auth\EmailVerificationController::class, 'verify'])
+    Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
         ->middleware(['signed', 'throttle:6,1'])
         ->name('verification.verify');
-    Route::post('/email/verification-notification', [App\Http\Controllers\Auth\EmailVerificationController::class, 'resend'])
+    Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
         ->middleware('throttle:6,1')
         ->name('verification.send');
 });
 
 // Two-factor authentication routes
 Route::middleware(['auth'])->prefix('two-factor')->name('two-factor.')->group(function () {
-    Route::get('/setup', [App\Http\Controllers\Auth\TwoFactorController::class, 'showSetupForm'])->name('setup');
-    Route::post('/enable', [App\Http\Controllers\Auth\TwoFactorController::class, 'enable'])->name('enable');
-    Route::post('/disable', [App\Http\Controllers\Auth\TwoFactorController::class, 'disable'])->name('disable');
+    Route::get('/setup', [TwoFactorController::class, 'showSetupForm'])->name('setup');
+    Route::post('/enable', [TwoFactorController::class, 'enable'])->name('enable');
+    Route::post('/disable', [TwoFactorController::class, 'disable'])->name('disable');
 });
 
 Route::middleware(['guest'])->prefix('two-factor')->name('two-factor.')->group(function () {
-    Route::get('/challenge', [App\Http\Controllers\Auth\TwoFactorController::class, 'showChallengeForm'])->name('challenge');
-    Route::post('/verify', [App\Http\Controllers\Auth\TwoFactorController::class, 'verifyChallenge'])->name('verify');
+    Route::get('/challenge', [TwoFactorController::class, 'showChallengeForm'])->name('challenge');
+    Route::post('/verify', [TwoFactorController::class, 'verifyChallenge'])->name('verify');
 });
 
 // Profile routes
 Route::middleware(['auth', 'verified'])->prefix('profile')->name('profile.')->group(function () {
-    Route::get('/', [App\Http\Controllers\ProfileController::class, 'show'])->name('show');
-    Route::put('/update', [App\Http\Controllers\ProfileController::class, 'updateProfile'])->name('update');
-    Route::put('/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('password.update');
-    Route::put('/avatar', [App\Http\Controllers\ProfileController::class, 'updateAvatar'])->name('avatar.update');
-    Route::get('/security', [App\Http\Controllers\ProfileController::class, 'showSecurity'])->name('security');
-    Route::delete('/sessions/{sessionId}', [App\Http\Controllers\ProfileController::class, 'revokeSession'])->name('sessions.revoke');
-    Route::post('/sessions/revoke-other', [App\Http\Controllers\ProfileController::class, 'revokeOtherSessions'])->name('sessions.revoke-other');
+    Route::get('/', [ProfileController::class, 'show'])->name('show');
+    Route::put('/update', [ProfileController::class, 'updateProfile'])->name('update');
+    Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
+    Route::put('/avatar', [ProfileController::class, 'updateAvatar'])->name('avatar.update');
+    Route::get('/security', [ProfileController::class, 'showSecurity'])->name('security');
+    Route::delete('/sessions/{sessionId}', [ProfileController::class, 'revokeSession'])->name('sessions.revoke');
+    Route::post('/sessions/revoke-other', [ProfileController::class, 'revokeOtherSessions'])->name('sessions.revoke-other');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(function () {
-    Route::get('/organizations', [App\Http\Controllers\OrganizationController::class, 'index'])->name('organizations');
-    Route::get('/onboarding', [App\Http\Controllers\OnboardingController::class, 'index'])->name('onboarding');
-    
+    Route::get('/organizations', [OrganizationController::class, 'index'])->name('organizations');
+    Route::get('/onboarding', [OnboardingController::class, 'index'])->name('onboarding');
+
     Route::middleware(['tenant', 'organization'])->prefix('{organizationId}')->group(function () {
-        Route::get('/', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
-        
+        Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
         Route::prefix('collaboration')->name('collaboration.')->group(function () {
-            Route::get('/', [App\Http\Controllers\CollaborationController::class, 'index'])->name('index');
-            Route::post('/topics', [App\Http\Controllers\CollaborationController::class, 'createTopic'])->name('topics.create');
-            Route::get('/topics/{topic}', [App\Http\Controllers\CollaborationController::class, 'showTopic'])->name('topics.show');
-            Route::post('/topics/{topic}/messages', [App\Http\Controllers\CollaborationController::class, 'storeMessage'])->name('messages.store');
-            
+            Route::get('/', [CollaborationController::class, 'index'])->name('index');
+            Route::post('/topics', [CollaborationController::class, 'createTopic'])->name('topics.create');
+            Route::get('/topics/{topic}', [CollaborationController::class, 'showTopic'])->name('topics.show');
+            Route::post('/topics/{topic}/messages', [CollaborationController::class, 'storeMessage'])->name('messages.store');
+
             // Chat Reactions
             Route::prefix('messages/{chatMessage}')->name('messages.')->group(function () {
-                Route::post('/reactions', [App\Http\Controllers\Chat\ChatReactionController::class, 'addReaction'])->name('reactions.add');
-                Route::delete('/reactions/{reaction}', [App\Http\Controllers\Chat\ChatReactionController::class, 'removeReaction'])->name('reactions.remove');
-                Route::get('/reactions', [App\Http\Controllers\Chat\ChatReactionController::class, 'getReactions'])->name('reactions.index');
+                Route::post('/reactions', [ChatReactionController::class, 'addReaction'])->name('reactions.add');
+                Route::delete('/reactions/{reaction}', [ChatReactionController::class, 'removeReaction'])->name('reactions.remove');
+                Route::get('/reactions', [ChatReactionController::class, 'getReactions'])->name('reactions.index');
             });
         });
-        
+
         // Review (Content Approval)
         Route::middleware('brand.context')->prefix('review')->name('review.')->group(function () {
-            Route::get('/', [App\Http\Controllers\ContentApprovalController::class, 'index'])->name('index');
-            Route::get('/{approval}', [App\Http\Controllers\ContentApprovalController::class, 'show'])->name('show');
-            Route::post('/{approval}/approve', [App\Http\Controllers\ContentApprovalController::class, 'approve'])->name('approve');
-            Route::post('/{approval}/reject', [App\Http\Controllers\ContentApprovalController::class, 'reject'])->name('reject');
-            Route::get('/scheduled-posts/{scheduledPost}/history', [App\Http\Controllers\ContentApprovalController::class, 'getApprovalHistory'])->name('history');
+            Route::get('/', [ContentApprovalController::class, 'index'])->name('index');
+            Route::get('/{approval}', [ContentApprovalController::class, 'show'])->name('show');
+            Route::post('/{approval}/approve', [ContentApprovalController::class, 'approve'])->name('approve');
+            Route::post('/{approval}/reject', [ContentApprovalController::class, 'reject'])->name('reject');
+            Route::get('/scheduled-posts/{scheduledPost}/history', [ContentApprovalController::class, 'getApprovalHistory'])->name('history');
         });
-        
+
         // Tasks
         Route::middleware('not.client')->prefix('tasks')->name('tasks.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Task\TaskController::class, 'index'])->name('index');
-            Route::post('/', [App\Http\Controllers\Task\TaskController::class, 'store'])->name('store');
-            Route::get('/{task}', [App\Http\Controllers\Task\TaskController::class, 'show'])->name('show');
-            Route::put('/{task}', [App\Http\Controllers\Task\TaskController::class, 'update'])->name('update');
-            Route::delete('/{task}', [App\Http\Controllers\Task\TaskController::class, 'destroy'])->name('destroy');
-            Route::post('/{task}/assign', [App\Http\Controllers\Task\TaskController::class, 'assign'])->name('assign');
-            Route::post('/{task}/status', [App\Http\Controllers\Task\TaskController::class, 'updateStatus'])->name('status');
-            Route::post('/{task}/comments', [App\Http\Controllers\Task\TaskController::class, 'addComment'])->name('comments.store');
-            Route::post('/{task}/attachments', [App\Http\Controllers\Task\TaskController::class, 'addAttachment'])->name('attachments.store');
-            Route::delete('/attachments/{taskAttachment}', [App\Http\Controllers\Task\TaskController::class, 'deleteAttachment'])->name('attachments.destroy');
-            
+            Route::get('/', [TaskController::class, 'index'])->name('index');
+            Route::post('/', [TaskController::class, 'store'])->name('store');
+            Route::get('/{task}', [TaskController::class, 'show'])->name('show');
+            Route::put('/{task}', [TaskController::class, 'update'])->name('update');
+            Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
+            Route::post('/{task}/assign', [TaskController::class, 'assign'])->name('assign');
+            Route::post('/{task}/status', [TaskController::class, 'updateStatus'])->name('status');
+            Route::post('/{task}/comments', [TaskController::class, 'addComment'])->name('comments.store');
+            Route::post('/{task}/attachments', [TaskController::class, 'addAttachment'])->name('attachments.store');
+            Route::delete('/attachments/{taskAttachment}', [TaskController::class, 'deleteAttachment'])->name('attachments.destroy');
+
             // Task Templates
             Route::prefix('templates')->name('templates.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Task\TaskTemplateController::class, 'index'])->name('index');
-                Route::post('/', [App\Http\Controllers\Task\TaskTemplateController::class, 'store'])->name('store');
-                Route::get('/{taskTemplate}', [App\Http\Controllers\Task\TaskTemplateController::class, 'show'])->name('show');
-                Route::put('/{taskTemplate}', [App\Http\Controllers\Task\TaskTemplateController::class, 'update'])->name('update');
-                Route::delete('/{taskTemplate}', [App\Http\Controllers\Task\TaskTemplateController::class, 'destroy'])->name('destroy');
-                Route::post('/{taskTemplate}/create-task', [App\Http\Controllers\Task\TaskTemplateController::class, 'createTask'])->name('create-task');
+                Route::get('/', [TaskTemplateController::class, 'index'])->name('index');
+                Route::post('/', [TaskTemplateController::class, 'store'])->name('store');
+                Route::get('/{taskTemplate}', [TaskTemplateController::class, 'show'])->name('show');
+                Route::put('/{taskTemplate}', [TaskTemplateController::class, 'update'])->name('update');
+                Route::delete('/{taskTemplate}', [TaskTemplateController::class, 'destroy'])->name('destroy');
+                Route::post('/{taskTemplate}/create-task', [TaskTemplateController::class, 'createTask'])->name('create-task');
             });
         });
-        
+
         // Projects
         Route::middleware('not.client')->prefix('projects')->name('projects.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Project\ProjectController::class, 'index'])->name('index');
-            Route::post('/', [App\Http\Controllers\Project\ProjectController::class, 'store'])->name('store');
-            Route::get('/{project}', [App\Http\Controllers\Project\ProjectController::class, 'show'])->name('show');
-            Route::put('/{project}', [App\Http\Controllers\Project\ProjectController::class, 'update'])->name('update');
-            Route::delete('/{project}', [App\Http\Controllers\Project\ProjectController::class, 'destroy'])->name('destroy');
-            Route::post('/{project}/members', [App\Http\Controllers\Project\ProjectController::class, 'addMember'])->name('members.store');
-            Route::delete('/{project}/members/{userId}', [App\Http\Controllers\Project\ProjectController::class, 'removeMember'])->name('members.destroy');
-            Route::put('/{project}/members/{userId}/role', [App\Http\Controllers\Project\ProjectController::class, 'updateMemberRole'])->name('members.role');
-            Route::post('/{project}/status', [App\Http\Controllers\Project\ProjectController::class, 'updateStatus'])->name('status');
-            
+            Route::get('/', [ProjectController::class, 'index'])->name('index');
+            Route::post('/', [ProjectController::class, 'store'])->name('store');
+            Route::get('/{project}', [ProjectController::class, 'show'])->name('show');
+            Route::put('/{project}', [ProjectController::class, 'update'])->name('update');
+            Route::delete('/{project}', [ProjectController::class, 'destroy'])->name('destroy');
+            Route::post('/{project}/members', [ProjectController::class, 'addMember'])->name('members.store');
+            Route::delete('/{project}/members/{userId}', [ProjectController::class, 'removeMember'])->name('members.destroy');
+            Route::put('/{project}/members/{userId}/role', [ProjectController::class, 'updateMemberRole'])->name('members.role');
+            Route::post('/{project}/status', [ProjectController::class, 'updateStatus'])->name('status');
+
             // Project Templates
             Route::prefix('templates')->name('templates.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Project\ProjectTemplateController::class, 'index'])->name('index');
-                Route::post('/', [App\Http\Controllers\Project\ProjectTemplateController::class, 'store'])->name('store');
-                Route::get('/{projectTemplate}', [App\Http\Controllers\Project\ProjectTemplateController::class, 'show'])->name('show');
-                Route::put('/{projectTemplate}', [App\Http\Controllers\Project\ProjectTemplateController::class, 'update'])->name('update');
-                Route::delete('/{projectTemplate}', [App\Http\Controllers\Project\ProjectTemplateController::class, 'destroy'])->name('destroy');
-                Route::post('/{projectTemplate}/create-project', [App\Http\Controllers\Project\ProjectTemplateController::class, 'createProject'])->name('create-project');
+                Route::get('/', [ProjectTemplateController::class, 'index'])->name('index');
+                Route::post('/', [ProjectTemplateController::class, 'store'])->name('store');
+                Route::get('/{projectTemplate}', [ProjectTemplateController::class, 'show'])->name('show');
+                Route::put('/{projectTemplate}', [ProjectTemplateController::class, 'update'])->name('update');
+                Route::delete('/{projectTemplate}', [ProjectTemplateController::class, 'destroy'])->name('destroy');
+                Route::post('/{projectTemplate}/create-project', [ProjectTemplateController::class, 'createProject'])->name('create-project');
             });
         });
-        
+
         // Notifications
         Route::prefix('notifications')->name('notifications.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Notification\NotificationController::class, 'index'])->name('index');
-            Route::get('/unread-count', [App\Http\Controllers\Notification\NotificationController::class, 'unreadCount'])->name('unread-count');
-            Route::post('/{notification}/read', [App\Http\Controllers\Notification\NotificationController::class, 'markAsRead'])->name('read');
-            Route::post('/read-all', [App\Http\Controllers\Notification\NotificationController::class, 'markAllAsRead'])->name('read-all');
-            Route::delete('/{notification}', [App\Http\Controllers\Notification\NotificationController::class, 'destroy'])->name('destroy');
-            Route::get('/preferences', [App\Http\Controllers\Notification\NotificationController::class, 'preferences'])->name('preferences');
-            Route::put('/preferences', [App\Http\Controllers\Notification\NotificationController::class, 'updatePreference'])->name('preferences.update');
+            Route::get('/', [NotificationController::class, 'index'])->name('index');
+            Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
+            Route::post('/{notification}/read', [NotificationController::class, 'markAsRead'])->name('read');
+            Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
+            Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('destroy');
+            Route::get('/preferences', [NotificationController::class, 'preferences'])->name('preferences');
+            Route::put('/preferences', [NotificationController::class, 'updatePreference'])->name('preferences.update');
         });
-        
+
         Route::middleware('not.client')->prefix('campaigns')->name('campaigns.')->group(function () {
             Route::get('/', [CampaignController::class, 'index'])->name('index');
             Route::get('/create', [CampaignController::class, 'create'])->name('create');
@@ -193,500 +274,500 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
             Route::post('/{campaign}/clone', [CampaignController::class, 'clone'])->name('clone');
             Route::post('/{campaign}/products', [CampaignController::class, 'attachProducts'])->name('attach-products');
             Route::delete('/{campaign}/products', [CampaignController::class, 'detachProducts'])->name('detach-products');
-            
+
             // Content Management
             Route::prefix('{campaign}/content')->name('content.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Campaign\ContentManagementController::class, 'index'])->name('index');
-                Route::post('/', [App\Http\Controllers\Campaign\ContentManagementController::class, 'store'])->name('store');
-                Route::put('/{scheduledPost}', [App\Http\Controllers\Campaign\ContentManagementController::class, 'update'])->name('update');
-                Route::delete('/{scheduledPost}', [App\Http\Controllers\Campaign\ContentManagementController::class, 'destroy'])->name('destroy');
+                Route::get('/', [ContentManagementController::class, 'index'])->name('index');
+                Route::post('/', [ContentManagementController::class, 'store'])->name('store');
+                Route::put('/{scheduledPost}', [ContentManagementController::class, 'update'])->name('update');
+                Route::delete('/{scheduledPost}', [ContentManagementController::class, 'destroy'])->name('destroy');
             });
-            
+
             // Competition
             Route::prefix('{campaign}/competitions')->name('competitions.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Campaign\CompetitionController::class, 'index'])->name('index');
-                Route::post('/attach', [App\Http\Controllers\Campaign\CompetitionController::class, 'attachCompetitor'])->name('attach');
-                Route::delete('/{competitor}', [App\Http\Controllers\Campaign\CompetitionController::class, 'detachCompetitor'])->name('detach');
+                Route::get('/', [CompetitionController::class, 'index'])->name('index');
+                Route::post('/attach', [CompetitionController::class, 'attachCompetitor'])->name('attach');
+                Route::delete('/{competitor}', [CompetitionController::class, 'detachCompetitor'])->name('detach');
             });
         });
-        
+
         // Campaign Templates
         Route::prefix('campaign-templates')->name('campaign-templates.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Campaign\CampaignTemplateController::class, 'index'])->name('index');
-            Route::post('/', [App\Http\Controllers\Campaign\CampaignTemplateController::class, 'store'])->name('store');
-            Route::get('/{template}', [App\Http\Controllers\Campaign\CampaignTemplateController::class, 'show'])->name('show');
-            Route::put('/{template}', [App\Http\Controllers\Campaign\CampaignTemplateController::class, 'update'])->name('update');
-            Route::delete('/{template}', [App\Http\Controllers\Campaign\CampaignTemplateController::class, 'destroy'])->name('destroy');
-            Route::post('/{template}/create-campaign', [App\Http\Controllers\Campaign\CampaignTemplateController::class, 'createCampaignFromTemplate'])->name('create-campaign');
+            Route::get('/', [CampaignTemplateController::class, 'index'])->name('index');
+            Route::post('/', [CampaignTemplateController::class, 'store'])->name('store');
+            Route::get('/{template}', [CampaignTemplateController::class, 'show'])->name('show');
+            Route::put('/{template}', [CampaignTemplateController::class, 'update'])->name('update');
+            Route::delete('/{template}', [CampaignTemplateController::class, 'destroy'])->name('destroy');
+            Route::post('/{template}/create-campaign', [CampaignTemplateController::class, 'createCampaignFromTemplate'])->name('create-campaign');
         });
-        
+
         // Paid Campaigns
         Route::middleware('not.client')->prefix('paid-campaigns')->name('paid-campaigns.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Campaign\PaidCampaignController::class, 'index'])->name('index');
-            Route::post('/', [App\Http\Controllers\Campaign\PaidCampaignController::class, 'store'])->name('store');
-            Route::get('/{paidCampaign}', [App\Http\Controllers\Campaign\PaidCampaignController::class, 'show'])->name('show');
-            Route::put('/{paidCampaign}', [App\Http\Controllers\Campaign\PaidCampaignController::class, 'update'])->name('update');
-            Route::delete('/{paidCampaign}', [App\Http\Controllers\Campaign\PaidCampaignController::class, 'destroy'])->name('destroy');
-            Route::post('/{paidCampaign}/metrics', [App\Http\Controllers\Campaign\PaidCampaignController::class, 'updateMetrics'])->name('metrics');
+            Route::get('/', [PaidCampaignController::class, 'index'])->name('index');
+            Route::post('/', [PaidCampaignController::class, 'store'])->name('store');
+            Route::get('/{paidCampaign}', [PaidCampaignController::class, 'show'])->name('show');
+            Route::put('/{paidCampaign}', [PaidCampaignController::class, 'update'])->name('update');
+            Route::delete('/{paidCampaign}', [PaidCampaignController::class, 'destroy'])->name('destroy');
+            Route::post('/{paidCampaign}/metrics', [PaidCampaignController::class, 'updateMetrics'])->name('metrics');
         });
-        
+
         // Content Calendar
         Route::prefix('content-calendar')->name('content-calendar.')->group(function () {
-            Route::get('/', [App\Http\Controllers\ContentCalendarController::class, 'index'])->name('index');
-            Route::post('/', [App\Http\Controllers\ContentCalendarController::class, 'store'])->name('store');
-            Route::put('/{event}', [App\Http\Controllers\ContentCalendarController::class, 'update'])->name('update');
-            Route::delete('/{event}', [App\Http\Controllers\ContentCalendarController::class, 'destroy'])->name('destroy');
-            Route::post('/bulk-schedule', [App\Http\Controllers\ContentCalendarController::class, 'bulkSchedule'])->name('bulk-schedule');
-            Route::post('/recurring', [App\Http\Controllers\ContentCalendarController::class, 'createRecurringSchedule'])->name('recurring');
-            Route::delete('/recurring/{scheduledPost}', [App\Http\Controllers\ContentCalendarController::class, 'cancelRecurringSchedule'])->name('cancel-recurring');
+            Route::get('/', [ContentCalendarController::class, 'index'])->name('index');
+            Route::post('/', [ContentCalendarController::class, 'store'])->name('store');
+            Route::put('/{event}', [ContentCalendarController::class, 'update'])->name('update');
+            Route::delete('/{event}', [ContentCalendarController::class, 'destroy'])->name('destroy');
+            Route::post('/bulk-schedule', [ContentCalendarController::class, 'bulkSchedule'])->name('bulk-schedule');
+            Route::post('/recurring', [ContentCalendarController::class, 'createRecurringSchedule'])->name('recurring');
+            Route::delete('/recurring/{scheduledPost}', [ContentCalendarController::class, 'cancelRecurringSchedule'])->name('cancel-recurring');
         });
-        
+
         // Content Approval
         Route::prefix('content-approvals')->name('content-approvals.')->group(function () {
-            Route::get('/', [App\Http\Controllers\ContentApprovalController::class, 'index'])->name('index');
-            Route::get('/queue', [App\Http\Controllers\ContentApprovalController::class, 'queue'])->name('queue');
-            Route::post('/bulk', [App\Http\Controllers\ContentApprovalController::class, 'bulk'])->name('bulk');
-            Route::get('/{approval}', [App\Http\Controllers\ContentApprovalController::class, 'show'])->name('show');
-            Route::post('/{scheduledPost}/request', [App\Http\Controllers\ContentApprovalController::class, 'requestApproval'])->name('request');
-            Route::post('/{approval}/approve', [App\Http\Controllers\ContentApprovalController::class, 'approve'])->name('approve');
-            Route::post('/{approval}/reject', [App\Http\Controllers\ContentApprovalController::class, 'reject'])->name('reject');
-            Route::get('/{scheduledPost}/history', [App\Http\Controllers\ContentApprovalController::class, 'getApprovalHistory'])->name('history');
-            Route::get('/{approval}/annotations', [App\Http\Controllers\ContentApprovalController::class, 'annotations'])->name('annotations');
+            Route::get('/', [ContentApprovalController::class, 'index'])->name('index');
+            Route::get('/queue', [ContentApprovalController::class, 'queue'])->name('queue');
+            Route::post('/bulk', [ContentApprovalController::class, 'bulk'])->name('bulk');
+            Route::get('/{approval}', [ContentApprovalController::class, 'show'])->name('show');
+            Route::post('/{scheduledPost}/request', [ContentApprovalController::class, 'requestApproval'])->name('request');
+            Route::post('/{approval}/approve', [ContentApprovalController::class, 'approve'])->name('approve');
+            Route::post('/{approval}/reject', [ContentApprovalController::class, 'reject'])->name('reject');
+            Route::get('/{scheduledPost}/history', [ContentApprovalController::class, 'getApprovalHistory'])->name('history');
+            Route::get('/{approval}/annotations', [ContentApprovalController::class, 'annotations'])->name('annotations');
         });
-        
+
         // Dashboard API endpoints
         Route::prefix('dashboard')->name('dashboard.')->group(function () {
-            Route::get('/kpis', [App\Http\Controllers\DashboardController::class, 'getKPIs'])->name('kpis');
-            Route::get('/activity-feed', [App\Http\Controllers\DashboardController::class, 'getActivityFeed'])->name('activity-feed');
-            Route::get('/pending-tasks', [App\Http\Controllers\DashboardController::class, 'getPendingTasks'])->name('pending-tasks');
-            Route::get('/content-calendar', [App\Http\Controllers\DashboardController::class, 'getContentCalendar'])->name('content-calendar');
-            
+            Route::get('/kpis', [DashboardController::class, 'getKPIs'])->name('kpis');
+            Route::get('/activity-feed', [DashboardController::class, 'getActivityFeed'])->name('activity-feed');
+            Route::get('/pending-tasks', [DashboardController::class, 'getPendingTasks'])->name('pending-tasks');
+            Route::get('/content-calendar', [DashboardController::class, 'getContentCalendar'])->name('content-calendar');
+
             // Dashboard Widgets
             Route::prefix('widgets')->name('widgets.')->group(function () {
-                Route::get('/', [App\Http\Controllers\DashboardWidgetController::class, 'index'])->name('index');
-                Route::post('/', [App\Http\Controllers\DashboardWidgetController::class, 'store'])->name('store');
-                Route::put('/positions', [App\Http\Controllers\DashboardWidgetController::class, 'updatePositions'])->name('update-positions');
-                Route::put('/{widget}', [App\Http\Controllers\DashboardWidgetController::class, 'update'])->name('update');
-                Route::delete('/{widget}', [App\Http\Controllers\DashboardWidgetController::class, 'destroy'])->name('destroy');
+                Route::get('/', [DashboardWidgetController::class, 'index'])->name('index');
+                Route::post('/', [DashboardWidgetController::class, 'store'])->name('store');
+                Route::put('/positions', [DashboardWidgetController::class, 'updatePositions'])->name('update-positions');
+                Route::put('/{widget}', [DashboardWidgetController::class, 'update'])->name('update');
+                Route::delete('/{widget}', [DashboardWidgetController::class, 'destroy'])->name('destroy');
             });
         });
-        
+
         // Tools Pages (Content Ideation)
         Route::middleware('not.client')->prefix('tools')->name('tools.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Tools\ToolsHubController::class, 'index'])->name('index');
-            Route::get('/seo-analysis', [App\Http\Controllers\Tools\ToolsHubController::class, 'seoAnalysis'])->name('seo-analysis');
-            Route::get('/email-template', [App\Http\Controllers\Tools\ToolsHubController::class, 'emailTemplate'])->name('email-template');
-            Route::get('/image-generator', [App\Http\Controllers\Tools\ToolsHubController::class, 'imageGenerator'])->name('image-generator');
-            Route::get('/blog', [App\Http\Controllers\Tools\ToolsHubController::class, 'blog'])->name('blog');
-            Route::get('/press-release', [App\Http\Controllers\Tools\ToolsHubController::class, 'pressRelease'])->name('press-release');
-            Route::get('/label-inspiration', [App\Http\Controllers\AI\LabelInspirationController::class, 'index'])->name('label-inspiration');
-            Route::get('/product-catalog', [App\Http\Controllers\AI\ProductCatalogController::class, 'index'])->name('product-catalog');
+            Route::get('/', [ToolsHubController::class, 'index'])->name('index');
+            Route::get('/seo-analysis', [ToolsHubController::class, 'seoAnalysis'])->name('seo-analysis');
+            Route::get('/email-template', [ToolsHubController::class, 'emailTemplate'])->name('email-template');
+            Route::get('/image-generator', [ToolsHubController::class, 'imageGenerator'])->name('image-generator');
+            Route::get('/blog', [ToolsHubController::class, 'blog'])->name('blog');
+            Route::get('/press-release', [ToolsHubController::class, 'pressRelease'])->name('press-release');
+            Route::get('/label-inspiration', [LabelInspirationController::class, 'index'])->name('label-inspiration');
+            Route::get('/product-catalog', [ProductCatalogController::class, 'index'])->name('product-catalog');
         });
 
         Route::middleware('not.client')->prefix('intelligence')->name('intelligence.')->group(function () {
-            Route::get('/sentiment', [App\Http\Controllers\Intelligence\IntelligenceController::class, 'sentiment'])->name('sentiment');
-            Route::get('/predictive', [App\Http\Controllers\Intelligence\IntelligenceController::class, 'predictive'])->name('predictive');
+            Route::get('/sentiment', [IntelligenceController::class, 'sentiment'])->name('sentiment');
+            Route::get('/predictive', [IntelligenceController::class, 'predictive'])->name('predictive');
         });
 
         Route::middleware('not.client')->prefix('paid-ads')->name('paid-ads.')->group(function () {
-            Route::get('/campaigns', [App\Http\Controllers\Campaign\PaidCampaignController::class, 'index'])->name('campaigns');
-            Route::get('/ad-copy', [App\Http\Controllers\Tools\ToolsHubController::class, 'adCopy'])->name('ad-copy');
-            Route::get('/keyword-research', [App\Http\Controllers\Tools\ToolsHubController::class, 'keywordResearch'])->name('keyword-research');
+            Route::get('/campaigns', [PaidCampaignController::class, 'index'])->name('campaigns');
+            Route::get('/ad-copy', [ToolsHubController::class, 'adCopy'])->name('ad-copy');
+            Route::get('/keyword-research', [ToolsHubController::class, 'keywordResearch'])->name('keyword-research');
         });
 
         Route::middleware('not.client')->prefix('competitions')->name('competitions.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Campaign\ContestController::class, 'index'])->name('index');
-            Route::get('/create', [App\Http\Controllers\Campaign\ContestController::class, 'create'])->name('create');
-            Route::post('/', [App\Http\Controllers\Campaign\ContestController::class, 'store'])->name('store');
-            Route::get('/{contest}', [App\Http\Controllers\Campaign\ContestController::class, 'show'])->name('show');
-            Route::post('/{contest}/entries', [App\Http\Controllers\Campaign\ContestController::class, 'storeEntry'])->name('entries.store');
-            Route::post('/{contest}/close', [App\Http\Controllers\Campaign\ContestController::class, 'close'])->name('close');
+            Route::get('/', [ContestController::class, 'index'])->name('index');
+            Route::get('/create', [ContestController::class, 'create'])->name('create');
+            Route::post('/', [ContestController::class, 'store'])->name('store');
+            Route::get('/{contest}', [ContestController::class, 'show'])->name('show');
+            Route::post('/{contest}/entries', [ContestController::class, 'storeEntry'])->name('entries.store');
+            Route::post('/{contest}/close', [ContestController::class, 'close'])->name('close');
         });
 
         Route::middleware('not.client')->prefix('reputation')->name('reviews.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Review\ReviewController::class, 'index'])->name('index');
-            Route::get('/{review}', [App\Http\Controllers\Review\ReviewController::class, 'show'])->name('show');
-            Route::post('/{review}/responses', [App\Http\Controllers\Review\ReviewController::class, 'createResponse'])->name('responses.store');
-            Route::post('/import', [App\Http\Controllers\Review\ReviewController::class, 'importReviews'])->name('import');
-            Route::get('/sources/list', [App\Http\Controllers\Review\ReviewController::class, 'sources'])->name('sources');
+            Route::get('/', [ReviewController::class, 'index'])->name('index');
+            Route::get('/{review}', [ReviewController::class, 'show'])->name('show');
+            Route::post('/{review}/responses', [ReviewController::class, 'createResponse'])->name('responses.store');
+            Route::post('/import', [ReviewController::class, 'importReviews'])->name('import');
+            Route::get('/sources/list', [ReviewController::class, 'sources'])->name('sources');
         });
-        
+
         // AI Content Generation
         Route::prefix('ai')->name('ai.')->group(function () {
             Route::prefix('content')->name('content.')->group(function () {
-                Route::post('/social-media', [App\Http\Controllers\AI\AiContentController::class, 'generateSocialMediaPost'])->name('social-media');
-                Route::post('/press-release', [App\Http\Controllers\AI\AiContentController::class, 'generatePressRelease'])->name('press-release');
-                Route::post('/email', [App\Http\Controllers\AI\AiContentController::class, 'generateEmailTemplate'])->name('email');
-                Route::post('/blog', [App\Http\Controllers\AI\AiContentController::class, 'generateBlogPost'])->name('blog');
-                Route::post('/ad-copy', [App\Http\Controllers\AI\AiContentController::class, 'generateAdCopy'])->name('ad-copy');
-                Route::post('/variations', [App\Http\Controllers\AI\AiContentController::class, 'generateVariations'])->name('variations');
+                Route::post('/social-media', [AiContentController::class, 'generateSocialMediaPost'])->name('social-media');
+                Route::post('/press-release', [AiContentController::class, 'generatePressRelease'])->name('press-release');
+                Route::post('/email', [AiContentController::class, 'generateEmailTemplate'])->name('email');
+                Route::post('/blog', [AiContentController::class, 'generateBlogPost'])->name('blog');
+                Route::post('/ad-copy', [AiContentController::class, 'generateAdCopy'])->name('ad-copy');
+                Route::post('/variations', [AiContentController::class, 'generateVariations'])->name('variations');
             });
-            
+
             // AI Image Generation
             Route::prefix('images')->name('images.')->group(function () {
-                Route::post('/generate', [App\Http\Controllers\AI\AiImageController::class, 'generateImage'])->name('generate');
-                Route::post('/{image}/optimize', [App\Http\Controllers\AI\AiImageController::class, 'optimizeForPlatform'])->name('optimize');
-                Route::post('/{image}/library', [App\Http\Controllers\AI\AiImageController::class, 'addToLibrary'])->name('add-to-library');
+                Route::post('/generate', [AiImageController::class, 'generateImage'])->name('generate');
+                Route::post('/{image}/optimize', [AiImageController::class, 'optimizeForPlatform'])->name('optimize');
+                Route::post('/{image}/library', [AiImageController::class, 'addToLibrary'])->name('add-to-library');
             });
-            
+
             // SEO Tools
             Route::prefix('seo')->name('seo.')->group(function () {
-                Route::post('/keyword-research', [App\Http\Controllers\AI\SeoController::class, 'researchKeyword'])->name('keyword-research');
-                Route::post('/analyze-content', [App\Http\Controllers\AI\SeoController::class, 'analyzeContent'])->name('analyze-content');
-                Route::post('/meta-tags', [App\Http\Controllers\AI\SeoController::class, 'generateMetaTags'])->name('meta-tags');
-                Route::post('/sitemap', [App\Http\Controllers\AI\SeoController::class, 'generateSitemap'])->name('sitemap');
-                Route::post('/competitor', [App\Http\Controllers\AI\SeoController::class, 'analyzeCompetitor'])->name('competitor');
+                Route::post('/keyword-research', [SeoController::class, 'researchKeyword'])->name('keyword-research');
+                Route::post('/analyze-content', [SeoController::class, 'analyzeContent'])->name('analyze-content');
+                Route::post('/meta-tags', [SeoController::class, 'generateMetaTags'])->name('meta-tags');
+                Route::post('/sitemap', [SeoController::class, 'generateSitemap'])->name('sitemap');
+                Route::post('/competitor', [SeoController::class, 'analyzeCompetitor'])->name('competitor');
             });
-            
+
             // Label Inspiration
             Route::prefix('label-inspiration')->name('label-inspiration.')->group(function () {
-                Route::post('/generate', [App\Http\Controllers\AI\LabelInspirationController::class, 'generateLabels'])->name('generate');
+                Route::post('/generate', [LabelInspirationController::class, 'generateLabels'])->name('generate');
             });
-            
+
             // Product Catalog Generator
             Route::prefix('product-catalog')->name('product-catalog.')->group(function () {
-                Route::post('/generate', [App\Http\Controllers\AI\ProductCatalogController::class, 'generateCatalog'])->name('generate');
-                Route::post('/descriptions', [App\Http\Controllers\AI\ProductCatalogController::class, 'generateProductDescriptions'])->name('descriptions');
+                Route::post('/generate', [ProductCatalogController::class, 'generateCatalog'])->name('generate');
+                Route::post('/descriptions', [ProductCatalogController::class, 'generateProductDescriptions'])->name('descriptions');
             });
-            
+
             // AI Usage & Quota
             Route::prefix('usage')->name('usage.')->group(function () {
-                Route::get('/stats', [App\Http\Controllers\AI\AiUsageController::class, 'getUsageStats'])->name('stats');
-                Route::get('/quota', [App\Http\Controllers\AI\AiUsageController::class, 'getRemainingQuota'])->name('quota');
+                Route::get('/stats', [AiUsageController::class, 'getUsageStats'])->name('stats');
+                Route::get('/quota', [AiUsageController::class, 'getRemainingQuota'])->name('quota');
             });
         });
-        
+
         // Email Marketing
         Route::prefix('email-marketing')->name('email-marketing.')->group(function () {
             // Email Campaigns
             Route::middleware('not.client')->prefix('campaigns')->name('campaigns.')->group(function () {
-                Route::get('/', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'index'])->name('index');
-                Route::get('/create', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'create'])->name('create');
-                Route::post('/', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'store'])->name('store');
-                Route::get('/{emailCampaign}', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'show'])->name('show');
-                Route::put('/{emailCampaign}', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'update'])->name('update');
-                Route::delete('/{emailCampaign}', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'destroy'])->name('destroy');
-                Route::post('/{emailCampaign}/send', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'send'])->name('send');
-                Route::post('/{emailCampaign}/schedule', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'schedule'])->name('schedule');
-                Route::post('/{emailCampaign}/pause', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'pause'])->name('pause');
-                Route::post('/{emailCampaign}/resume', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'resume'])->name('resume');
-                Route::post('/{emailCampaign}/cancel', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'cancel'])->name('cancel');
-                Route::get('/{emailCampaign}/metrics', [App\Http\Controllers\EmailMarketing\EmailCampaignController::class, 'getMetrics'])->name('metrics');
+                Route::get('/', [EmailCampaignController::class, 'index'])->name('index');
+                Route::get('/create', [EmailCampaignController::class, 'create'])->name('create');
+                Route::post('/', [EmailCampaignController::class, 'store'])->name('store');
+                Route::get('/{emailCampaign}', [EmailCampaignController::class, 'show'])->name('show');
+                Route::put('/{emailCampaign}', [EmailCampaignController::class, 'update'])->name('update');
+                Route::delete('/{emailCampaign}', [EmailCampaignController::class, 'destroy'])->name('destroy');
+                Route::post('/{emailCampaign}/send', [EmailCampaignController::class, 'send'])->name('send');
+                Route::post('/{emailCampaign}/schedule', [EmailCampaignController::class, 'schedule'])->name('schedule');
+                Route::post('/{emailCampaign}/pause', [EmailCampaignController::class, 'pause'])->name('pause');
+                Route::post('/{emailCampaign}/resume', [EmailCampaignController::class, 'resume'])->name('resume');
+                Route::post('/{emailCampaign}/cancel', [EmailCampaignController::class, 'cancel'])->name('cancel');
+                Route::get('/{emailCampaign}/metrics', [EmailCampaignController::class, 'getMetrics'])->name('metrics');
             });
-            
+
             // Contacts
             Route::prefix('contacts')->name('contacts.')->group(function () {
-                Route::get('/', [App\Http\Controllers\EmailMarketing\ContactController::class, 'index'])->name('index');
-                Route::get('/create', [App\Http\Controllers\EmailMarketing\ContactController::class, 'create'])->name('create');
-                Route::post('/', [App\Http\Controllers\EmailMarketing\ContactController::class, 'store'])->name('store');
-                Route::post('/import', [App\Http\Controllers\EmailMarketing\ContactController::class, 'import'])->name('import');
-                Route::get('/{contact}', [App\Http\Controllers\EmailMarketing\ContactController::class, 'show'])->name('show');
-                Route::put('/{contact}', [App\Http\Controllers\EmailMarketing\ContactController::class, 'update'])->name('update');
-                Route::delete('/{contact}', [App\Http\Controllers\EmailMarketing\ContactController::class, 'destroy'])->name('destroy');
-                Route::get('/{contact}/duplicates', [App\Http\Controllers\EmailMarketing\ContactController::class, 'findDuplicates'])->name('duplicates');
-                Route::post('/{contact}/merge', [App\Http\Controllers\EmailMarketing\ContactController::class, 'merge'])->name('merge');
-                Route::post('/{contact}/subscribe', [App\Http\Controllers\EmailMarketing\ContactController::class, 'subscribe'])->name('subscribe');
-                Route::post('/{contact}/unsubscribe', [App\Http\Controllers\EmailMarketing\ContactController::class, 'unsubscribe'])->name('unsubscribe');
-                Route::get('/{contact}/export', [App\Http\Controllers\EmailMarketing\ContactController::class, 'exportData'])->name('export');
-                Route::delete('/{contact}/data', [App\Http\Controllers\EmailMarketing\ContactController::class, 'deleteData'])->name('delete-data');
+                Route::get('/', [ContactController::class, 'index'])->name('index');
+                Route::get('/create', [ContactController::class, 'create'])->name('create');
+                Route::post('/', [ContactController::class, 'store'])->name('store');
+                Route::post('/import', [ContactController::class, 'import'])->name('import');
+                Route::get('/{contact}', [ContactController::class, 'show'])->name('show');
+                Route::put('/{contact}', [ContactController::class, 'update'])->name('update');
+                Route::delete('/{contact}', [ContactController::class, 'destroy'])->name('destroy');
+                Route::get('/{contact}/duplicates', [ContactController::class, 'findDuplicates'])->name('duplicates');
+                Route::post('/{contact}/merge', [ContactController::class, 'merge'])->name('merge');
+                Route::post('/{contact}/subscribe', [ContactController::class, 'subscribe'])->name('subscribe');
+                Route::post('/{contact}/unsubscribe', [ContactController::class, 'unsubscribe'])->name('unsubscribe');
+                Route::get('/{contact}/export', [ContactController::class, 'exportData'])->name('export');
+                Route::delete('/{contact}/data', [ContactController::class, 'deleteData'])->name('delete-data');
             });
-            
+
             // Email Templates
             Route::middleware('not.client')->prefix('templates')->name('templates.')->group(function () {
-                Route::get('/', [App\Http\Controllers\EmailMarketing\EmailTemplateController::class, 'index'])->name('index');
-                Route::get('/builder/{emailTemplate?}', [App\Http\Controllers\EmailMarketing\EmailTemplateController::class, 'builder'])->name('builder');
-                Route::post('/', [App\Http\Controllers\EmailMarketing\EmailTemplateController::class, 'store'])->name('store');
-                Route::get('/{emailTemplate}', [App\Http\Controllers\EmailMarketing\EmailTemplateController::class, 'show'])->name('show');
-                Route::put('/{emailTemplate}', [App\Http\Controllers\EmailMarketing\EmailTemplateController::class, 'update'])->name('update');
-                Route::delete('/{emailTemplate}', [App\Http\Controllers\EmailMarketing\EmailTemplateController::class, 'destroy'])->name('destroy');
-                Route::post('/{emailTemplate}/render', [App\Http\Controllers\EmailMarketing\EmailTemplateController::class, 'render'])->name('render');
+                Route::get('/', [EmailTemplateController::class, 'index'])->name('index');
+                Route::get('/builder/{emailTemplate?}', [EmailTemplateController::class, 'builder'])->name('builder');
+                Route::post('/', [EmailTemplateController::class, 'store'])->name('store');
+                Route::get('/{emailTemplate}', [EmailTemplateController::class, 'show'])->name('show');
+                Route::put('/{emailTemplate}', [EmailTemplateController::class, 'update'])->name('update');
+                Route::delete('/{emailTemplate}', [EmailTemplateController::class, 'destroy'])->name('destroy');
+                Route::post('/{emailTemplate}/render', [EmailTemplateController::class, 'render'])->name('render');
             });
-            
+
             // Contact Lists
             Route::prefix('contact-lists')->name('contact-lists.')->group(function () {
-                Route::get('/', [App\Http\Controllers\EmailMarketing\ContactListController::class, 'index'])->name('index');
-                Route::post('/', [App\Http\Controllers\EmailMarketing\ContactListController::class, 'store'])->name('store');
-                Route::get('/{contactList}', [App\Http\Controllers\EmailMarketing\ContactListController::class, 'show'])->name('show');
-                Route::put('/{contactList}', [App\Http\Controllers\EmailMarketing\ContactListController::class, 'update'])->name('update');
-                Route::delete('/{contactList}', [App\Http\Controllers\EmailMarketing\ContactListController::class, 'destroy'])->name('destroy');
-                Route::post('/{contactList}/contacts', [App\Http\Controllers\EmailMarketing\ContactListController::class, 'addContacts'])->name('add-contacts');
-                Route::delete('/{contactList}/contacts', [App\Http\Controllers\EmailMarketing\ContactListController::class, 'removeContacts'])->name('remove-contacts');
+                Route::get('/', [ContactListController::class, 'index'])->name('index');
+                Route::post('/', [ContactListController::class, 'store'])->name('store');
+                Route::get('/{contactList}', [ContactListController::class, 'show'])->name('show');
+                Route::put('/{contactList}', [ContactListController::class, 'update'])->name('update');
+                Route::delete('/{contactList}', [ContactListController::class, 'destroy'])->name('destroy');
+                Route::post('/{contactList}/contacts', [ContactListController::class, 'addContacts'])->name('add-contacts');
+                Route::delete('/{contactList}/contacts', [ContactListController::class, 'removeContacts'])->name('remove-contacts');
             });
         });
 
         // Brand Assets Page (brand-scoped)
-        Route::middleware('brand.context')->get('/brand-assets', [App\Http\Controllers\Brand\BrandController::class, 'brandAssets'])->name('brand-assets');
-        
+        Route::middleware('brand.context')->get('/brand-assets', [BrandController::class, 'brandAssets'])->name('brand-assets');
+
         // Files Management (brand-scoped)
         Route::middleware('brand.context')->prefix('files')->name('files.')->group(function () {
-            Route::get('/', [App\Http\Controllers\FileController::class, 'index'])->name('index');
-            Route::post('/', [App\Http\Controllers\FileController::class, 'store'])->name('store');
-            Route::get('/{file}', [App\Http\Controllers\FileController::class, 'show'])->name('show');
-            Route::delete('/{file}', [App\Http\Controllers\FileController::class, 'destroy'])->name('destroy');
-            Route::get('/{file}/download', [App\Http\Controllers\FileController::class, 'download'])->name('download');
+            Route::get('/', [FileController::class, 'index'])->name('index');
+            Route::post('/', [FileController::class, 'store'])->name('store');
+            Route::get('/{file}', [FileController::class, 'show'])->name('show');
+            Route::delete('/{file}', [FileController::class, 'destroy'])->name('destroy');
+            Route::get('/{file}/download', [FileController::class, 'download'])->name('download');
         });
-        
+
         // Analytics (brand-scoped)
         Route::middleware('brand.context')->prefix('analytics')->name('analytics.')->group(function () {
-            Route::get('/', [App\Http\Controllers\AnalyticsController::class, 'index'])->name('index');
-            Route::post('/analyze', [App\Http\Controllers\AnalyticsController::class, 'analyze'])->name('analyze');
-            Route::get('/reports/{reportId}', [App\Http\Controllers\AnalyticsController::class, 'getAnalysis'])->name('reports.show');
-            Route::get('/campaigns/{campaignId}/performance', [App\Http\Controllers\AnalyticsController::class, 'getCampaignPerformance'])->name('campaigns.performance');
-            Route::get('/social-media/engagement', [App\Http\Controllers\AnalyticsController::class, 'getSocialMediaEngagement'])->name('social-media.engagement');
-            Route::get('/campaigns/{campaignId}/roi', [App\Http\Controllers\AnalyticsController::class, 'calculateROI'])->name('campaigns.roi');
-            Route::get('/competitors/comparison', [App\Http\Controllers\AnalyticsController::class, 'getCompetitorComparison'])->name('competitors.comparison');
-            Route::post('/sentiment', [App\Http\Controllers\AnalyticsController::class, 'analyzeSentiment'])->name('sentiment.analyze');
-            Route::get('/sentiment/trends', [App\Http\Controllers\AnalyticsController::class, 'getSentimentTrends'])->name('sentiment.trends');
-            Route::get('/sentiment/alerts', [App\Http\Controllers\AnalyticsController::class, 'getSentimentAlerts'])->name('sentiment.alerts');
-            Route::post('/predictions/campaigns/{campaignId}', [App\Http\Controllers\AnalyticsController::class, 'predictCampaignPerformance'])->name('predictions.campaigns');
-            Route::post('/predictions/content-engagement', [App\Http\Controllers\AnalyticsController::class, 'predictContentEngagement'])->name('predictions.content-engagement');
-            Route::post('/predictions/campaigns/{campaignId}/roi', [App\Http\Controllers\AnalyticsController::class, 'predictROI'])->name('predictions.roi');
-            Route::get('/predictions/optimal-posting-times', [App\Http\Controllers\AnalyticsController::class, 'getOptimalPostingTimes'])->name('predictions.optimal-posting-times');
-            Route::get('/predictions/budget-optimization', [App\Http\Controllers\AnalyticsController::class, 'getBudgetOptimization'])->name('predictions.budget-optimization');
+            Route::get('/', [AnalyticsController::class, 'index'])->name('index');
+            Route::post('/analyze', [AnalyticsController::class, 'analyze'])->name('analyze');
+            Route::get('/reports/{reportId}', [AnalyticsController::class, 'getAnalysis'])->name('reports.show');
+            Route::get('/campaigns/{campaignId}/performance', [AnalyticsController::class, 'getCampaignPerformance'])->name('campaigns.performance');
+            Route::get('/social-media/engagement', [AnalyticsController::class, 'getSocialMediaEngagement'])->name('social-media.engagement');
+            Route::get('/campaigns/{campaignId}/roi', [AnalyticsController::class, 'calculateROI'])->name('campaigns.roi');
+            Route::get('/competitors/comparison', [AnalyticsController::class, 'getCompetitorComparison'])->name('competitors.comparison');
+            Route::post('/sentiment', [AnalyticsController::class, 'analyzeSentiment'])->name('sentiment.analyze');
+            Route::get('/sentiment/trends', [AnalyticsController::class, 'getSentimentTrends'])->name('sentiment.trends');
+            Route::get('/sentiment/alerts', [AnalyticsController::class, 'getSentimentAlerts'])->name('sentiment.alerts');
+            Route::post('/predictions/campaigns/{campaignId}', [AnalyticsController::class, 'predictCampaignPerformance'])->name('predictions.campaigns');
+            Route::post('/predictions/content-engagement', [AnalyticsController::class, 'predictContentEngagement'])->name('predictions.content-engagement');
+            Route::post('/predictions/campaigns/{campaignId}/roi', [AnalyticsController::class, 'predictROI'])->name('predictions.roi');
+            Route::get('/predictions/optimal-posting-times', [AnalyticsController::class, 'getOptimalPostingTimes'])->name('predictions.optimal-posting-times');
+            Route::get('/predictions/budget-optimization', [AnalyticsController::class, 'getBudgetOptimization'])->name('predictions.budget-optimization');
         });
-        
+
         // Reports
         Route::middleware('not.client')->prefix('reports')->name('reports.')->group(function () {
-            Route::get('/', [App\Http\Controllers\ReportController::class, 'index'])->name('index');
-            Route::get('/create', [App\Http\Controllers\ReportController::class, 'create'])->name('create');
-            Route::post('/', [App\Http\Controllers\ReportController::class, 'store'])->name('store');
-            Route::get('/{reportId}', [App\Http\Controllers\ReportController::class, 'show'])->name('show');
-            Route::put('/{reportId}', [App\Http\Controllers\ReportController::class, 'update'])->name('update');
-            Route::delete('/{reportId}', [App\Http\Controllers\ReportController::class, 'destroy'])->name('destroy');
-            Route::post('/{reportId}/generate', [App\Http\Controllers\ReportController::class, 'generate'])->name('generate');
-            Route::post('/{reportId}/schedule', [App\Http\Controllers\ReportController::class, 'schedule'])->name('schedule');
-            Route::post('/{reportId}/share', [App\Http\Controllers\ReportController::class, 'share'])->name('share');
-            Route::post('/{reportId}/export', [App\Http\Controllers\ReportController::class, 'export'])->name('export');
+            Route::get('/', [ReportController::class, 'index'])->name('index');
+            Route::get('/create', [ReportController::class, 'create'])->name('create');
+            Route::post('/', [ReportController::class, 'store'])->name('store');
+            Route::get('/{reportId}', [ReportController::class, 'show'])->name('show');
+            Route::put('/{reportId}', [ReportController::class, 'update'])->name('update');
+            Route::delete('/{reportId}', [ReportController::class, 'destroy'])->name('destroy');
+            Route::post('/{reportId}/generate', [ReportController::class, 'generate'])->name('generate');
+            Route::post('/{reportId}/schedule', [ReportController::class, 'schedule'])->name('schedule');
+            Route::post('/{reportId}/share', [ReportController::class, 'share'])->name('share');
+            Route::post('/{reportId}/export', [ReportController::class, 'export'])->name('export');
         });
-        
+
         // Brand Management
         Route::prefix('brands')->name('brands.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Brand\BrandController::class, 'index'])->name('index');
-            Route::post('/', [App\Http\Controllers\Brand\BrandController::class, 'store'])->name('store');
-            Route::get('/create', [App\Http\Controllers\Brand\BrandController::class, 'create'])->name('create');
-            Route::get('/choose-name', [App\Http\Controllers\Brand\BrandNameGeneratorController::class, 'index'])->name('choose-name');
-            Route::post('/generate-concept', [App\Http\Controllers\Brand\BrandController::class, 'generateConcept'])->name('generate-concept');
+            Route::get('/', [BrandController::class, 'index'])->name('index');
+            Route::post('/', [BrandController::class, 'store'])->name('store');
+            Route::get('/create', [BrandController::class, 'create'])->name('create');
+            Route::get('/choose-name', [BrandNameGeneratorController::class, 'index'])->name('choose-name');
+            Route::post('/generate-concept', [BrandController::class, 'generateConcept'])->name('generate-concept');
 
             Route::prefix('name-generator')->name('name-generator.')->group(function () {
-                Route::post('/generate', [App\Http\Controllers\Brand\BrandNameGeneratorController::class, 'generate'])->name('generate');
-                Route::post('/check-domain', [App\Http\Controllers\Brand\BrandNameGeneratorController::class, 'checkDomain'])->name('check-domain');
-                Route::post('/check-handles', [App\Http\Controllers\Brand\BrandNameGeneratorController::class, 'checkSocialHandles'])->name('check-handles');
+                Route::post('/generate', [BrandNameGeneratorController::class, 'generate'])->name('generate');
+                Route::post('/check-domain', [BrandNameGeneratorController::class, 'checkDomain'])->name('check-domain');
+                Route::post('/check-handles', [BrandNameGeneratorController::class, 'checkSocialHandles'])->name('check-handles');
             });
 
-            Route::get('/{brand}/edit', [App\Http\Controllers\Brand\BrandController::class, 'edit'])->name('edit');
-            Route::get('/{brand}', [App\Http\Controllers\Brand\BrandController::class, 'show'])->name('show');
-            Route::put('/{brand}', [App\Http\Controllers\Brand\BrandController::class, 'update'])->name('update');
-            Route::delete('/{brand}', [App\Http\Controllers\Brand\BrandController::class, 'destroy'])->name('destroy');
+            Route::get('/{brand}/edit', [BrandController::class, 'edit'])->name('edit');
+            Route::get('/{brand}', [BrandController::class, 'show'])->name('show');
+            Route::put('/{brand}', [BrandController::class, 'update'])->name('update');
+            Route::delete('/{brand}', [BrandController::class, 'destroy'])->name('destroy');
 
             Route::prefix('{brand}/assets')->name('assets.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Brand\BrandAssetController::class, 'index'])->name('index');
-                Route::get('/{brandAsset}', [App\Http\Controllers\Brand\BrandAssetController::class, 'show'])->name('show');
-                Route::post('/', [App\Http\Controllers\Brand\BrandAssetController::class, 'store'])->name('store');
-                Route::put('/{brandAsset}', [App\Http\Controllers\Brand\BrandAssetController::class, 'update'])->name('update');
-                Route::delete('/{brandAsset}', [App\Http\Controllers\Brand\BrandAssetController::class, 'destroy'])->name('destroy');
+                Route::get('/', [BrandAssetController::class, 'index'])->name('index');
+                Route::get('/{brandAsset}', [BrandAssetController::class, 'show'])->name('show');
+                Route::post('/', [BrandAssetController::class, 'store'])->name('store');
+                Route::put('/{brandAsset}', [BrandAssetController::class, 'update'])->name('update');
+                Route::delete('/{brandAsset}', [BrandAssetController::class, 'destroy'])->name('destroy');
             });
         });
-        
+
         // Product Management
         Route::prefix('products')->name('products.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Product\ProductController::class, 'index'])->name('index');
-            Route::get('/create', [App\Http\Controllers\Product\ProductController::class, 'create'])->name('create');
-            Route::post('/', [App\Http\Controllers\Product\ProductController::class, 'store'])->name('store');
-            Route::post('/import', [App\Http\Controllers\Product\ProductController::class, 'import'])->name('import');
-            Route::get('/{product}/edit', [App\Http\Controllers\Product\ProductController::class, 'edit'])->name('edit');
-            Route::get('/{product}', [App\Http\Controllers\Product\ProductController::class, 'show'])->name('show');
-            Route::put('/{product}', [App\Http\Controllers\Product\ProductController::class, 'update'])->name('update');
-            Route::delete('/{product}', [App\Http\Controllers\Product\ProductController::class, 'destroy'])->name('destroy');
-            Route::put('/{product}/stock', [App\Http\Controllers\Product\ProductController::class, 'updateStock'])->name('update-stock');
-            
+            Route::get('/', [ProductController::class, 'index'])->name('index');
+            Route::get('/create', [ProductController::class, 'create'])->name('create');
+            Route::post('/', [ProductController::class, 'store'])->name('store');
+            Route::post('/import', [ProductController::class, 'import'])->name('import');
+            Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit');
+            Route::get('/{product}', [ProductController::class, 'show'])->name('show');
+            Route::put('/{product}', [ProductController::class, 'update'])->name('update');
+            Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
+            Route::put('/{product}/stock', [ProductController::class, 'updateStock'])->name('update-stock');
+
             // Product Images
             Route::prefix('{product}/images')->name('images.')->group(function () {
-                Route::post('/', [App\Http\Controllers\Product\ProductImageController::class, 'store'])->name('store');
-                Route::delete('/{productImage}', [App\Http\Controllers\Product\ProductImageController::class, 'destroy'])->name('destroy');
+                Route::post('/', [ProductImageController::class, 'store'])->name('store');
+                Route::delete('/{productImage}', [ProductImageController::class, 'destroy'])->name('destroy');
             });
-            
+
             // Product Variants
             Route::prefix('{product}/variants')->name('variants.')->group(function () {
-                Route::post('/', [App\Http\Controllers\Product\ProductVariantController::class, 'store'])->name('store');
-                Route::put('/{productVariant}', [App\Http\Controllers\Product\ProductVariantController::class, 'update'])->name('update');
-                Route::delete('/{productVariant}', [App\Http\Controllers\Product\ProductVariantController::class, 'destroy'])->name('destroy');
+                Route::post('/', [ProductVariantController::class, 'store'])->name('store');
+                Route::put('/{productVariant}', [ProductVariantController::class, 'update'])->name('update');
+                Route::delete('/{productVariant}', [ProductVariantController::class, 'destroy'])->name('destroy');
             });
         });
-        
+
         // Product Categories
         Route::prefix('product-categories')->name('product-categories.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Product\ProductCategoryController::class, 'index'])->name('index');
-            Route::post('/', [App\Http\Controllers\Product\ProductCategoryController::class, 'store'])->name('store');
-            Route::put('/{productCategory}', [App\Http\Controllers\Product\ProductCategoryController::class, 'update'])->name('update');
-            Route::delete('/{productCategory}', [App\Http\Controllers\Product\ProductCategoryController::class, 'destroy'])->name('destroy');
+            Route::get('/', [ProductCategoryController::class, 'index'])->name('index');
+            Route::post('/', [ProductCategoryController::class, 'store'])->name('store');
+            Route::put('/{productCategory}', [ProductCategoryController::class, 'update'])->name('update');
+            Route::delete('/{productCategory}', [ProductCategoryController::class, 'destroy'])->name('destroy');
         });
-        
+
         // Social Media Integration
         Route::prefix('social')->name('social.')->group(function () {
             // OAuth Routes
             Route::prefix('auth')->name('auth.')->group(function () {
-                Route::get('/{platform}/redirect', [App\Http\Controllers\SocialMedia\SocialAuthController::class, 'redirectToProvider'])->name('redirect');
-                Route::get('/{platform}/callback', [App\Http\Controllers\SocialMedia\SocialAuthController::class, 'handleProviderCallback'])->name('callback');
+                Route::get('/{platform}/redirect', [SocialAuthController::class, 'redirectToProvider'])->name('redirect');
+                Route::get('/{platform}/callback', [SocialAuthController::class, 'handleProviderCallback'])->name('callback');
             });
 
             // Connections
             Route::prefix('connections')->name('connections.')->group(function () {
-                Route::get('/', [App\Http\Controllers\SocialMedia\SocialConnectionController::class, 'index'])->name('index');
-                Route::get('/{connection}', [App\Http\Controllers\SocialMedia\SocialConnectionController::class, 'show'])->name('show');
-                Route::post('/{connection}/refresh', [App\Http\Controllers\SocialMedia\SocialAuthController::class, 'refresh'])->name('refresh');
-                Route::post('/{connection}/check', [App\Http\Controllers\SocialMedia\SocialConnectionController::class, 'checkStatus'])->name('check');
-                Route::delete('/{connection}', [App\Http\Controllers\SocialMedia\SocialConnectionController::class, 'destroy'])->name('destroy');
+                Route::get('/', [SocialConnectionController::class, 'index'])->name('index');
+                Route::get('/{connection}', [SocialConnectionController::class, 'show'])->name('show');
+                Route::post('/{connection}/refresh', [SocialAuthController::class, 'refresh'])->name('refresh');
+                Route::post('/{connection}/check', [SocialConnectionController::class, 'checkStatus'])->name('check');
+                Route::delete('/{connection}', [SocialConnectionController::class, 'destroy'])->name('destroy');
             });
 
             // Publishing
             Route::prefix('publishing')->name('publishing.')->group(function () {
-                Route::post('/{scheduledPost}/publish', [App\Http\Controllers\SocialMedia\PublishingController::class, 'publishNow'])->name('publish');
-                Route::post('/{scheduledPost}/publish-multiple', [App\Http\Controllers\SocialMedia\PublishingController::class, 'publishToMultiple'])->name('publish-multiple');
+                Route::post('/{scheduledPost}/publish', [PublishingController::class, 'publishNow'])->name('publish');
+                Route::post('/{scheduledPost}/publish-multiple', [PublishingController::class, 'publishToMultiple'])->name('publish-multiple');
             });
 
             // Channels
             Route::prefix('channels')->name('channels.')->group(function () {
-                Route::get('/', [App\Http\Controllers\ChannelController::class, 'index'])->name('index');
-                Route::get('/create', [App\Http\Controllers\ChannelController::class, 'create'])->name('create');
-                Route::post('/', [App\Http\Controllers\ChannelController::class, 'store'])->name('store');
-                Route::get('/{channel}/edit', [App\Http\Controllers\ChannelController::class, 'edit'])->name('edit');
-                Route::post('/{channel}/test', [App\Http\Controllers\ChannelController::class, 'testConnection'])->name('test');
-                Route::get('/{channel}', [App\Http\Controllers\ChannelController::class, 'show'])->name('show');
-                Route::put('/{channel}', [App\Http\Controllers\ChannelController::class, 'update'])->name('update');
-                Route::delete('/{channel}', [App\Http\Controllers\ChannelController::class, 'destroy'])->name('destroy');
-                Route::put('/{channel}/settings', [App\Http\Controllers\ChannelController::class, 'updateSettings'])->name('settings');
+                Route::get('/', [ChannelController::class, 'index'])->name('index');
+                Route::get('/create', [ChannelController::class, 'create'])->name('create');
+                Route::post('/', [ChannelController::class, 'store'])->name('store');
+                Route::get('/{channel}/edit', [ChannelController::class, 'edit'])->name('edit');
+                Route::post('/{channel}/test', [ChannelController::class, 'testConnection'])->name('test');
+                Route::get('/{channel}', [ChannelController::class, 'show'])->name('show');
+                Route::put('/{channel}', [ChannelController::class, 'update'])->name('update');
+                Route::delete('/{channel}', [ChannelController::class, 'destroy'])->name('destroy');
+                Route::put('/{channel}/settings', [ChannelController::class, 'updateSettings'])->name('settings');
             });
         });
-        
+
         // Press Release Management
         Route::middleware('not.client')->prefix('press-releases')->name('press-releases.')->group(function () {
-            Route::get('/', [App\Http\Controllers\PressRelease\PressReleaseController::class, 'index'])->name('index');
-            Route::post('/', [App\Http\Controllers\PressRelease\PressReleaseController::class, 'store'])->name('store');
-            Route::get('/{pressRelease}', [App\Http\Controllers\PressRelease\PressReleaseController::class, 'show'])->name('show');
-            Route::put('/{pressRelease}', [App\Http\Controllers\PressRelease\PressReleaseController::class, 'update'])->name('update');
-            Route::delete('/{pressRelease}', [App\Http\Controllers\PressRelease\PressReleaseController::class, 'destroy'])->name('destroy');
-            Route::post('/{pressRelease}/schedule', [App\Http\Controllers\PressRelease\PressReleaseController::class, 'schedule'])->name('schedule');
-            Route::post('/{pressRelease}/approve', [App\Http\Controllers\PressRelease\PressReleaseController::class, 'approve'])->name('approve');
-            Route::post('/{pressRelease}/distribute', [App\Http\Controllers\PressRelease\PressReleaseController::class, 'distribute'])->name('distribute');
-            
+            Route::get('/', [PressReleaseController::class, 'index'])->name('index');
+            Route::post('/', [PressReleaseController::class, 'store'])->name('store');
+            Route::get('/{pressRelease}', [PressReleaseController::class, 'show'])->name('show');
+            Route::put('/{pressRelease}', [PressReleaseController::class, 'update'])->name('update');
+            Route::delete('/{pressRelease}', [PressReleaseController::class, 'destroy'])->name('destroy');
+            Route::post('/{pressRelease}/schedule', [PressReleaseController::class, 'schedule'])->name('schedule');
+            Route::post('/{pressRelease}/approve', [PressReleaseController::class, 'approve'])->name('approve');
+            Route::post('/{pressRelease}/distribute', [PressReleaseController::class, 'distribute'])->name('distribute');
+
             // Press Contacts
             Route::prefix('contacts')->name('contacts.')->group(function () {
-                Route::get('/', [App\Http\Controllers\PressRelease\PressContactController::class, 'index'])->name('index');
-                Route::post('/', [App\Http\Controllers\PressRelease\PressContactController::class, 'store'])->name('store');
-                Route::post('/import', [App\Http\Controllers\PressRelease\PressContactController::class, 'import'])->name('import');
-                Route::get('/{pressContact}', [App\Http\Controllers\PressRelease\PressContactController::class, 'show'])->name('show');
-                Route::put('/{pressContact}', [App\Http\Controllers\PressRelease\PressContactController::class, 'update'])->name('update');
-                Route::delete('/{pressContact}', [App\Http\Controllers\PressRelease\PressContactController::class, 'destroy'])->name('destroy');
+                Route::get('/', [PressContactController::class, 'index'])->name('index');
+                Route::post('/', [PressContactController::class, 'store'])->name('store');
+                Route::post('/import', [PressContactController::class, 'import'])->name('import');
+                Route::get('/{pressContact}', [PressContactController::class, 'show'])->name('show');
+                Route::put('/{pressContact}', [PressContactController::class, 'update'])->name('update');
+                Route::delete('/{pressContact}', [PressContactController::class, 'destroy'])->name('destroy');
             });
         });
-        
+
         // Competitor Analysis
         Route::middleware('not.client')->prefix('competitors')->name('competitors.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Competitor\CompetitorController::class, 'index'])->name('index');
-            Route::post('/', [App\Http\Controllers\Competitor\CompetitorController::class, 'store'])->name('store');
-            Route::get('/{competitor}', [App\Http\Controllers\Competitor\CompetitorController::class, 'show'])->name('show');
-            Route::put('/{competitor}', [App\Http\Controllers\Competitor\CompetitorController::class, 'update'])->name('update');
-            Route::delete('/{competitor}', [App\Http\Controllers\Competitor\CompetitorController::class, 'destroy'])->name('destroy');
-            Route::post('/{competitor}/analysis', [App\Http\Controllers\Competitor\CompetitorController::class, 'createAnalysis'])->name('analysis');
-            Route::post('/{competitor}/track-post', [App\Http\Controllers\Competitor\CompetitorController::class, 'trackPost'])->name('track-post');
-            Route::post('/compare', [App\Http\Controllers\Competitor\CompetitorController::class, 'compare'])->name('compare');
+            Route::get('/', [CompetitorController::class, 'index'])->name('index');
+            Route::post('/', [CompetitorController::class, 'store'])->name('store');
+            Route::get('/{competitor}', [CompetitorController::class, 'show'])->name('show');
+            Route::put('/{competitor}', [CompetitorController::class, 'update'])->name('update');
+            Route::delete('/{competitor}', [CompetitorController::class, 'destroy'])->name('destroy');
+            Route::post('/{competitor}/analysis', [CompetitorController::class, 'createAnalysis'])->name('analysis');
+            Route::post('/{competitor}/track-post', [CompetitorController::class, 'trackPost'])->name('track-post');
+            Route::post('/compare', [CompetitorController::class, 'compare'])->name('compare');
         });
-        
+
         // Automation & Workflows
         Route::middleware('not.client')->prefix('workflows')->name('workflows.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Workflow\WorkflowController::class, 'index'])->name('index');
-            Route::get('/builder', [App\Http\Controllers\Workflow\WorkflowController::class, 'builder'])->name('builder');
-            Route::post('/', [App\Http\Controllers\Workflow\WorkflowController::class, 'store'])->name('store');
-            Route::get('/{workflow}', [App\Http\Controllers\Workflow\WorkflowController::class, 'show'])->name('show');
-            Route::put('/{workflow}', [App\Http\Controllers\Workflow\WorkflowController::class, 'update'])->name('update');
-            Route::delete('/{workflow}', [App\Http\Controllers\Workflow\WorkflowController::class, 'destroy'])->name('destroy');
-            Route::post('/{workflow}/execute', [App\Http\Controllers\Workflow\WorkflowController::class, 'execute'])->name('execute');
+            Route::get('/', [WorkflowController::class, 'index'])->name('index');
+            Route::get('/builder', [WorkflowController::class, 'builder'])->name('builder');
+            Route::post('/', [WorkflowController::class, 'store'])->name('store');
+            Route::get('/{workflow}', [WorkflowController::class, 'show'])->name('show');
+            Route::put('/{workflow}', [WorkflowController::class, 'update'])->name('update');
+            Route::delete('/{workflow}', [WorkflowController::class, 'destroy'])->name('destroy');
+            Route::post('/{workflow}/execute', [WorkflowController::class, 'execute'])->name('execute');
         });
-        
+
         // Website Chatbot
         Route::middleware('not.client')->prefix('chatbots')->name('chatbots.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Chatbot\ChatbotController::class, 'index'])->name('index');
-            Route::get('/builder', [App\Http\Controllers\Chatbot\ChatbotController::class, 'builder'])->name('builder');
-            Route::get('/deployment', [App\Http\Controllers\Chatbot\ChatbotController::class, 'deployment'])->name('deployment');
-            Route::get('/analytics', [App\Http\Controllers\Chatbot\ChatbotController::class, 'analytics'])->name('analytics');
-            Route::post('/', [App\Http\Controllers\Chatbot\ChatbotController::class, 'store'])->name('store');
-            Route::get('/{chatbot}', [App\Http\Controllers\Chatbot\ChatbotController::class, 'show'])->name('show');
-            Route::put('/{chatbot}', [App\Http\Controllers\Chatbot\ChatbotController::class, 'update'])->name('update');
-            Route::delete('/{chatbot}', [App\Http\Controllers\Chatbot\ChatbotController::class, 'destroy'])->name('destroy');
-            Route::post('/{chatbot}/conversation', [App\Http\Controllers\Chatbot\ChatbotController::class, 'startConversation'])->name('conversation');
-            Route::post('/{chatbot}/lead', [App\Http\Controllers\Chatbot\ChatbotController::class, 'captureLead'])->name('lead');
+            Route::get('/', [ChatbotController::class, 'index'])->name('index');
+            Route::get('/builder', [ChatbotController::class, 'builder'])->name('builder');
+            Route::get('/deployment', [ChatbotController::class, 'deployment'])->name('deployment');
+            Route::get('/analytics', [ChatbotController::class, 'analytics'])->name('analytics');
+            Route::post('/', [ChatbotController::class, 'store'])->name('store');
+            Route::get('/{chatbot}', [ChatbotController::class, 'show'])->name('show');
+            Route::put('/{chatbot}', [ChatbotController::class, 'update'])->name('update');
+            Route::delete('/{chatbot}', [ChatbotController::class, 'destroy'])->name('destroy');
+            Route::post('/{chatbot}/conversation', [ChatbotController::class, 'startConversation'])->name('conversation');
+            Route::post('/{chatbot}/lead', [ChatbotController::class, 'captureLead'])->name('lead');
         });
-        
+
         // Landing Page Builder
         Route::middleware('not.client')->prefix('landing-pages')->name('landing-pages.')->group(function () {
-            Route::get('/', [App\Http\Controllers\LandingPage\LandingPageController::class, 'index'])->name('index');
-            Route::get('/create', [App\Http\Controllers\LandingPage\LandingPageController::class, 'create'])->name('create');
-            Route::post('/', [App\Http\Controllers\LandingPage\LandingPageController::class, 'store'])->name('store');
-            Route::get('/{landingPage}/builder', [App\Http\Controllers\LandingPage\LandingPageController::class, 'builder'])->name('builder');
-            Route::get('/{landingPage}/preview', [App\Http\Controllers\LandingPage\LandingPageController::class, 'preview'])->name('preview');
-            Route::get('/{landingPage}/analytics', [App\Http\Controllers\LandingPage\LandingPageController::class, 'analytics'])->name('analytics');
-            Route::get('/{landingPage}', [App\Http\Controllers\LandingPage\LandingPageController::class, 'show'])->name('show');
-            Route::put('/{landingPage}', [App\Http\Controllers\LandingPage\LandingPageController::class, 'update'])->name('update');
-            Route::delete('/{landingPage}', [App\Http\Controllers\LandingPage\LandingPageController::class, 'destroy'])->name('destroy');
-            Route::post('/{landingPage}/publish', [App\Http\Controllers\LandingPage\LandingPageController::class, 'publish'])->name('publish');
-            Route::post('/{landingPage}/variants', [App\Http\Controllers\LandingPage\LandingPageController::class, 'createVariant'])->name('variants.store');
-            Route::post('/{landingPage}/set-winner', [App\Http\Controllers\LandingPage\LandingPageController::class, 'setWinner'])->name('set-winner');
+            Route::get('/', [LandingPageController::class, 'index'])->name('index');
+            Route::get('/create', [LandingPageController::class, 'create'])->name('create');
+            Route::post('/', [LandingPageController::class, 'store'])->name('store');
+            Route::get('/{landingPage}/builder', [LandingPageController::class, 'builder'])->name('builder');
+            Route::get('/{landingPage}/preview', [LandingPageController::class, 'preview'])->name('preview');
+            Route::get('/{landingPage}/analytics', [LandingPageController::class, 'analytics'])->name('analytics');
+            Route::get('/{landingPage}', [LandingPageController::class, 'show'])->name('show');
+            Route::put('/{landingPage}', [LandingPageController::class, 'update'])->name('update');
+            Route::delete('/{landingPage}', [LandingPageController::class, 'destroy'])->name('destroy');
+            Route::post('/{landingPage}/publish', [LandingPageController::class, 'publish'])->name('publish');
+            Route::post('/{landingPage}/variants', [LandingPageController::class, 'createVariant'])->name('variants.store');
+            Route::post('/{landingPage}/set-winner', [LandingPageController::class, 'setWinner'])->name('set-winner');
         });
-        
+
         // Surveys & Feedback
         Route::middleware('not.client')->prefix('surveys')->name('surveys.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Survey\SurveyController::class, 'index'])->name('index');
-            Route::get('/create', [App\Http\Controllers\Survey\SurveyController::class, 'create'])->name('create');
-            Route::post('/', [App\Http\Controllers\Survey\SurveyController::class, 'store'])->name('store');
-            Route::get('/{survey}/builder', [App\Http\Controllers\Survey\SurveyController::class, 'builder'])->name('builder');
-            Route::get('/{survey}/analytics', [App\Http\Controllers\Survey\SurveyController::class, 'analytics'])->name('analytics');
-            Route::get('/{survey}/export', [App\Http\Controllers\Survey\SurveyController::class, 'export'])->name('export');
-            Route::get('/{survey}', [App\Http\Controllers\Survey\SurveyController::class, 'show'])->name('show');
-            Route::put('/{survey}', [App\Http\Controllers\Survey\SurveyController::class, 'update'])->name('update');
-            Route::delete('/{survey}', [App\Http\Controllers\Survey\SurveyController::class, 'destroy'])->name('destroy');
-            Route::post('/{survey}/questions', [App\Http\Controllers\Survey\SurveyController::class, 'addQuestion'])->name('questions.store');
-            Route::post('/{survey}/responses', [App\Http\Controllers\Survey\SurveyController::class, 'submitResponse'])->name('responses.store');
-            Route::post('/{survey}/activate', [App\Http\Controllers\Survey\SurveyController::class, 'activate'])->name('activate');
-            Route::post('/{survey}/close', [App\Http\Controllers\Survey\SurveyController::class, 'close'])->name('close');
+            Route::get('/', [SurveyController::class, 'index'])->name('index');
+            Route::get('/create', [SurveyController::class, 'create'])->name('create');
+            Route::post('/', [SurveyController::class, 'store'])->name('store');
+            Route::get('/{survey}/builder', [SurveyController::class, 'builder'])->name('builder');
+            Route::get('/{survey}/analytics', [SurveyController::class, 'analytics'])->name('analytics');
+            Route::get('/{survey}/export', [SurveyController::class, 'export'])->name('export');
+            Route::get('/{survey}', [SurveyController::class, 'show'])->name('show');
+            Route::put('/{survey}', [SurveyController::class, 'update'])->name('update');
+            Route::delete('/{survey}', [SurveyController::class, 'destroy'])->name('destroy');
+            Route::post('/{survey}/questions', [SurveyController::class, 'addQuestion'])->name('questions.store');
+            Route::post('/{survey}/responses', [SurveyController::class, 'submitResponse'])->name('responses.store');
+            Route::post('/{survey}/activate', [SurveyController::class, 'activate'])->name('activate');
+            Route::post('/{survey}/close', [SurveyController::class, 'close'])->name('close');
         });
-        
+
         // Organization Settings (Admin only)
         Route::middleware('organization.admin')->group(function () {
             // Settings
-            Route::get('/settings', [App\Http\Controllers\Organization\SettingsController::class, 'index'])->name('settings');
-            Route::put('/settings', [App\Http\Controllers\Organization\SettingsController::class, 'update'])->name('settings.update');
-            Route::get('/settings/{key}', [App\Http\Controllers\Organization\SettingsController::class, 'getSetting'])->name('settings.get');
-            Route::put('/settings/{key}', [App\Http\Controllers\Organization\SettingsController::class, 'updateSetting'])->name('settings.update-setting');
-            Route::delete('/settings/{key}', [App\Http\Controllers\Organization\SettingsController::class, 'deleteSetting'])->name('settings.delete');
-            
+            Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+            Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+            Route::get('/settings/{key}', [SettingsController::class, 'getSetting'])->name('settings.get');
+            Route::put('/settings/{key}', [SettingsController::class, 'updateSetting'])->name('settings.update-setting');
+            Route::delete('/settings/{key}', [SettingsController::class, 'deleteSetting'])->name('settings.delete');
+
             // Billing
-            Route::get('/billing', [App\Http\Controllers\Organization\BillingController::class, 'index'])->name('billing');
-            Route::post('/billing/subscription', [App\Http\Controllers\Organization\BillingController::class, 'createSubscription'])->name('billing.subscription.create');
-            Route::put('/billing/subscription/upgrade', [App\Http\Controllers\Organization\BillingController::class, 'upgradeSubscription'])->name('billing.subscription.upgrade');
-            Route::put('/billing/subscription/cancel', [App\Http\Controllers\Organization\BillingController::class, 'cancelSubscription'])->name('billing.subscription.cancel');
-            Route::get('/billing/invoices', [App\Http\Controllers\Organization\BillingController::class, 'getInvoices'])->name('billing.invoices');
-            Route::get('/billing/usage', [App\Http\Controllers\Organization\BillingController::class, 'getUsageStats'])->name('billing.usage');
-            
+            Route::get('/billing', [BillingController::class, 'index'])->name('billing');
+            Route::post('/billing/subscription', [BillingController::class, 'createSubscription'])->name('billing.subscription.create');
+            Route::put('/billing/subscription/upgrade', [BillingController::class, 'upgradeSubscription'])->name('billing.subscription.upgrade');
+            Route::put('/billing/subscription/cancel', [BillingController::class, 'cancelSubscription'])->name('billing.subscription.cancel');
+            Route::get('/billing/invoices', [BillingController::class, 'getInvoices'])->name('billing.invoices');
+            Route::get('/billing/usage', [BillingController::class, 'getUsageStats'])->name('billing.usage');
+
             // Team
-            Route::get('/team', [App\Http\Controllers\Organization\TeamController::class, 'index'])->name('team');
-            Route::post('/team/members', [App\Http\Controllers\Organization\TeamController::class, 'addMember'])->name('team.members.add');
-            Route::delete('/team/members/{userId}', [App\Http\Controllers\Organization\TeamController::class, 'removeMember'])->name('team.members.remove');
-            Route::put('/team/members/{userId}/role', [App\Http\Controllers\Organization\TeamController::class, 'updateRole'])->name('team.members.update-role');
-            Route::post('/team/invite', [App\Http\Controllers\Organization\TeamController::class, 'invite'])->name('team.invite');
-            Route::get('/team/roles', [App\Http\Controllers\Organization\TeamController::class, 'getRoles'])->name('team.roles');
-            
+            Route::get('/team', [TeamController::class, 'index'])->name('team');
+            Route::post('/team/members', [TeamController::class, 'addMember'])->name('team.members.add');
+            Route::delete('/team/members/{userId}', [TeamController::class, 'removeMember'])->name('team.members.remove');
+            Route::put('/team/members/{userId}/role', [TeamController::class, 'updateRole'])->name('team.members.update-role');
+            Route::post('/team/invite', [TeamController::class, 'invite'])->name('team.invite');
+            Route::get('/team/roles', [TeamController::class, 'getRoles'])->name('team.roles');
+
             // Storage Sources
-            Route::get('/storage-sources', [App\Http\Controllers\Organization\StorageSourceController::class, 'index'])->name('storage-sources');
-            Route::post('/storage-sources/connect', [App\Http\Controllers\Organization\StorageSourceController::class, 'connect'])->name('storage-sources.connect');
-            Route::delete('/storage-sources/{provider}', [App\Http\Controllers\Organization\StorageSourceController::class, 'disconnect'])->name('storage-sources.disconnect');
-            Route::get('/storage-sources/{provider}', [App\Http\Controllers\Organization\StorageSourceController::class, 'show'])->name('storage-sources.show');
-            Route::put('/storage-sources/{provider}/settings', [App\Http\Controllers\Organization\StorageSourceController::class, 'updateSettings'])->name('storage-sources.update-settings');
-            
+            Route::get('/storage-sources', [StorageSourceController::class, 'index'])->name('storage-sources');
+            Route::post('/storage-sources/connect', [StorageSourceController::class, 'connect'])->name('storage-sources.connect');
+            Route::delete('/storage-sources/{provider}', [StorageSourceController::class, 'disconnect'])->name('storage-sources.disconnect');
+            Route::get('/storage-sources/{provider}', [StorageSourceController::class, 'show'])->name('storage-sources.show');
+            Route::put('/storage-sources/{provider}/settings', [StorageSourceController::class, 'updateSettings'])->name('storage-sources.update-settings');
+
             // Automations
-            Route::get('/automations', [App\Http\Controllers\Organization\AutomationController::class, 'index'])->name('automations');
-            Route::post('/automations', [App\Http\Controllers\Organization\AutomationController::class, 'store'])->name('automations.store');
-            Route::post('/automations/{automationRule}/toggle', [App\Http\Controllers\Organization\AutomationController::class, 'toggle'])->name('automations.toggle');
-            Route::post('/automations/{automationRule}/test', [App\Http\Controllers\Organization\AutomationController::class, 'test'])->name('automations.test');
+            Route::get('/automations', [AutomationController::class, 'index'])->name('automations');
+            Route::post('/automations', [AutomationController::class, 'store'])->name('automations.store');
+            Route::post('/automations/{automationRule}/toggle', [AutomationController::class, 'toggle'])->name('automations.toggle');
+            Route::post('/automations/{automationRule}/test', [AutomationController::class, 'test'])->name('automations.test');
         });
     });
 });
@@ -694,21 +775,21 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
 Route::prefix('admin')->middleware(['auth:admin', 'role:admin'])->name('admin.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
     Route::resource('organizations', App\Http\Controllers\Admin\OrganizationController::class);
-    
+
     // User Management
-    Route::resource('users', App\Http\Controllers\Admin\UserController::class);
-    Route::post('/users/{user}/assign-roles', [App\Http\Controllers\Admin\UserController::class, 'assignRoles'])->name('users.assign-roles');
-    Route::post('/users/{user}/deactivate', [App\Http\Controllers\Admin\UserController::class, 'deactivate'])->name('users.deactivate');
-    Route::post('/users/{user}/reactivate', [App\Http\Controllers\Admin\UserController::class, 'reactivate'])->name('users.reactivate');
-    
+    Route::resource('users', UserController::class);
+    Route::post('/users/{user}/assign-roles', [UserController::class, 'assignRoles'])->name('users.assign-roles');
+    Route::post('/users/{user}/deactivate', [UserController::class, 'deactivate'])->name('users.deactivate');
+    Route::post('/users/{user}/reactivate', [UserController::class, 'reactivate'])->name('users.reactivate');
+
     // Content Moderation
-    Route::get('/content', [App\Http\Controllers\Admin\ContentController::class, 'index'])->name('content.index');
-    Route::post('/content/flag/{post}', [App\Http\Controllers\Admin\ContentController::class, 'flag'])->name('content.flag');
-    Route::post('/content/{moderation}/approve', [App\Http\Controllers\Admin\ContentController::class, 'approve'])->name('content.approve');
-    Route::post('/content/{moderation}/reject', [App\Http\Controllers\Admin\ContentController::class, 'reject'])->name('content.reject');
-    Route::delete('/content/{moderation}', [App\Http\Controllers\Admin\ContentController::class, 'destroy'])->name('content.destroy');
-    Route::post('/content/flags/{flag}/review', [App\Http\Controllers\Admin\ContentController::class, 'reviewFlag'])->name('content.review-flag');
-    
+    Route::get('/content', [ContentController::class, 'index'])->name('content.index');
+    Route::post('/content/flag/{post}', [ContentController::class, 'flag'])->name('content.flag');
+    Route::post('/content/{moderation}/approve', [ContentController::class, 'approve'])->name('content.approve');
+    Route::post('/content/{moderation}/reject', [ContentController::class, 'reject'])->name('content.reject');
+    Route::delete('/content/{moderation}', [ContentController::class, 'destroy'])->name('content.destroy');
+    Route::post('/content/flags/{flag}/review', [ContentController::class, 'reviewFlag'])->name('content.review-flag');
+
     // Platform Settings
     Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings/update', [App\Http\Controllers\Admin\SettingsController::class, 'updateSetting'])->name('settings.update');
@@ -717,15 +798,15 @@ Route::prefix('admin')->middleware(['auth:admin', 'role:admin'])->name('admin.')
     Route::post('/settings/api-keys', [App\Http\Controllers\Admin\SettingsController::class, 'updateApiKey'])->name('settings.update-api-key');
     Route::post('/settings/maintenance/enable', [App\Http\Controllers\Admin\SettingsController::class, 'enableMaintenanceMode'])->name('settings.enable-maintenance');
     Route::post('/settings/maintenance/disable', [App\Http\Controllers\Admin\SettingsController::class, 'disableMaintenanceMode'])->name('settings.disable-maintenance');
-    
+
     // System Logs
-    Route::get('/logs', [App\Http\Controllers\Admin\LogController::class, 'index'])->name('logs.index');
-    
+    Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
+
     // Admin Analytics & Costing
-    Route::get('/costing', [App\Http\Controllers\Admin\CostingController::class, 'index'])->name('costing.index');
-    
+    Route::get('/costing', [CostingController::class, 'index'])->name('costing.index');
+
     // Other admin routes (to be implemented)
-    Route::resource('packages', App\Http\Controllers\Admin\PackageController::class);
+    Route::resource('packages', PackageController::class);
     Route::get('/billing', [App\Http\Controllers\Admin\BillingController::class, 'index'])->name('billing.index');
     Route::get('/team', [App\Http\Controllers\Admin\TeamController::class, 'index'])->name('team.index');
 });
@@ -733,23 +814,23 @@ Route::prefix('admin')->middleware(['auth:admin', 'role:admin'])->name('admin.')
 Route::middleware(['auth', 'verified', 'role:agency'])->prefix('agency')->name('agency.')->group(function () {
     Route::middleware('agency')->prefix('{agency}')->group(function () {
         Route::get('/', [App\Http\Controllers\Agency\DashboardController::class, 'index'])->name('dashboard');
-        
+
         Route::prefix('clients')->name('clients.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Agency\ClientController::class, 'index'])->name('index');
-            Route::middleware('agency.admin')->get('/create', [App\Http\Controllers\Agency\ClientController::class, 'create'])->name('create');
-            Route::middleware('agency.admin')->post('/', [App\Http\Controllers\Agency\ClientController::class, 'store'])->name('store');
-            Route::middleware('agency.client')->get('/{organizationId}', [App\Http\Controllers\Agency\ClientController::class, 'show'])->name('show');
+            Route::get('/', [ClientController::class, 'index'])->name('index');
+            Route::middleware('agency.admin')->get('/create', [ClientController::class, 'create'])->name('create');
+            Route::middleware('agency.admin')->post('/', [ClientController::class, 'store'])->name('store');
+            Route::middleware('agency.client')->get('/{organizationId}', [ClientController::class, 'show'])->name('show');
         });
-        
+
         Route::get('/tasks', [App\Http\Controllers\Agency\TaskController::class, 'index'])->name('tasks');
-        Route::get('/calendar', [App\Http\Controllers\Agency\CalendarController::class, 'index'])->name('calendar');
-        
+        Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar');
+
         Route::prefix('reports')->name('reports.')->group(function () {
             Route::get('/', [App\Http\Controllers\Agency\ReportController::class, 'index'])->name('index');
             Route::post('/generate', [App\Http\Controllers\Agency\ReportController::class, 'generate'])->name('generate');
             Route::get('/{report}/download', [App\Http\Controllers\Agency\ReportController::class, 'download'])->name('download');
         });
-        
+
         // Admin-only routes
         Route::middleware('agency.admin')->group(function () {
             Route::prefix('billing')->name('billing.')->group(function () {
@@ -758,14 +839,14 @@ Route::middleware(['auth', 'verified', 'role:agency'])->prefix('agency')->name('
                 Route::get('/{invoice}/download', [App\Http\Controllers\Agency\BillingController::class, 'download'])->name('download');
                 Route::post('/send-reminders', [App\Http\Controllers\Agency\BillingController::class, 'sendReminders'])->name('send-reminders');
             });
-            
+
             Route::prefix('team')->name('team.')->group(function () {
                 Route::get('/', [App\Http\Controllers\Agency\TeamController::class, 'index'])->name('index');
                 Route::post('/', [App\Http\Controllers\Agency\TeamController::class, 'store'])->name('store');
                 Route::put('/{user}', [App\Http\Controllers\Agency\TeamController::class, 'update'])->name('update');
                 Route::delete('/{user}', [App\Http\Controllers\Agency\TeamController::class, 'destroy'])->name('destroy');
             });
-            
+
             Route::prefix('settings')->name('settings.')->group(function () {
                 Route::get('/', [App\Http\Controllers\Agency\SettingsController::class, 'index'])->name('index');
                 Route::put('/profile', [App\Http\Controllers\Agency\SettingsController::class, 'updateProfile'])->name('update-profile');
@@ -780,24 +861,23 @@ Route::middleware(['auth', 'verified', 'role:agency'])->prefix('agency')->name('
 
 // Webhook routes (no auth required)
 Route::prefix('webhooks')->name('webhooks.')->group(function () {
-    Route::post('/facebook', [App\Http\Controllers\SocialMedia\WebhookController::class, 'handleFacebook'])->name('facebook');
-    Route::post('/instagram', [App\Http\Controllers\SocialMedia\WebhookController::class, 'handleInstagram'])->name('instagram');
-    Route::post('/linkedin', [App\Http\Controllers\SocialMedia\WebhookController::class, 'handleLinkedIn'])->name('linkedin');
-    Route::post('/twitter', [App\Http\Controllers\SocialMedia\WebhookController::class, 'handleTwitter'])->name('twitter');
-    Route::post('/tiktok', [App\Http\Controllers\SocialMedia\WebhookController::class, 'handleTikTok'])->name('tiktok');
-    Route::post('/pinterest', [App\Http\Controllers\SocialMedia\WebhookController::class, 'handlePinterest'])->name('pinterest');
-    Route::post('/stripe', [App\Http\Controllers\Billing\PaymentWebhookController::class, 'stripe'])->name('stripe');
-    Route::post('/paypal', [App\Http\Controllers\Billing\PaymentWebhookController::class, 'paypal'])->name('paypal');
+    Route::post('/facebook', [WebhookController::class, 'handleFacebook'])->name('facebook');
+    Route::post('/instagram', [WebhookController::class, 'handleInstagram'])->name('instagram');
+    Route::post('/linkedin', [WebhookController::class, 'handleLinkedIn'])->name('linkedin');
+    Route::post('/twitter', [WebhookController::class, 'handleTwitter'])->name('twitter');
+    Route::post('/tiktok', [WebhookController::class, 'handleTikTok'])->name('tiktok');
+    Route::post('/pinterest', [WebhookController::class, 'handlePinterest'])->name('pinterest');
+    Route::post('/stripe', [PaymentWebhookController::class, 'stripe'])->name('stripe');
+    Route::post('/paypal', [PaymentWebhookController::class, 'paypal'])->name('paypal');
 });
 
-Route::get('/p/{slug}', [App\Http\Controllers\LandingPage\PublicLandingPageController::class, 'show'])->name('public.landing-page');
-Route::get('/s/{survey}', [App\Http\Controllers\Survey\PublicSurveyController::class, 'show'])->name('public.survey');
-Route::post('/s/{survey}', [App\Http\Controllers\Survey\PublicSurveyController::class, 'submit'])->name('public.survey.submit');
+Route::get('/p/{slug}', [PublicLandingPageController::class, 'show'])->name('public.landing-page');
+Route::get('/s/{survey}', [PublicSurveyController::class, 'show'])->name('public.survey');
+Route::post('/s/{survey}', [PublicSurveyController::class, 'submit'])->name('public.survey.submit');
 
 // Email tracking routes (no auth required)
 Route::prefix('email')->name('email.')->group(function () {
-    Route::get('/track/open/{token}', [App\Http\Controllers\EmailMarketing\EmailTrackingController::class, 'trackOpen'])->name('track.open');
-    Route::get('/track/click/{token}', [App\Http\Controllers\EmailMarketing\EmailTrackingController::class, 'trackClick'])->name('track.click');
-    Route::get('/unsubscribe/{token}', [App\Http\Controllers\EmailMarketing\EmailTrackingController::class, 'unsubscribe'])->name('unsubscribe');
+    Route::get('/track/open/{token}', [EmailTrackingController::class, 'trackOpen'])->name('track.open');
+    Route::get('/track/click/{token}', [EmailTrackingController::class, 'trackClick'])->name('track.click');
+    Route::get('/unsubscribe/{token}', [EmailTrackingController::class, 'unsubscribe'])->name('unsubscribe');
 });
-

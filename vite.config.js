@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
     plugins: [
@@ -8,6 +10,7 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
+                'resources/js/inertia/app.tsx',
                 'resources/js/components/LandingPageBuilder.vue',
                 'resources/js/components/SurveyBuilder.vue',
                 'resources/js/components/EmailTemplateBuilder.vue',
@@ -24,12 +27,12 @@ export default defineConfig({
                 },
             },
         }),
+        react(),
     ],
     resolve: {
         alias: {
             vue: 'vue/dist/vue.esm-bundler.js',
-            '@': '/resources/js',
+            '@': path.resolve(__dirname, 'resources/js'),
         },
     },
 });
-
