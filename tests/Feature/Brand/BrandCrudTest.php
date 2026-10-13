@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Brand;
 
+use App\Models\AiGeneration;
 use App\Models\Brand;
 use App\Models\Organization;
 use App\Models\User;
 use App\Services\AI\ContentGenerationService;
-use App\Models\AiGeneration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,6 +15,7 @@ class BrandCrudTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Organization $organization;
 
     protected function setUp(): void
@@ -24,7 +25,7 @@ class BrandCrudTest extends TestCase
         [$this->user, $this->organization] = $this->actingAsOrganizationAdmin();
     }
 
-    public function testIndexReturnsBrandsView(): void
+    public function test_index_returns_brands_view(): void
     {
         Brand::factory()->count(2)->create([
             'organization_id' => $this->organization->id,
@@ -33,11 +34,13 @@ class BrandCrudTest extends TestCase
         $response = $this->get("/main/{$this->organization->id}/brands");
 
         $response->assertOk();
-        $response->assertViewIs('brands.index');
-        $response->assertSee('Add Brand');
+        $response->assertInertia(fn ($page) => $page
+            ->component('Brands/Index')
+            ->has('brands.data', 2)
+            ->where('can.create', true));
     }
 
-    public function testJsonIndexReturnsBrandCollection(): void
+    public function test_json_index_returns_brand_collection(): void
     {
         Brand::factory()->create([
             'organization_id' => $this->organization->id,
@@ -50,7 +53,7 @@ class BrandCrudTest extends TestCase
         $response->assertJsonFragment(['name' => 'Json Brand']);
     }
 
-    public function testUserCanCreateBrand(): void
+    public function test_user_can_create_brand(): void
     {
         $response = $this->post("/main/{$this->organization->id}/brands", [
             'name' => 'New Brand',
@@ -72,7 +75,7 @@ class BrandCrudTest extends TestCase
         $this->assertSame(['cheap'], $brand->avoid_keywords);
     }
 
-    public function testUserCanViewBrand(): void
+    public function test_user_can_view_brand(): void
     {
         $brand = Brand::factory()->create([
             'organization_id' => $this->organization->id,
@@ -81,11 +84,12 @@ class BrandCrudTest extends TestCase
         $response = $this->get("/main/{$this->organization->id}/brands/{$brand->id}");
 
         $response->assertOk();
-        $response->assertViewIs('brands.show');
-        $response->assertViewHas('brand');
+        $response->assertInertia(fn ($page) => $page
+            ->component('Brands/Show')
+            ->where('brand.id', $brand->id));
     }
 
-    public function testUserCanUpdateBrand(): void
+    public function test_user_can_update_brand(): void
     {
         $brand = Brand::factory()->create([
             'organization_id' => $this->organization->id,
@@ -104,7 +108,7 @@ class BrandCrudTest extends TestCase
         ]);
     }
 
-    public function testUserCanDeleteBrand(): void
+    public function test_user_can_delete_brand(): void
     {
         $brand = Brand::factory()->create([
             'organization_id' => $this->organization->id,
@@ -118,7 +122,7 @@ class BrandCrudTest extends TestCase
         ]);
     }
 
-    public function testViewerCannotCreateBrand(): void
+    public function test_viewer_cannot_create_brand(): void
     {
         [$viewer] = $this->createOrganizationAdmin(
             organization: $this->organization,
@@ -130,14 +134,16 @@ class BrandCrudTest extends TestCase
 
         $this->get("/main/{$this->organization->id}/brands")
             ->assertOk()
-            ->assertDontSee('Add Brand');
+            ->assertInertia(fn ($page) => $page
+                ->component('Brands/Index')
+                ->where('can.create', false));
 
         $this->post("/main/{$this->organization->id}/brands", [
             'name' => 'Forbidden Brand',
         ])->assertForbidden();
     }
 
-    public function testChooseNamePageIsAvailable(): void
+    public function test_choose_name_page_is_available(): void
     {
         $response = $this->get("/main/{$this->organization->id}/brands/choose-name");
 
@@ -145,7 +151,7 @@ class BrandCrudTest extends TestCase
         $response->assertViewIs('brands.choose-name');
     }
 
-    public function testFactoryStoresKeywordsAsArray(): void
+    public function test_factory_stores_keywords_as_array(): void
     {
         $brand = Brand::factory()->create([
             'organization_id' => $this->organization->id,
@@ -155,7 +161,7 @@ class BrandCrudTest extends TestCase
         $this->assertNotEmpty($brand->keywords);
     }
 
-    public function testGenerateConceptFillsStructuredFields(): void
+    public function test_generate_concept_fills_structured_fields(): void
     {
         $generation = new AiGeneration([
             'generated_content' => json_encode([
@@ -184,7 +190,7 @@ class BrandCrudTest extends TestCase
         $response->assertJsonPath('data.keywords.0', 'coffee');
     }
 
-    public function testUserCannotAccessOtherOrganizationBrands(): void
+    public function test_user_cannot_access_other_organization_brands(): void
     {
         $otherOrganization = Organization::factory()->create();
         $brand = Brand::factory()->create([
