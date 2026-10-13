@@ -49,7 +49,7 @@ jobs:
         run: tar -czf build-artifacts.tar.gz -C public/build .
 
       - name: Ensure remote staging directory exists
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_USER }}
@@ -60,7 +60,7 @@ jobs:
             mkdir -p "${{ secrets.STAGING_DEPLOY_PATH }}/.deploy"
 
       - name: Upload build artifacts to server
-        uses: appleboy/scp-action@v1.2.0
+        uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_USER }}
@@ -71,7 +71,7 @@ jobs:
           overwrite: true
 
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_USER }}
