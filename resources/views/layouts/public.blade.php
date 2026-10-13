@@ -14,8 +14,12 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
 
-    <!-- Styles -->
-    <link href="{{ SubdirectoryRequestUriNormalizer::rootRelativePublicPath('css/public.css') }}" rel="stylesheet">
+    <!-- Styles: Vite marketing bundle when built; static fallback for local/CI without npm build -->
+    @if (! app()->runningUnitTests() && file_exists(public_path('build/manifest.json')))
+        @vite(['resources/css/public-marketing.css'])
+    @else
+        <link href="{{ SubdirectoryRequestUriNormalizer::rootRelativePublicPath('css/public.css') }}" rel="stylesheet">
+    @endif
     
     @stack('styles')
 </head>
