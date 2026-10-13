@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Services\Navigation\SidebarMenuBuilder;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
@@ -54,6 +55,7 @@ class HandleInertiaRequests extends Middleware
             'ziggy' => fn () => array_merge((new Ziggy)->toArray(), [
                 'location' => $request->url(),
             ]),
+            'sidebar' => fn () => app(SidebarMenuBuilder::class)->buildForRequest($request),
         ];
     }
 }
