@@ -38,4 +38,14 @@ class PublicFeaturesFollowupTest extends TestCase
         $this->assertFileExists($path);
         $this->assertGreaterThan(10_000, filesize($path));
     }
+
+    public function test_product_insights_image_differs_from_other_zigzag_assets(): void
+    {
+        $insights = public_path('images/marketing/product-insights.png');
+        $workspace = public_path('images/marketing/product-workspace.png');
+        $hero = public_path('images/marketing/hero-dashboard.png');
+
+        $this->assertNotSame(md5_file($insights), md5_file($workspace));
+        $this->assertNotSame(md5_file($insights), md5_file($hero));
+    }
 }
