@@ -34,6 +34,7 @@ use App\Http\Controllers\Campaign\PaidCampaignController;
 use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\Chat\ChatReactionController;
 use App\Http\Controllers\Chatbot\ChatbotController;
+use App\Http\Controllers\ClientPortal\PortalController;
 use App\Http\Controllers\CollaborationController;
 use App\Http\Controllers\Competitor\CompetitorController;
 use App\Http\Controllers\ContentApprovalController;
@@ -170,6 +171,13 @@ Route::middleware(['auth', 'verified'])->prefix('profile')->name('profile.')->gr
     Route::delete('/sessions/{sessionId}', [ProfileController::class, 'revokeSession'])->name('sessions.revoke');
     Route::post('/sessions/revoke-other', [ProfileController::class, 'revokeOtherSessions'])->name('sessions.revoke-other');
 });
+
+Route::middleware(['auth', 'verified', 'client.portal'])
+    ->prefix('client-portal/{agency}')
+    ->name('client-portal.')
+    ->group(function () {
+        Route::get('/', [PortalController::class, 'home'])->name('home');
+    });
 
 Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(function () {
     Route::get('/organizations', [OrganizationController::class, 'index'])->name('organizations');
