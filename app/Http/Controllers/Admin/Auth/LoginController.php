@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class LoginController extends Controller
 {
-    public function showLoginForm()
+    public function showLoginForm(): Response
     {
-        return view('admin.auth.login');
+        return Inertia::render('Admin/Auth/Login');
     }
 
     public function login(Request $request)
@@ -32,5 +36,3 @@ class LoginController extends Controller
         ]);
     }
 }
-
-
