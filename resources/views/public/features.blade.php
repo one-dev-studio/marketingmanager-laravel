@@ -32,7 +32,7 @@
             <figure class="product-shot features-zigzag-shot">
                 <img
                     src="{{ SubdirectoryRequestUriNormalizer::rootRelativePublicPath('images/marketing/hero-dashboard.png') }}"
-                    alt="Marketing Manager campaigns overview in the demo workspace"
+                    alt="Marketing Manager AI content workspace in the demo org"
                     width="720"
                     height="405"
                     loading="lazy"
@@ -77,8 +77,8 @@
             </div>
             <figure class="product-shot features-zigzag-shot">
                 <img
-                    src="{{ SubdirectoryRequestUriNormalizer::rootRelativePublicPath('images/marketing/hero-dashboard.png') }}"
-                    alt="Marketing Manager reporting view in the demo workspace"
+                    src="{{ SubdirectoryRequestUriNormalizer::rootRelativePublicPath('images/marketing/product-insights.png') }}"
+                    alt="Marketing Manager insights and reporting view in the demo workspace"
                     width="720"
                     height="405"
                     loading="lazy"
@@ -132,11 +132,23 @@
     <div class="container">
         <h2 class="section-title">Plays well with your stack</h2>
         <p class="section-description">Connect social, email, and analytics tools as you grow.</p>
-        <div class="features-integration-grid" aria-hidden="true">
-            <span class="features-integration-tile">Email</span>
-            <span class="features-integration-tile">Social</span>
-            <span class="features-integration-tile">Ads</span>
-            <span class="features-integration-tile">Analytics</span>
+        <div class="features-integration-grid">
+            <div class="features-integration-tile">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                <span>Email</span>
+            </div>
+            <div class="features-integration-tile">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                <span>Social</span>
+            </div>
+            <div class="features-integration-tile">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m3 11 18-5v12L3 13v-2z"/><path d="M11 13v8"/></svg>
+                <span>Ads</span>
+            </div>
+            <div class="features-integration-tile">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 16V9"/><path d="M12 16V5"/><path d="M17 16v-3"/></svg>
+                <span>Analytics</span>
+            </div>
         </div>
     </div>
 </section>
