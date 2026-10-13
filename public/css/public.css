@@ -563,11 +563,21 @@ main {
     background: var(--mm-surface);
     border: 1px solid var(--mm-border);
     border-radius: 0.75rem;
-    display: grid;
-    place-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     font-weight: 700;
-    color: var(--gray-400);
-    font-size: 0.75rem;
+    color: var(--mm-text);
+    font-size: 0.8125rem;
+    padding: 0.75rem;
+}
+
+.features-integration-tile svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--mm-brand-600);
 }
 
 .features-cta {
