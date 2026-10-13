@@ -20,8 +20,9 @@
     @stack('styles')
 </head>
 <body class="antialiased">
+    <a class="skip-to-content" href="#main-content">Skip to content</a>
     <!-- Navigation -->
-    <nav class="navbar">
+    <nav class="navbar" aria-label="Primary">
         <div class="container">
             <div class="navbar-content">
                 <div class="navbar-brand">
@@ -49,7 +50,14 @@
                     <a href="{{ route('register') }}" class="btn btn-primary">Start free trial</a>
                 </div>
 
-                <button class="navbar-toggle" id="navbarToggle">
+                <button
+                    type="button"
+                    class="navbar-toggle"
+                    id="navbarToggle"
+                    aria-label="Open menu"
+                    aria-expanded="false"
+                    aria-controls="navbarMenu"
+                >
                     <span></span>
                     <span></span>
                     <span></span>
@@ -59,7 +67,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main>
+    <main id="main-content">
         @yield('content')
     </main>
 
@@ -142,10 +150,12 @@
         const navbarToggle = document.getElementById('navbarToggle');
         const navbarMenu = document.getElementById('navbarMenu');
         
-        if (navbarToggle) {
+        if (navbarToggle && navbarMenu) {
             navbarToggle.addEventListener('click', () => {
-                navbarMenu.classList.toggle('active');
-                navbarToggle.classList.toggle('active');
+                const isOpen = navbarMenu.classList.toggle('active');
+                navbarToggle.classList.toggle('active', isOpen);
+                navbarToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                navbarToggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
             });
         }
 

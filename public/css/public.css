@@ -139,6 +139,31 @@ main {
     align-items: center;
 }
 
+.skip-to-content {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+.skip-to-content:focus {
+    position: fixed;
+    left: 1rem;
+    top: 1rem;
+    z-index: 50;
+    width: auto;
+    height: auto;
+    padding: 0.5rem 1rem;
+    background: var(--mm-surface);
+    border: 2px solid var(--mm-brand-600);
+    border-radius: 0.5rem;
+    font-weight: 600;
+    color: var(--mm-text);
+    text-decoration: none;
+}
+
 .navbar-toggle {
     display: none;
     flex-direction: column;
@@ -147,6 +172,12 @@ main {
     border: none;
     cursor: pointer;
     padding: 0.5rem;
+    border-radius: 0.5rem;
+}
+
+.navbar-toggle:focus-visible {
+    outline: 2px solid var(--mm-brand-600);
+    outline-offset: 2px;
 }
 
 .navbar-toggle span {
