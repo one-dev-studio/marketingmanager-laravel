@@ -70,48 +70,75 @@ class PublicController extends Controller
     public function legal(?string $page = null): View
     {
         $page ??= request()->route('page');
+        $contactUrl = route('contact');
+
         $pages = [
             'privacy' => [
                 'heading' => 'Privacy Policy',
-                'body' => '<p>Marketing Manager collects account, organization, and usage data to provide the product. We do not sell personal data. Contact us to request access or deletion.</p>',
+                'summary' => 'How Marketing Manager handles account and product data.',
+                'body' => '<p>We collect information you provide when you sign up, invite teammates, and use the product — for example organization name, email address, campaign content, and usage events needed to operate the service.</p>'
+                    .'<p>We use this data to deliver features, secure accounts, and improve reliability. We do not sell personal information.</p>'
+                    .'<p>Organization administrators can manage many requests directly in the app. You may also <a href="'.e($contactUrl).'">contact us</a> to ask about access, correction, or deletion where applicable.</p>',
             ],
             'terms' => [
                 'heading' => 'Terms of Service',
-                'body' => '<p>Use of Marketing Manager is subject to your organization agreement. Do not misuse the service or attempt unauthorized access.</p>',
+                'summary' => 'Rules for using the Marketing Manager workspace.',
+                'body' => '<p>Your use of Marketing Manager is subject to your organization agreement and these terms. You are responsible for content published through connected channels and for keeping credentials secure.</p>'
+                    .'<ul><li>Do not attempt to break, probe, or overload the service.</li><li>Do not upload unlawful content or infringe others’ rights.</li><li>We may suspend access for abuse or non-payment per your plan.</li></ul>',
             ],
             'cookies' => [
                 'heading' => 'Cookie Policy',
-                'body' => '<p>We use essential cookies for authentication and optional analytics cookies to improve the site.</p>',
+                'summary' => 'Cookies on the marketing site and in the app.',
+                'body' => '<p>Essential cookies keep you signed in and protect forms. Optional analytics cookies on the public site help us understand which pages are useful — you can dismiss the cookie notice on first visit.</p>'
+                    .'<p>See also our <a href="'.e(route('privacy')).'">Privacy Policy</a>.</p>',
             ],
             'gdpr' => [
                 'heading' => 'GDPR',
-                'body' => '<p>European users can request export or deletion of personal data from their organization admin or by contacting us.</p>',
+                'summary' => 'Rights for individuals in the European Economic Area and UK.',
+                'body' => '<p>Depending on your relationship with us, you may have rights to access, rectify, erase, restrict, or export personal data, and to object to certain processing.</p>'
+                    .'<p>Start with your organization administrator. If you cannot resolve a request internally, <a href="'.e($contactUrl).'">contact us</a> with enough detail for us to verify your identity.</p>',
             ],
             'help' => [
                 'heading' => 'Help Center',
-                'body' => '<p>Find guides for brands, campaigns, channels, and billing. For account help, use the contact form.</p><p><a href="'.e(url('/contact')).'">Contact support</a></p>',
+                'summary' => 'Guides for everyday marketing workflows.',
+                'body' => '<p>Topics we document for teams:</p>'
+                    .'<ul><li>Brands, channels, and approvals</li><li>Campaigns, calendars, and content review</li><li>Billing, seats, and organization settings</li></ul>'
+                    .'<p>Need hands-on help? Use the <a href="'.e($contactUrl).'">contact form</a> and include your workspace URL.</p>',
+                'cta_label' => 'Contact support',
+                'cta_url' => $contactUrl,
             ],
             'blog' => [
                 'heading' => 'Blog',
-                'body' => '<p>Product updates and marketing playbooks will appear here.</p>',
+                'summary' => 'Product news and practical playbooks.',
+                'body' => '<p>We publish release notes and workflow tips here as they are ready. For now, explore <a href="'.e(route('features')).'">features</a> or start a <a href="'.e(route('register')).'">free trial</a>.</p>',
             ],
             'careers' => [
                 'heading' => 'Careers',
-                'body' => '<p>We are not listing open roles right now. Send a note via the contact page if you would like to work with us.</p>',
+                'summary' => 'Build marketing software with a small, product-focused team.',
+                'body' => '<p>We are not listing open roles at the moment. If you would like to introduce yourself, send a short note through the <a href="'.e($contactUrl).'">contact page</a>.</p>',
             ],
             'integrations' => [
                 'heading' => 'Integrations',
-                'body' => '<p>Connect social channels, email, storage, and billing providers from your organization settings.</p>',
+                'summary' => 'Connect channels, email, storage, and billing.',
+                'body' => '<p>Organizations connect social profiles, email delivery, file storage, and payment providers from in-app settings. Availability can vary by plan.</p>'
+                    .'<ul><li>Social publishing and inbox tools</li><li>Email campaigns and templates</li><li>Exports to storage and reporting</li></ul>'
+                    .'<p>Developers can use authenticated JSON under <code>/api</code> — see the <a href="'.e(route('developer')).'">API overview</a>.</p>',
             ],
             'api' => [
                 'heading' => 'API',
-                'body' => '<p>Authenticated JSON APIs are available under <code>/api</code>. Use a Sanctum token from your account.</p>',
+                'summary' => 'Authenticated JSON for integrations and scripts.',
+                'body' => '<p>Marketing Manager exposes REST-style JSON endpoints under <code>/api</code>. Authenticate with a Sanctum personal access token created from your account.</p>'
+                    .'<p>Run <code>php artisan route:list</code> in your deployment for the current inventory. For questions about scopes or rate limits, <a href="'.e($contactUrl).'">contact us</a>.</p>',
             ],
         ];
 
         abort_unless(isset($pages[$page]), 404);
 
-        return view('public.legal', $pages[$page] + ['title' => $pages[$page]['heading']]);
+        return view('public.legal', $pages[$page] + [
+            'title' => $pages[$page]['heading'],
+            'cta_label' => $pages[$page]['cta_label'] ?? null,
+            'cta_url' => $pages[$page]['cta_url'] ?? null,
+        ]);
     }
 
     public function sitemap()
