@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Agency;
+use App\Support\Agency\AgencyPortalBrandingKeys;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -33,15 +34,24 @@ class AgencySettingsService
     public function updateBranding(Agency $agency, array $data): Agency
     {
         $settings = $agency->settings ?? [];
-        $settings['branding'] = array_merge($settings['branding'] ?? [], [
+        $branding = array_merge($settings['branding'] ?? [], [
             'primary_color' => $data['primary_color'] ?? null,
             'secondary_color' => $data['secondary_color'] ?? null,
             'logo' => $data['logo'] ?? null,
             'favicon' => $data['favicon'] ?? null,
         ]);
 
+        foreach (AgencyPortalBrandingKeys::all() as $portalKey) {
+            if (array_key_exists($portalKey, $data)) {
+                $branding[$portalKey] = $data[$portalKey];
+            }
+        }
+
+        $settings['branding'] = $branding;
+
         return DB::transaction(function () use ($agency, $settings) {
             $agency->update(['settings' => $settings]);
+
             return $agency->fresh();
         });
     }
@@ -61,6 +71,7 @@ class AgencySettingsService
 
         return DB::transaction(function () use ($agency, $settings) {
             $agency->update(['settings' => $settings]);
+
             return $agency->fresh();
         });
     }
@@ -75,6 +86,7 @@ class AgencySettingsService
 
         return DB::transaction(function () use ($agency, $settings) {
             $agency->update(['settings' => $settings]);
+
             return $agency->fresh();
         });
     }
@@ -89,6 +101,7 @@ class AgencySettingsService
 
         return DB::transaction(function () use ($agency, $settings) {
             $agency->update(['settings' => $settings]);
+
             return $agency->fresh();
         });
     }
@@ -106,4 +119,3 @@ class AgencySettingsService
         ];
     }
 }
-
