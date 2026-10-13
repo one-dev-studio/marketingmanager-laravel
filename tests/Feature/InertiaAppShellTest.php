@@ -19,6 +19,9 @@ class InertiaAppShellTest extends TestCase
             ->component('Demo/Shell')
             ->has('sidebar')
             ->where('sidebar.organizationId', (string) $organization->id)
-            ->has('sidebar.items'));
+            ->has('sidebar.items')
+            ->has('appShell')
+            ->where('appShell.currentOrganization.id', (string) $organization->id)
+            ->has('appShell.locales'));
     }
 }
