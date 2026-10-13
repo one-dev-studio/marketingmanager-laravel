@@ -70,7 +70,11 @@ class CampaignCrudTest extends TestCase
         $response = $this->get("/main/{$this->organization->id}/campaigns/{$campaign->id}");
 
         $response->assertStatus(200);
-        $response->assertViewHas('campaign');
+        $response->assertInertia(fn ($page) => $page
+            ->component('Campaigns/Show')
+            ->where('campaign.id', $campaign->id)
+            ->has('sidebar')
+            ->has('appShell'));
     }
 
     public function test_user_can_update_campaign(): void
