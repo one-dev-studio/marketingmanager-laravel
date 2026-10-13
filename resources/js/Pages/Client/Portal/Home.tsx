@@ -28,7 +28,7 @@ export default function Home({ portalBranding, organizations }: ClientPortalHome
                             <li key={organization.id} className="flex items-center justify-between p-4">
                                 <span className="font-medium text-gray-900">{organization.name}</span>
                                 <Link
-                                    href={organization.dashboard_href}
+                                    href={organization.workspace_href ?? organization.dashboard_href}
                                     className="text-sm font-medium"
                                     style={{ color: 'var(--client-portal-primary)' }}
                                 >
