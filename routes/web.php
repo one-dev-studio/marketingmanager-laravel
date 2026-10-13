@@ -35,6 +35,7 @@ use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\Chat\ChatReactionController;
 use App\Http\Controllers\Chatbot\ChatbotController;
 use App\Http\Controllers\ClientPortal\PortalController;
+use App\Http\Controllers\ClientPortal\WorkspaceController;
 use App\Http\Controllers\CollaborationController;
 use App\Http\Controllers\Competitor\CompetitorController;
 use App\Http\Controllers\ContentApprovalController;
@@ -177,6 +178,8 @@ Route::middleware(['auth', 'verified', 'client.portal'])
     ->name('client-portal.')
     ->group(function () {
         Route::get('/', [PortalController::class, 'home'])->name('home');
+        Route::get('/workspaces/{organization}', [WorkspaceController::class, 'show'])
+            ->name('workspace');
     });
 
 Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(function () {

@@ -35,7 +35,7 @@ final class ClientPortalAccessService
     }
 
     /**
-     * @return list<array{id: string, name: string, dashboard_href: string}>
+     * @return list<array{id: string, name: string, dashboard_href: string, workspace_href: string}>
      */
     public function accessibleClientOrganizations(User $user, Agency $agency): array
     {
@@ -51,6 +51,10 @@ final class ClientPortalAccessService
                 'id' => (string) $organization->id,
                 'name' => $organization->name,
                 'dashboard_href' => route('main.dashboard', ['organizationId' => $organization->id]),
+                'workspace_href' => route('client-portal.workspace', [
+                    'agency' => $agency->id,
+                    'organization' => $organization->id,
+                ]),
             ])
             ->values()
             ->all();

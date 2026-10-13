@@ -15,4 +15,5 @@ export interface ClientPortalOrganizationLink {
     id: string;
     name: string;
     dashboard_href: string;
+    workspace_href: string;
 }
