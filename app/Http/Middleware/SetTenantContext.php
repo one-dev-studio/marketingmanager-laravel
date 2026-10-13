@@ -16,13 +16,14 @@ class SetTenantContext
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return $next($request);
         }
 
         $organizationId = $request->route('organizationId');
 
-        if ($organizationId && $user->hasAccessToOrganization($organizationId)) {
+        if ($organizationId !== null && $organizationId !== '' && $user->hasAccessToOrganization((int) $organizationId)) {
+            $organizationId = (int) $organizationId;
             $request->attributes->set('organization_id', $organizationId);
             session(['current_organization_id' => $organizationId]);
         } elseif ($user->primaryOrganization()) {
@@ -33,5 +34,3 @@ class SetTenantContext
         return $next($request);
     }
 }
-
-

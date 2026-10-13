@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Agency;
 
 use App\Http\Controllers\Controller;
-use App\Models\Agency;
-use App\Services\AgencySettingsService;
-use App\Http\Requests\Agency\UpdateAgencyProfileRequest;
 use App\Http\Requests\Agency\UpdateAgencyBrandingRequest;
 use App\Http\Requests\Agency\UpdateAgencyDefaultsRequest;
 use App\Http\Requests\Agency\UpdateAgencyIntegrationsRequest;
 use App\Http\Requests\Agency\UpdateAgencyNotificationsRequest;
+use App\Http\Requests\Agency\UpdateAgencyProfileRequest;
+use App\Models\Agency;
+use App\Services\AgencySettingsService;
 use Illuminate\Http\Request;
 
 /**
@@ -33,6 +33,7 @@ class SettingsController extends Controller
         return view('agency.settings.index', [
             'agency' => $agency,
             'settings' => $settings,
+            'branding' => $settings['branding'] ?? [],
         ]);
     }
 
@@ -91,4 +92,3 @@ class SettingsController extends Controller
             ->with('success', 'Notification preferences updated successfully.');
     }
 }
-
