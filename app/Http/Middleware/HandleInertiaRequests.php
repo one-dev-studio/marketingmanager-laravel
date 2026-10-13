@@ -48,6 +48,8 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
                 'status' => fn () => $request->session()->get('status'),
+                'info' => fn () => $request->session()->get('info'),
+                'recoveryCodes' => fn () => $request->session()->get('recoveryCodes'),
             ],
             'ziggy' => fn () => array_merge((new Ziggy)->toArray(), [
                 'location' => $request->url(),
