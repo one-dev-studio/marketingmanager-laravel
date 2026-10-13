@@ -14,16 +14,17 @@ class CampaignCrudTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Organization $organization;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         [$this->user, $this->organization] = $this->actingAsOrganizationAdmin();
     }
 
-    public function testUserCanCreateCampaign(): void
+    public function test_user_can_create_campaign(): void
     {
         $channel = Channel::factory()->create([
             'organization_id' => $this->organization->id,
@@ -48,7 +49,7 @@ class CampaignCrudTest extends TestCase
         ]);
     }
 
-    public function testUserCanViewCampaigns(): void
+    public function test_user_can_view_campaigns(): void
     {
         Campaign::factory()->count(3)->create([
             'organization_id' => $this->organization->id,
@@ -57,10 +58,10 @@ class CampaignCrudTest extends TestCase
         $response = $this->get("/main/{$this->organization->id}/campaigns");
 
         $response->assertStatus(200);
-        $response->assertViewIs('campaigns.index');
+        $response->assertInertia(fn ($page) => $page->component('Campaigns/Index')->has('campaigns.data', 3));
     }
 
-    public function testUserCanViewSingleCampaign(): void
+    public function test_user_can_view_single_campaign(): void
     {
         $campaign = Campaign::factory()->create([
             'organization_id' => $this->organization->id,
@@ -72,7 +73,7 @@ class CampaignCrudTest extends TestCase
         $response->assertViewHas('campaign');
     }
 
-    public function testUserCanUpdateCampaign(): void
+    public function test_user_can_update_campaign(): void
     {
         $campaign = Campaign::factory()->create([
             'organization_id' => $this->organization->id,
@@ -91,7 +92,7 @@ class CampaignCrudTest extends TestCase
         ]);
     }
 
-    public function testUserCanDeleteCampaign(): void
+    public function test_user_can_delete_campaign(): void
     {
         $campaign = Campaign::factory()->create([
             'organization_id' => $this->organization->id,
@@ -105,7 +106,7 @@ class CampaignCrudTest extends TestCase
         ]);
     }
 
-    public function testUserCannotAccessOtherOrganizationCampaigns(): void
+    public function test_user_cannot_access_other_organization_campaigns(): void
     {
         $otherOrganization = Organization::factory()->create();
         $campaign = Campaign::factory()->create([
@@ -117,4 +118,3 @@ class CampaignCrudTest extends TestCase
         $this->assertTrue(in_array($response->status(), [403, 404], true));
     }
 }
-
