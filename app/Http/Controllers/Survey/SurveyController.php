@@ -238,9 +238,12 @@ class SurveyController extends Controller
             return response()->json(['success' => true, 'data' => $analytics]);
         }
 
-        return view('surveys.analytics', [
+        return Inertia::render('Surveys/Analytics', [
             'organizationId' => $organizationId,
-            'survey' => $survey,
+            'survey' => [
+                'id' => $survey->id,
+                'title' => $survey->title,
+            ],
             'analytics' => $analytics,
         ]);
     }

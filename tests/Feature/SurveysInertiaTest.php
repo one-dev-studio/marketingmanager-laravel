@@ -45,6 +45,29 @@ class SurveysInertiaTest extends TestCase
             ->assertInertia(fn ($page) => $page->component('Surveys/Create')->has('sidebar'));
     }
 
+    public function test_survey_analytics_renders_inertia(): void
+    {
+        [$user, $organization] = $this->actingAsOrganizationAdmin();
+
+        $survey = Survey::query()->create([
+            'organization_id' => $organization->id,
+            'title' => 'Analytics Survey',
+            'status' => 'draft',
+            'created_by' => $user->id,
+        ]);
+
+        $this->get(route('main.surveys.analytics', [
+            'organizationId' => $organization->id,
+            'survey' => $survey->id,
+        ]))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Surveys/Analytics')
+                ->where('survey.title', 'Analytics Survey')
+                ->has('analytics')
+                ->has('sidebar'));
+    }
+
     public function test_survey_builder_renders_inertia_with_questions(): void
     {
         [$user, $organization] = $this->actingAsOrganizationAdmin();
