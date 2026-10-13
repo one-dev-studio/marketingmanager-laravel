@@ -1292,6 +1292,17 @@ main {
     margin-bottom: 0.35rem;
 }
 
+.about-approach {
+    padding: 2.5rem 0;
+    background: var(--mm-surface-muted);
+    border-block: 1px solid var(--mm-border);
+}
+
+.about-approach-list {
+    max-width: 36rem;
+    margin: 0 auto;
+}
+
 .about-stats {
     padding: 2.5rem 0;
     background: var(--mm-surface-muted);

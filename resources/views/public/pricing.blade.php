@@ -104,12 +104,6 @@
                         <td>Unlimited</td>
                     </tr>
                     <tr>
-                        <th scope="row">Team members</th>
-                        <td>2</td>
-                        <td>10</td>
-                        <td>Unlimited</td>
-                    </tr>
-                    <tr>
                         <th scope="row">AI content credits</th>
                         <td>100 / mo</td>
                         <td>500 / mo</td>
@@ -124,8 +118,8 @@
                     <tr>
                         <th scope="row">Support</th>
                         <td>Email</td>
-                        <td>Priority chat</td>
-                        <td>Dedicated manager</td>
+                        <td>Priority email &amp; chat</td>
+                        <td>Dedicated account manager</td>
                     </tr>
                 </tbody>
             </table>

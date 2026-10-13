@@ -43,22 +43,17 @@
     </div>
 </section>
 
-<section class="about-stats" aria-label="By the numbers">
+<section class="about-approach" aria-labelledby="about-approach-title">
     <div class="container">
-        <div class="about-stats-grid">
-            <div class="about-stat">
-                <p class="about-stat-value">10k+</p>
-                <p class="about-stat-label">Marketers on the platform</p>
-            </div>
-            <div class="about-stat">
-                <p class="about-stat-value">500k+</p>
-                <p class="about-stat-label">Campaigns launched</p>
-            </div>
-            <div class="about-stat">
-                <p class="about-stat-value">50+</p>
-                <p class="about-stat-label">Countries served</p>
-            </div>
+        <div class="section-header">
+            <h2 id="about-approach-title" class="section-title">How we build</h2>
+            <p class="section-description">Principles and pace — not vanity metrics.</p>
         </div>
+        <ul class="about-zigzag-list about-approach-list">
+            <li>Listen to agencies and in-house teams about where campaigns stall.</li>
+            <li>Ship workflows, AI assists, and reporting in one workspace.</li>
+            <li>Improve from real usage — not invented benchmarks.</li>
+        </ul>
     </div>
 </section>
 
@@ -96,32 +91,6 @@
                 </div>
                 <h3 class="feature-title">Practical AI</h3>
                 <p class="feature-description">Assistive drafts with guardrails — not black-box magic.</p>
-            </article>
-        </div>
-    </div>
-</section>
-
-<section class="about-team" aria-labelledby="about-team-title">
-    <div class="container">
-        <div class="section-header">
-            <h2 id="about-team-title" class="section-title">Leadership</h2>
-            <p class="section-description">Operators from product, AI, and customer success.</p>
-        </div>
-        <div class="about-team-grid">
-            <article class="about-team-card">
-                <div class="about-team-avatar" aria-hidden="true">JS</div>
-                <h3 class="about-team-name">John Smith</h3>
-                <p class="about-team-role">CEO & Co-founder</p>
-            </article>
-            <article class="about-team-card">
-                <div class="about-team-avatar" aria-hidden="true">SK</div>
-                <h3 class="about-team-name">Sarah Kim</h3>
-                <p class="about-team-role">CTO & Co-founder</p>
-            </article>
-            <article class="about-team-card">
-                <div class="about-team-avatar" aria-hidden="true">MP</div>
-                <h3 class="about-team-name">Michael Peters</h3>
-                <p class="about-team-role">VP Product</p>
             </article>
         </div>
     </div>
