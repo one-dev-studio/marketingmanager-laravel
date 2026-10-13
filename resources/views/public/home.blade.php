@@ -1,3 +1,4 @@
+@use('App\Http\Support\SubdirectoryRequestUriNormalizer')
 @extends('layouts.public')
 
 @section('content')
@@ -28,7 +29,7 @@
             <div class="hero-image">
                 <figure class="product-shot">
                     <img
-                        src="{{ asset('images/marketing/hero-dashboard.png') }}"
+                        src="{{ SubdirectoryRequestUriNormalizer::rootRelativePublicPath('images/marketing/hero-dashboard.png') }}"
                         alt="Marketing Manager dashboard showing campaigns and channel overview"
                         width="720"
                         height="405"
@@ -126,7 +127,7 @@
             </div>
             <figure class="product-shot product-shot--wide">
                 <img
-                    src="{{ asset('images/marketing/product-workspace.png') }}"
+                    src="{{ SubdirectoryRequestUriNormalizer::rootRelativePublicPath('images/marketing/product-workspace.png') }}"
                     alt="Marketing Manager workspace with campaign list and activity panels"
                     width="800"
                     height="500"

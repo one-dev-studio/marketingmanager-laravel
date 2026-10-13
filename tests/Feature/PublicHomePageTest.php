@@ -13,6 +13,7 @@ class PublicHomePageTest extends TestCase
         $response = $this->get('/');
 
         $response->assertOk();
+        $response->assertSee('href="/css/public.css"', false);
         $response->assertSee('Marketing Manager', false);
         $response->assertSee('Plan campaigns.', false);
         $response->assertSee('Everything in one place', false);
