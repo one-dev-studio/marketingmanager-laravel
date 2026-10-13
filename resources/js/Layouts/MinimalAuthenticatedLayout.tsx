@@ -8,6 +8,8 @@ interface MinimalAuthenticatedLayoutProps {
     children: ReactNode;
 }
 
+const appName = import.meta.env.VITE_APP_NAME ?? 'Marketing Manager';
+
 export default function MinimalAuthenticatedLayout({
     title,
     children,
@@ -19,7 +21,7 @@ export default function MinimalAuthenticatedLayout({
                 <header className="border-b border-gray-200 bg-white">
                     <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
                         <Link href={route('home')} className="text-lg font-bold text-gray-900">
-                            MarketPulse
+                            {appName}
                         </Link>
                         <Link
                             href={route('main.organizations')}

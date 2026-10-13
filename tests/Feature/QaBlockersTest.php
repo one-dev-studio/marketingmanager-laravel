@@ -15,7 +15,7 @@ class QaBlockersTest extends TestCase
         $this->actingAs($user)
             ->get(route('main.organizations'))
             ->assertOk()
-            ->assertSee('Demo Company');
+            ->assertSee('Brightpath Marketing (demo)');
     }
 
     public function testProfileShowViewLoads(): void

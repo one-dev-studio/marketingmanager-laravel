@@ -26,11 +26,15 @@ class DemoDataSeeder extends Seeder
         $organization = Organization::firstOrCreate(
             ['slug' => 'demo-company'],
             [
-                'name' => 'Demo Company',
+                'name' => 'Brightpath Marketing (demo)',
                 'timezone' => 'UTC',
                 'status' => 'active',
             ]
         );
+        $organization->update([
+            'name' => 'Brightpath Marketing (demo)',
+            'status' => 'active',
+        ]);
 
         $adminRole = Role::where('name', 'admin')->first();
 
@@ -62,13 +66,17 @@ class DemoDataSeeder extends Seeder
         }
 
         $brand = Brand::firstOrCreate(
-            ['organization_id' => $organization->id, 'name' => 'Demo Brand'],
+            ['organization_id' => $organization->id, 'name' => 'Northline Studio'],
             [
-                'summary' => 'Demo brand for testing the main application.',
+                'summary' => 'Fictional demo brand for marketing screenshots (no customer data).',
                 'status' => 'active',
                 'tone_of_voice' => 'professional',
             ]
         );
+        $brand->update([
+            'summary' => 'Fictional demo brand for marketing screenshots (no customer data).',
+            'status' => 'active',
+        ]);
 
         $campaignDefinitions = [
             [
@@ -212,6 +220,7 @@ class DemoDataSeeder extends Seeder
         $taskDefinitions = [
             ['title' => 'Draft launch email #1', 'status' => 'todo', 'priority' => 'high'],
             ['title' => 'Approve social ad sets', 'status' => 'todo', 'priority' => 'medium'],
+            ['title' => 'Brief agency on Q4 creative', 'status' => 'todo', 'priority' => 'low'],
             ['title' => 'Update landing page hero', 'status' => 'in_progress', 'priority' => 'high'],
             ['title' => 'Schedule webinar reminders', 'status' => 'in_progress', 'priority' => 'medium'],
             ['title' => 'Review Q4 budget spreadsheet', 'status' => 'in_progress', 'priority' => 'low'],

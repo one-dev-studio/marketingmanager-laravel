@@ -9,6 +9,8 @@ interface GuestLayoutProps {
     children: ReactNode;
 }
 
+const appName = import.meta.env.VITE_APP_NAME ?? 'Marketing Manager';
+
 export default function GuestLayout({ title, subtitle, children }: GuestLayoutProps) {
     return (
         <>
@@ -17,7 +19,7 @@ export default function GuestLayout({ title, subtitle, children }: GuestLayoutPr
                 <div className="w-full max-w-md">
                     <div className="mb-8 text-center">
                         <Link href={route('home')} className="text-2xl font-bold text-gray-900">
-                            MarketPulse
+                            {appName}
                         </Link>
                         {subtitle ? <p className="mt-2 text-sm text-gray-600">{subtitle}</p> : null}
                     </div>
