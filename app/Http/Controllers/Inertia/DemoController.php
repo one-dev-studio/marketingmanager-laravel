@@ -15,6 +15,14 @@ use Inertia\Response;
 class DemoController extends Controller
 {
     /**
+     * Render the authenticated app shell proof (organization sidebar via shared props).
+     */
+    public function shell(Request $request): Response
+    {
+        return Inertia::render('Demo/Shell');
+    }
+
+    /**
      * Render the Inertia scaffold demo (stack verification only).
      */
     public function show(Request $request): Response

@@ -14,8 +14,8 @@ use App\Http\Controllers\AI\LabelInspirationController;
 use App\Http\Controllers\AI\ProductCatalogController;
 use App\Http\Controllers\AI\SeoController;
 use App\Http\Controllers\AnalyticsController;
-use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\ConfirmPasswordController;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -176,6 +176,8 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
     Route::get('/onboarding', [OnboardingController::class, 'index'])->name('onboarding');
 
     Route::middleware(['tenant', 'organization'])->prefix('{organizationId}')->group(function () {
+        Route::get('/inertia/shell', [DemoController::class, 'shell'])->name('inertia.shell');
+
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::prefix('collaboration')->name('collaboration.')->group(function () {
