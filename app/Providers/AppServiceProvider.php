@@ -41,8 +41,15 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Keep generated URLs aligned with the public APP_URL on deployed environments.
+        // In local dev, forcing APP_URL (often http://localhost) breaks Vite assets and CSP when
+        // the app is opened via 127.0.0.1 or a non-default port.
         $appUrl = config('app.url');
-        if (is_string($appUrl) && $appUrl !== '') {
+        if (
+            is_string($appUrl)
+            && $appUrl !== ''
+            && app()->environment('production', 'staging')
+        ) {
             URL::forceRootUrl($appUrl);
         }
 
