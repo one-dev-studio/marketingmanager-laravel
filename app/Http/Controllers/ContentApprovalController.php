@@ -220,10 +220,9 @@ class ContentApprovalController extends Controller
             ]);
         }
 
-        return view('content-approvals.show', [
-            'approval' => $approval,
-            'approvalHistory' => $approvalHistory,
+        return Inertia::render('ContentApprovals/Show', [
             'organizationId' => $organizationId,
+            'approval' => ContentApprovalInertiaResource::detail($approval, $request, $approvalHistory),
         ]);
     }
 

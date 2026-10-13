@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Task;
 
 use App\Http\Controllers\Controller;
@@ -8,10 +10,12 @@ use App\Http\Requests\Task\UpdateTaskRequest;
 use App\Http\Resources\Task\TaskResource;
 use App\Models\Task;
 use App\Models\TaskAttachment;
+use App\Models\TaskTemplate;
+use App\Models\User;
 use App\Services\Task\TaskService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Inertia\Inertia;
 
 class TaskController extends Controller
 {
@@ -40,20 +44,28 @@ class TaskController extends Controller
             $query->where('priority', $request->priority);
         }
 
-        $tasks = $query->orderBy('created_at', 'desc')->paginate();
-
         if ($this->wantsJson($request)) {
+            $tasks = $query->orderBy('created_at', 'desc')->paginate();
+
             return TaskResource::collection($tasks);
         }
 
-        $members = \App\Models\User::whereHas('organizations', fn ($q) => $q->where('organizations.id', $organizationId))->get(['id', 'name']);
-        $templates = \App\Models\TaskTemplate::where('organization_id', $organizationId)->get();
+        $tasks = $query->orderBy('created_at', 'desc')->get();
 
-        return view('tasks.index', [
-            'title' => 'Tasks',
+        $members = User::whereHas('organizations', fn ($q) => $q->where('organizations.id', $organizationId))->get(['id', 'name']);
+        $templates = TaskTemplate::where('organization_id', $organizationId)->get();
+
+        return Inertia::render('Tasks/Index', [
             'organizationId' => $organizationId,
-            'members' => $members,
-            'templates' => $templates,
+            'members' => $members->map(fn ($user) => ['id' => $user->id, 'name' => $user->name])->values()->all(),
+            'templates' => $templates->map(fn ($template) => [
+                'id' => $template->id,
+                'name' => $template->name,
+            ])->values()->all(),
+            'tasks' => $tasks
+                ->map(fn (Task $task) => (new TaskResource($task))->toArray($request))
+                ->values()
+                ->all(),
         ]);
     }
 
@@ -205,4 +217,3 @@ class TaskController extends Controller
         ]);
     }
 }
-

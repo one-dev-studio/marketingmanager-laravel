@@ -6,6 +6,7 @@ namespace App\Http\Resources\Content;
 
 use App\Models\ContentApproval;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 final class ContentApprovalInertiaResource
 {
@@ -30,6 +31,40 @@ final class ContentApprovalInertiaResource
                 'organizationId' => $organizationId,
                 'approval' => $approval->id,
             ]),
+        ];
+    }
+
+    /**
+     * @param  Collection<int, ContentApproval>  $history
+     * @return array<string, mixed>
+     */
+    public static function detail(
+        ContentApproval $approval,
+        Request $request,
+        iterable $history,
+    ): array {
+        $scheduledPost = $approval->scheduledPost;
+        $user = $request->user();
+
+        return [
+            'id' => $approval->id,
+            'status' => $approval->status,
+            'comments' => $approval->comments,
+            'campaign_name' => $scheduledPost?->campaign?->name,
+            'channel_name' => $scheduledPost?->channel?->display_name,
+            'content' => $scheduledPost?->content ?? '',
+            'scheduled_at' => $scheduledPost?->scheduled_at?->toIso8601String(),
+            'can' => [
+                'approve' => $approval->status === ContentApproval::STATUS_PENDING
+                    && $user !== null,
+            ],
+            'history' => collect($history)->map(fn (ContentApproval $item) => [
+                'id' => $item->id,
+                'status' => $item->status,
+                'comments' => $item->comments,
+                'reviewed_at' => $item->reviewed_at?->toIso8601String(),
+                'approver_name' => $item->approvedBy?->name ?? $item->requestedBy?->name,
+            ])->values()->all(),
         ];
     }
 }
