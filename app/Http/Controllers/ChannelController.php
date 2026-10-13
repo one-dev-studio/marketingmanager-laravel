@@ -1,15 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Http\Resources\Channel\ChannelInertiaResource;
 use App\Models\Channel;
 use App\Models\ChannelSetting;
 use App\Models\InfluencerChannel;
 use App\Models\SocialConnection;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ChannelController extends Controller
 {
+    private const OAUTH_PLATFORMS = ['facebook', 'instagram', 'linkedin', 'twitter', 'tiktok', 'pinterest'];
+
     public function index(Request $request, string $organizationId)
     {
         $channels = Channel::where('organization_id', $organizationId)
@@ -21,20 +28,27 @@ class ChannelController extends Controller
             return response()->json($channels);
         }
 
-        return view('channels.index', [
-            'title' => 'Channels',
+        return Inertia::render('Channels/Index', [
             'organizationId' => $organizationId,
-            'channels' => $channels,
-            'oauthPlatforms' => ['facebook', 'instagram', 'linkedin', 'twitter', 'tiktok', 'pinterest'],
+            'channels' => $channels
+                ->map(fn (Channel $channel) => ChannelInertiaResource::toArray($channel, $request))
+                ->values()
+                ->all(),
+            'oauthPlatforms' => self::OAUTH_PLATFORMS,
+            'can' => [
+                'create' => $request->user()?->can('create', Channel::class) ?? false,
+            ],
         ]);
     }
 
-    public function create(Request $request, string $organizationId)
+    public function create(Request $request, string $organizationId): Response
     {
-        return view('channels.create', [
-            'title' => 'Add Channel',
+        if ($this->wantsJson($request)) {
+            abort(404);
+        }
+
+        return Inertia::render('Channels/Create', [
             'organizationId' => $organizationId,
-            'channel' => null,
         ]);
     }
 
@@ -77,7 +91,7 @@ class ChannelController extends Controller
             ]);
         }
 
-        if (!empty($settings)) {
+        if (! empty($settings)) {
             ChannelSetting::create([
                 'channel_id' => $channel->id,
                 'settings_json' => $settings,
@@ -102,22 +116,21 @@ class ChannelController extends Controller
             return response()->json($channel);
         }
 
-        return view('channels.edit', [
-            'title' => $channel->display_name,
-            'organizationId' => $organizationId,
-            'channel' => $channel,
-        ]);
+        return $this->edit($request, $organizationId, $channel);
     }
 
-    public function edit(Request $request, string $organizationId, Channel $channel)
+    public function edit(Request $request, string $organizationId, Channel $channel): Response
     {
         $this->authorize('update', $channel);
         $channel->load('socialConnection', 'settings');
 
-        return view('channels.edit', [
-            'title' => 'Edit Channel',
+        if ($this->wantsJson($request)) {
+            abort(404);
+        }
+
+        return Inertia::render('Channels/Edit', [
             'organizationId' => $organizationId,
-            'channel' => $channel,
+            'channel' => ChannelInertiaResource::toArray($channel, $request),
         ]);
     }
 
@@ -225,7 +238,7 @@ class ChannelController extends Controller
                 : ($connection->error_message ?: 'Connection is not active.');
         } elseif (in_array($channel->type, ['email', 'whatsapp', 'amplify', 'paid_ads', 'press_release'], true)) {
             $settings = $channel->settings?->settings_json ?? [];
-            $ok = !empty($settings);
+            $ok = ! empty($settings);
             $message = $ok ? 'Channel settings are present.' : 'Add posting defaults or credentials first.';
         } elseif ($channel->type === 'influencer') {
             $ok = true;
