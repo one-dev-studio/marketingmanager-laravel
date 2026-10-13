@@ -1,11 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Agency;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Agency\AgencyClientInertiaResource;
 use App\Models\Agency;
+use App\Models\Organization;
 use App\Services\AgencyService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * Agency Client Controller
@@ -20,7 +26,7 @@ class ClientController extends Controller
     /**
      * Display list of client organizations
      */
-    public function index(Request $request, Agency $agency)
+    public function index(Request $request, Agency $agency): Response
     {
         $filters = [
             'search' => $request->get('search'),
@@ -30,10 +36,22 @@ class ClientController extends Controller
 
         $clients = $this->agencyService->getClientOrganizations($agency, $filters);
 
-        return view('agency.clients.index', [
-            'agency' => $agency,
-            'clients' => $clients,
-            'filters' => $filters,
+        $user = $request->user();
+        $isAgencyAdmin = $user !== null
+            && ($user->hasRole(['agency_admin', 'agency-admin', 'admin'], $agency) || $user->isAdmin());
+
+        return Inertia::render('Agency/Clients/Index', [
+            'agencyId' => (string) $agency->id,
+            'clients' => $clients->through(
+                fn (Organization $client) => AgencyClientInertiaResource::listItem($client, $agency)
+            ),
+            'filters' => [
+                'search' => $filters['search'],
+                'status' => $filters['status'],
+            ],
+            'can' => [
+                'create' => $isAgencyAdmin,
+            ],
         ]);
     }
 
@@ -58,19 +76,17 @@ class ClientController extends Controller
     /**
      * Display details of a specific client organization
      */
-    public function show(Agency $agency, int $organizationId)
+    public function show(Request $request, Agency $agency, int $organizationId): Response
     {
         $client = $this->agencyService->getClientOrganization($agency, $organizationId);
 
-        if (!$client) {
+        if (! $client) {
             abort(404, 'Client organization not found or not associated with this agency.');
         }
 
-        return view('agency.clients.show', [
-            'agency' => $agency,
-            'client' => $client,
+        return Inertia::render('Agency/Clients/Show', [
+            'agencyId' => (string) $agency->id,
+            'client' => AgencyClientInertiaResource::detail($client),
         ]);
     }
 }
-
-

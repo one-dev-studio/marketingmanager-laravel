@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Services\Agency\ClientPortalBrandingSharing;
+use App\Services\Navigation\AgencyShellContextBuilder;
+use App\Services\Navigation\AgencySidebarMenuBuilder;
 use App\Services\Navigation\AppShellContextBuilder;
 use App\Services\Navigation\SidebarMenuBuilder;
 use Illuminate\Http\Request;
@@ -59,6 +61,8 @@ class HandleInertiaRequests extends Middleware
             ]),
             'sidebar' => fn () => app(SidebarMenuBuilder::class)->buildForRequest($request),
             'appShell' => fn () => app(AppShellContextBuilder::class)->buildForRequest($request),
+            'agencySidebar' => fn () => app(AgencySidebarMenuBuilder::class)->buildForRequest($request),
+            'agencyShell' => fn () => app(AgencyShellContextBuilder::class)->buildForRequest($request),
             'clientPortalBranding' => fn () => app(ClientPortalBrandingSharing::class)->forRequest($request),
         ];
     }
