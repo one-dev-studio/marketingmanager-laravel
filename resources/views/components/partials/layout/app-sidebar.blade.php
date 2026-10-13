@@ -88,7 +88,7 @@
                 <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                 </svg>
-                <span class="text-xl font-bold text-gray-900">MarketPulse</span>
+                <span class="text-xl font-bold text-gray-900">{{ config('app.name') }}</span>
             </a>
         </div>
         @if($hasBrands)

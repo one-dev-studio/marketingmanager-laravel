@@ -13,6 +13,7 @@ use App\Models\Organization;
 use App\Models\Role;
 use App\Models\Survey;
 use App\Models\SurveyQuestion;
+use App\Models\Task;
 use App\Models\User;
 use App\Models\Workflow;
 use Illuminate\Database\Seeder;
@@ -69,17 +70,60 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        $campaign = Campaign::firstOrCreate(
-            ['organization_id' => $organization->id, 'name' => 'Summer Launch Campaign'],
+        $campaignDefinitions = [
             [
-                'brand_id' => $brand->id,
-                'description' => 'Demo campaign for product launch.',
-                'status' => 'draft',
-                'start_date' => now(),
+                'name' => 'Q4 Product Launch',
+                'description' => 'Multi-channel launch for the autumn product line.',
+                'status' => 'active',
+                'start_date' => now()->subWeeks(2),
+                'end_date' => now()->addMonths(2),
+            ],
+            [
+                'name' => 'Holiday Email Series',
+                'description' => 'Seasonal nurture and promo emails (demo data).',
+                'status' => 'active',
+                'start_date' => now()->subDays(5),
+                'end_date' => now()->addMonths(1),
+            ],
+            [
+                'name' => 'Brand Awareness — Social',
+                'description' => 'Paid social and organic posts across channels.',
+                'status' => 'paused',
+                'start_date' => now()->subMonth(),
                 'end_date' => now()->addMonths(3),
-                'created_by' => $demoUser->id,
-            ]
-        );
+            ],
+            [
+                'name' => 'Webinar Follow-up',
+                'description' => 'Post-event emails and retargeting (fake contacts).',
+                'status' => 'draft',
+                'start_date' => now()->addWeek(),
+                'end_date' => now()->addMonths(2),
+            ],
+            [
+                'name' => 'Partner Co-marketing',
+                'description' => 'Joint campaign with a fictional partner brand.',
+                'status' => 'completed',
+                'start_date' => now()->subMonths(2),
+                'end_date' => now()->subWeeks(1),
+            ],
+        ];
+
+        $campaign = null;
+        foreach ($campaignDefinitions as $definition) {
+            $campaign = Campaign::firstOrCreate(
+                ['organization_id' => $organization->id, 'name' => $definition['name']],
+                [
+                    'brand_id' => $brand->id,
+                    'description' => $definition['description'],
+                    'status' => $definition['status'],
+                    'start_date' => $definition['start_date'],
+                    'end_date' => $definition['end_date'],
+                    'created_by' => $demoUser->id,
+                ]
+            );
+        }
+
+        $this->seedDemoTasks($organization, $demoUser);
 
         Chatbot::firstOrCreate(
             ['organization_id' => $organization->id, 'name' => 'Website Assistant'],
@@ -109,14 +153,14 @@ class DemoDataSeeder extends Seeder
                 'description' => 'Demo landing page for campaigns.',
                 'status' => 'published',
                 'is_active' => true,
-                'html_content' => '<main style="font-family:sans-serif;padding:3rem;text-align:center"><h1>Demo Landing Page</h1><p>Published demo page for MarketPulse.</p></main>',
+                'html_content' => '<main style="font-family:sans-serif;padding:3rem;text-align:center"><h1>Demo Landing Page</h1><p>Published demo page for Marketing Manager.</p></main>',
                 'created_by' => $demoUser->id,
             ]
         );
         $landingPage->update([
             'status' => 'published',
             'is_active' => true,
-            'html_content' => $landingPage->html_content ?: '<main style="font-family:sans-serif;padding:3rem;text-align:center"><h1>Demo Landing Page</h1><p>Published demo page for MarketPulse.</p></main>',
+            'html_content' => $landingPage->html_content ?: '<main style="font-family:sans-serif;padding:3rem;text-align:center"><h1>Demo Landing Page</h1><p>Published demo page for Marketing Manager.</p></main>',
         ]);
 
         $survey = Survey::firstOrCreate(
@@ -161,6 +205,38 @@ class DemoDataSeeder extends Seeder
         );
 
         $this->seedAgency($organization, $adminRole);
+    }
+
+    private function seedDemoTasks(Organization $organization, User $demoUser): void
+    {
+        $taskDefinitions = [
+            ['title' => 'Draft launch email #1', 'status' => 'todo', 'priority' => 'high'],
+            ['title' => 'Approve social ad sets', 'status' => 'todo', 'priority' => 'medium'],
+            ['title' => 'Update landing page hero', 'status' => 'in_progress', 'priority' => 'high'],
+            ['title' => 'Schedule webinar reminders', 'status' => 'in_progress', 'priority' => 'medium'],
+            ['title' => 'Review Q4 budget spreadsheet', 'status' => 'in_progress', 'priority' => 'low'],
+            ['title' => 'Publish blog post recap', 'status' => 'completed', 'priority' => 'medium'],
+            ['title' => 'Send partner kickoff brief', 'status' => 'completed', 'priority' => 'low'],
+            ['title' => 'Archive summer campaign assets', 'status' => 'completed', 'priority' => 'low'],
+        ];
+
+        foreach ($taskDefinitions as $definition) {
+            Task::firstOrCreate(
+                [
+                    'organization_id' => $organization->id,
+                    'title' => $definition['title'],
+                ],
+                [
+                    'description' => 'Demo task for marketing screenshots (no real customer data).',
+                    'status' => $definition['status'],
+                    'priority' => $definition['priority'],
+                    'assignee_id' => $demoUser->id,
+                    'created_by' => $demoUser->id,
+                    'due_date' => now()->addDays(7),
+                    'completed_at' => $definition['status'] === 'completed' ? now()->subDay() : null,
+                ]
+            );
+        }
     }
 
     private function seedAgency(Organization $organization, ?Role $adminRole): void

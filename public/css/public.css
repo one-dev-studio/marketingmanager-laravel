@@ -168,7 +168,7 @@ main {
     font-size: 0.875rem;
 }
 
-.navbar-menu-auth {
+.navbar-menu > .navbar-menu-auth {
     display: none;
 }
 
@@ -933,8 +933,8 @@ main {
         display: none;
     }
 
-    .navbar-menu-auth {
-        display: block;
+    .navbar-menu > .navbar-menu-auth {
+        display: inline-flex;
         font-weight: 600;
     }
 
