@@ -92,6 +92,30 @@ class RolePermissionSeeder extends Seeder
             // Analytics permissions
             ['name' => 'analytics.view', 'description' => 'View analytics', 'module' => 'analytics'],
 
+            // Survey permissions
+            ['name' => 'surveys.view', 'description' => 'View surveys', 'module' => 'surveys'],
+            ['name' => 'surveys.create', 'description' => 'Create surveys', 'module' => 'surveys'],
+            ['name' => 'surveys.update', 'description' => 'Update surveys', 'module' => 'surveys'],
+            ['name' => 'surveys.delete', 'description' => 'Delete surveys', 'module' => 'surveys'],
+
+            // Landing page permissions
+            ['name' => 'landing_pages.view', 'description' => 'View landing pages', 'module' => 'landing_pages'],
+            ['name' => 'landing_pages.create', 'description' => 'Create landing pages', 'module' => 'landing_pages'],
+            ['name' => 'landing_pages.update', 'description' => 'Update landing pages', 'module' => 'landing_pages'],
+            ['name' => 'landing_pages.delete', 'description' => 'Delete landing pages', 'module' => 'landing_pages'],
+
+            // Workflow permissions
+            ['name' => 'workflows.view', 'description' => 'View workflows', 'module' => 'workflows'],
+            ['name' => 'workflows.create', 'description' => 'Create workflows', 'module' => 'workflows'],
+            ['name' => 'workflows.update', 'description' => 'Update workflows', 'module' => 'workflows'],
+            ['name' => 'workflows.delete', 'description' => 'Delete workflows', 'module' => 'workflows'],
+
+            // Chatbot permissions
+            ['name' => 'chatbots.view', 'description' => 'View chatbots', 'module' => 'chatbots'],
+            ['name' => 'chatbots.create', 'description' => 'Create chatbots', 'module' => 'chatbots'],
+            ['name' => 'chatbots.update', 'description' => 'Update chatbots', 'module' => 'chatbots'],
+            ['name' => 'chatbots.delete', 'description' => 'Delete chatbots', 'module' => 'chatbots'],
+
             // AI permissions
             ['name' => 'ai.generate_content', 'description' => 'Generate AI content', 'module' => 'ai'],
             ['name' => 'ai.generate_images', 'description' => 'Generate AI images', 'module' => 'ai'],
@@ -162,6 +186,10 @@ class RolePermissionSeeder extends Seeder
             'projects.view', 'projects.create', 'projects.update', 'projects.delete',
             'reports.view', 'reports.create', 'reports.update', 'reports.delete', 'reports.share',
             'analytics.view',
+            'surveys.view', 'surveys.create', 'surveys.update', 'surveys.delete',
+            'landing_pages.view', 'landing_pages.create', 'landing_pages.update', 'landing_pages.delete',
+            'workflows.view', 'workflows.create', 'workflows.update', 'workflows.delete',
+            'chatbots.view', 'chatbots.create', 'chatbots.update', 'chatbots.delete',
             'ai.generate_content', 'ai.generate_images',
             'settings.view', 'settings.update',
         ]);
@@ -178,6 +206,10 @@ class RolePermissionSeeder extends Seeder
             'projects.view', 'projects.create', 'projects.update',
             'reports.view', 'reports.create', 'reports.update',
             'analytics.view',
+            'surveys.view', 'surveys.create', 'surveys.update',
+            'landing_pages.view', 'landing_pages.create', 'landing_pages.update',
+            'workflows.view', 'workflows.create', 'workflows.update',
+            'chatbots.view', 'chatbots.create', 'chatbots.update',
             'ai.generate_content', 'ai.generate_images',
         ]);
 
@@ -193,6 +225,10 @@ class RolePermissionSeeder extends Seeder
             'projects.view',
             'reports.view',
             'analytics.view',
+            'surveys.view',
+            'landing_pages.view',
+            'workflows.view',
+            'chatbots.view',
         ]);
 
         $client->syncPermissions([
@@ -215,6 +251,10 @@ class RolePermissionSeeder extends Seeder
             'projects.view', 'projects.create', 'projects.update', 'projects.delete',
             'reports.view', 'reports.create', 'reports.update', 'reports.delete', 'reports.share',
             'analytics.view',
+            'surveys.view', 'surveys.create', 'surveys.update', 'surveys.delete',
+            'landing_pages.view', 'landing_pages.create', 'landing_pages.update', 'landing_pages.delete',
+            'workflows.view', 'workflows.create', 'workflows.update', 'workflows.delete',
+            'chatbots.view', 'chatbots.create', 'chatbots.update', 'chatbots.delete',
             'ai.generate_content', 'ai.generate_images',
         ]);
 
@@ -230,6 +270,10 @@ class RolePermissionSeeder extends Seeder
             'projects.view', 'projects.create', 'projects.update',
             'reports.view', 'reports.create', 'reports.update',
             'analytics.view',
+            'surveys.view', 'surveys.create', 'surveys.update',
+            'landing_pages.view', 'landing_pages.create', 'landing_pages.update',
+            'workflows.view', 'workflows.create', 'workflows.update',
+            'chatbots.view', 'chatbots.create', 'chatbots.update',
             'ai.generate_content', 'ai.generate_images',
         ]);
 
@@ -238,5 +282,3 @@ class RolePermissionSeeder extends Seeder
         }
     }
 }
-
-
