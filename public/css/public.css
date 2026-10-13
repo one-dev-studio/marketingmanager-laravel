@@ -1,23 +1,48 @@
-/* MarketPulse Public Site Styles */
+/* Marketing Manager — public marketing site styles */
 
 :root {
-    --primary: #4f46e5;
-    --primary-dark: #4338ca;
-    --secondary: #6b7280;
-    --success: #10b981;
+    /* Brand tokens (canonical) */
+    --mm-brand-50: #eef2ff;
+    --mm-brand-100: #e0e7ff;
+    --mm-brand-500: #6366f1;
+    --mm-brand-600: #4f46e5;
+    --mm-brand-700: #4338ca;
+    --mm-accent-violet: #7c3aed;
+    --mm-surface: #ffffff;
+    --mm-surface-muted: #f9fafb;
+    --mm-border: #e5e7eb;
+    --mm-text: #111827;
+    --mm-text-muted: #6b7280;
+    --mm-success: #10b981;
+    --mm-radius-lg: 1rem;
+    --mm-radius-xl: 1.25rem;
+    --mm-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.18);
+    --mm-shadow-brand: 0 10px 25px rgba(79, 70, 229, 0.3);
+
+    /* Legacy aliases (existing class names) */
+    --primary: var(--mm-brand-600);
+    --primary-dark: var(--mm-brand-700);
+    --secondary: var(--mm-text-muted);
+    --success: var(--mm-success);
     --warning: #f59e0b;
     --danger: #ef4444;
-    --white: #ffffff;
-    --gray-50: #f9fafb;
+    --white: var(--mm-surface);
+    --gray-50: var(--mm-surface-muted);
     --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
+    --gray-200: var(--mm-border);
     --gray-300: #d1d5db;
     --gray-400: #9ca3af;
-    --gray-500: #6b7280;
+    --gray-500: var(--mm-text-muted);
     --gray-600: #4b5563;
     --gray-700: #374151;
     --gray-800: #1f2937;
-    --gray-900: #111827;
+    --gray-900: var(--mm-text);
+
+    /* Typography scale */
+    --mm-font-display: clamp(2.25rem, 4vw, 3.25rem);
+    --mm-font-h2: 2rem;
+    --mm-font-lead: 1.125rem;
+    --mm-font-body: 1rem;
 }
 
 * {
@@ -27,10 +52,11 @@
 }
 
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: var(--mm-font-body);
     line-height: 1.6;
-    color: var(--gray-900);
-    background: var(--white);
+    color: var(--mm-text);
+    background: var(--mm-surface);
 }
 
 .antialiased {
@@ -84,7 +110,7 @@ main {
 }
 
 .logo-text {
-    background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--mm-accent-violet) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -136,7 +162,7 @@ main {
     align-items: center;
     justify-content: center;
     padding: 0.625rem 1.25rem;
-    border-radius: 0.5rem;
+    border-radius: 0.625rem;
     font-weight: 600;
     text-decoration: none;
     transition: all 0.2s;
@@ -158,7 +184,14 @@ main {
 .btn-primary:hover {
     background: var(--primary-dark);
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+    box-shadow: var(--mm-shadow-brand);
+}
+
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.nav-link:focus-visible {
+    outline: 2px solid var(--mm-brand-600);
+    outline-offset: 2px;
 }
 
 .btn-secondary {
@@ -194,7 +227,7 @@ main {
 /* Hero Section */
 .hero {
     padding: 5rem 0;
-    background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+    background: linear-gradient(180deg, var(--mm-surface-muted) 0%, var(--mm-surface) 70%);
 }
 
 .hero-content {
@@ -205,22 +238,23 @@ main {
 }
 
 .hero-title {
-    font-size: 3rem;
+    font-size: var(--mm-font-display);
     font-weight: 800;
-    line-height: 1.2;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
     margin-bottom: 1.5rem;
 }
 
 .text-gradient {
-    background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 50%, #ec4899 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--mm-accent-violet) 50%, #ec4899 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
 .hero-description {
-    font-size: 1.25rem;
-    color: var(--gray-600);
+    font-size: var(--mm-font-lead);
+    color: var(--mm-text-muted);
     margin-bottom: 2rem;
     line-height: 1.8;
 }
@@ -276,14 +310,15 @@ main {
 }
 
 .section-title {
-    font-size: 2.5rem;
+    font-size: var(--mm-font-h2);
     font-weight: 800;
     margin-bottom: 1rem;
+    letter-spacing: -0.02em;
 }
 
 .section-description {
-    font-size: 1.125rem;
-    color: var(--gray-600);
+    font-size: var(--mm-font-lead);
+    color: var(--mm-text-muted);
     max-width: 600px;
     margin: 0 auto;
 }
@@ -311,8 +346,8 @@ main {
 .feature-icon {
     width: 56px;
     height: 56px;
-    background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
-    border-radius: 1rem;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--mm-accent-violet) 100%);
+    border-radius: var(--mm-radius-lg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -413,7 +448,7 @@ main {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--mm-accent-violet) 100%);
     color: var(--white);
     display: flex;
     align-items: center;
@@ -434,7 +469,7 @@ main {
 /* CTA Section */
 .cta {
     padding: 5rem 0;
-    background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--mm-accent-violet) 100%);
     color: var(--white);
 }
 
@@ -563,6 +598,21 @@ main {
 .social-links svg {
     width: 20px;
     height: 20px;
+}
+
+/* Legal / stub pages (no Tailwind on public layout) */
+.py-16 {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+}
+
+.text-gray-700 {
+    color: var(--gray-700);
+    line-height: 1.75;
+}
+
+.text-gray-700 p {
+    margin-bottom: 1rem;
 }
 
 /* Responsive Design */
