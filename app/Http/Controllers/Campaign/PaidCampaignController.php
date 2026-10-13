@@ -1,15 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Campaign;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PaidCampaign\PaidCampaignInertiaResource;
 use App\Models\PaidCampaign;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class PaidCampaignController extends Controller
 {
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response|JsonResponse
     {
         $query = PaidCampaign::where('organization_id', $organizationId);
 
@@ -32,9 +37,12 @@ class PaidCampaignController extends Controller
             ]);
         }
 
-        return view('paid-ads.campaigns', [
+        return Inertia::render('PaidAds/Campaigns', [
             'organizationId' => $organizationId,
-            'paidCampaigns' => $paidCampaigns,
+            'paidCampaigns' => $paidCampaigns->through(
+                fn (PaidCampaign $campaign) => PaidCampaignInertiaResource::listItem($campaign)
+            ),
+            'platforms' => ['facebook', 'instagram', 'google', 'linkedin', 'twitter', 'tiktok', 'pinterest'],
         ]);
     }
 
@@ -159,7 +167,7 @@ class PaidCampaignController extends Controller
             unset($validated['spent']);
         }
 
-        if (!empty($validated)) {
+        if (! empty($validated)) {
             $paidCampaign->updateMetrics($validated);
         }
 
@@ -173,5 +181,3 @@ class PaidCampaignController extends Controller
         ]);
     }
 }
-
-

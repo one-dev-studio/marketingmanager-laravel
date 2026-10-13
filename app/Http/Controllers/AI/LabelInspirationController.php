@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\AI;
 
 use App\Http\Controllers\Controller;
@@ -9,7 +11,8 @@ use App\Models\Product;
 use App\Services\AI\LabelInspirationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class LabelInspirationController extends Controller
 {
@@ -20,21 +23,20 @@ class LabelInspirationController extends Controller
     /**
      * Display label inspiration page
      */
-    public function index(Request $request, string $organizationId): View
+    public function index(Request $request, string $organizationId): Response
     {
         $organization = $request->user()->primaryOrganization();
-        
+
         $brands = Brand::where('organization_id', $organization->id)
             ->where('status', 'active')
             ->orderBy('name')
-            ->get();
-        
-        $products = Product::where('organization_id', $organization->id)
-            ->with('brand')
-            ->orderBy('name')
-            ->get();
+            ->get(['id', 'name']);
 
-        return view('tools.label-inspiration', [
+        $products = Product::where('organization_id', $organization->id)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return Inertia::render('Tools/LabelInspiration', [
             'organizationId' => $organizationId,
             'brands' => $brands,
             'products' => $products,
@@ -69,4 +71,3 @@ class LabelInspirationController extends Controller
         ]);
     }
 }
-
