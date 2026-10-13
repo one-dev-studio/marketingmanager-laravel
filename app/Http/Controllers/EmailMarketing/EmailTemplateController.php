@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\EmailMarketing;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EmailMarketing\CreateEmailTemplateRequest;
+use App\Http\Resources\EmailMarketing\EmailTemplateInertiaResource;
 use App\Http\Resources\EmailMarketing\EmailTemplateResource;
 use App\Models\EmailTemplate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class EmailTemplateController extends Controller
 {
@@ -25,19 +29,22 @@ class EmailTemplateController extends Controller
             return EmailTemplateResource::collection($templates);
         }
 
-        return view('email.templates.index', [
-            'title' => 'Email Templates',
+        return Inertia::render('EmailTemplates/Index', [
             'organizationId' => $organizationId,
-            'templates' => $templates,
+            'templates' => $templates->through(
+                fn (EmailTemplate $template) => EmailTemplateInertiaResource::listItem($template, $request)
+            ),
+            'can' => [
+                'create' => $request->user()?->hasAccessToOrganization((int) $organizationId) ?? false,
+            ],
         ]);
     }
 
-    public function builder(Request $request, string $organizationId, ?EmailTemplate $emailTemplate = null)
+    public function builder(Request $request, string $organizationId, ?EmailTemplate $emailTemplate = null): Response
     {
-        return view('email.templates.builder', [
-            'title' => 'Template Builder',
+        return Inertia::render('EmailTemplates/Builder', [
             'organizationId' => $organizationId,
-            'template' => $emailTemplate,
+            'template' => EmailTemplateInertiaResource::builder($emailTemplate, $request),
         ]);
     }
 
@@ -124,4 +131,3 @@ class EmailTemplateController extends Controller
         ]);
     }
 }
-
