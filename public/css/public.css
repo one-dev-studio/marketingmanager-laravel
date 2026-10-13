@@ -1017,6 +1017,390 @@ main {
     margin-bottom: 1rem;
 }
 
+.btn-block {
+    width: 100%;
+    justify-content: center;
+}
+
+/* Pricing page */
+.pricing-page-hero {
+    padding: 3rem 0 2.5rem;
+    background: var(--mm-surface-muted);
+    border-bottom: 1px solid var(--mm-border);
+}
+
+.pricing-page-hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+}
+
+.pricing-page-crumb {
+    font-size: 0.8125rem;
+    color: var(--mm-text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.pricing-page-title {
+    font-size: clamp(2rem, 3.5vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.pricing-page-lead {
+    color: var(--mm-text-muted);
+    margin-top: 0.5rem;
+    font-size: var(--mm-font-lead);
+    max-width: 28rem;
+}
+
+.pricing-page-highlights {
+    margin: 1.25rem 0 0;
+    padding-left: 1.1rem;
+    color: var(--gray-700);
+    line-height: 1.7;
+}
+
+.pricing-page-highlights li {
+    margin-bottom: 0.35rem;
+}
+
+.pricing-plans-section {
+    padding: 3.5rem 0;
+}
+
+.pricing-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    align-items: stretch;
+}
+
+.pricing-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 1.75rem;
+    background: var(--mm-surface);
+    border: 1px solid var(--mm-border);
+    border-radius: var(--mm-radius-lg);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.pricing-card--featured {
+    border-color: var(--mm-brand-600);
+    box-shadow: var(--mm-shadow-brand);
+}
+
+.pricing-card-badge {
+    position: absolute;
+    top: -0.65rem;
+    left: 1.75rem;
+    padding: 0.2rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--white);
+    background: var(--mm-brand-600);
+    border-radius: 999px;
+}
+
+.pricing-card-name {
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.pricing-card-price {
+    margin-bottom: 0.35rem;
+}
+
+.pricing-card-amount {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.pricing-card-period {
+    color: var(--mm-text-muted);
+    font-size: 0.9375rem;
+    margin-left: 0.15rem;
+}
+
+.pricing-card-tagline {
+    color: var(--mm-text-muted);
+    font-size: 0.9375rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--mm-border);
+}
+
+.pricing-card-features {
+    flex: 1;
+    list-style: none;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    color: var(--gray-700);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+}
+
+.pricing-card-features li {
+    padding: 0.35rem 0;
+    padding-left: 1.25rem;
+    position: relative;
+}
+
+.pricing-card-features li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--mm-success);
+    font-weight: 700;
+}
+
+.pricing-compare {
+    padding: 3rem 0 4rem;
+    background: var(--mm-surface-muted);
+}
+
+.pricing-compare-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--mm-border);
+    border-radius: var(--mm-radius-lg);
+    background: var(--mm-surface);
+}
+
+.pricing-compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+}
+
+.pricing-compare-table th,
+.pricing-compare-table td {
+    padding: 0.85rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--mm-border);
+}
+
+.pricing-compare-table thead th {
+    background: var(--mm-brand-50);
+    font-weight: 700;
+}
+
+.pricing-compare-table tbody th {
+    font-weight: 600;
+    color: var(--mm-text);
+}
+
+.pricing-compare-table tbody tr:last-child th,
+.pricing-compare-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.pricing-faq {
+    padding: 3.5rem 0 4rem;
+}
+
+.pricing-faq-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+}
+
+.pricing-faq-item {
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--mm-border);
+    border-radius: var(--mm-radius-lg);
+    background: var(--mm-surface-muted);
+}
+
+.pricing-faq-question {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.pricing-faq-answer {
+    color: var(--mm-text-muted);
+    line-height: 1.6;
+    font-size: 0.9375rem;
+}
+
+.pricing-cta {
+    margin-bottom: 3rem;
+}
+
+/* About page */
+.about-page-hero {
+    padding: 3rem 0 2rem;
+    text-align: center;
+    background: var(--mm-surface-muted);
+    border-bottom: 1px solid var(--mm-border);
+}
+
+.about-page-crumb {
+    font-size: 0.8125rem;
+    color: var(--mm-text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.about-page-title {
+    font-size: clamp(2rem, 3.5vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.about-page-lead {
+    color: var(--mm-text-muted);
+    margin-top: 0.5rem;
+    max-width: 40rem;
+    margin-inline: auto;
+    font-size: var(--mm-font-lead);
+}
+
+.about-story {
+    padding: 3.5rem 0;
+}
+
+.about-zigzag-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+}
+
+.about-zigzag-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--mm-brand-700);
+    margin-bottom: 0.5rem;
+}
+
+.about-zigzag-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.02em;
+}
+
+.about-zigzag-text {
+    color: var(--mm-text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.about-zigzag-list {
+    padding-left: 1.1rem;
+    color: var(--gray-700);
+}
+
+.about-zigzag-list li {
+    margin-bottom: 0.35rem;
+}
+
+.about-approach {
+    padding: 2.5rem 0;
+    background: var(--mm-surface-muted);
+    border-block: 1px solid var(--mm-border);
+}
+
+.about-approach-list {
+    max-width: 36rem;
+    margin: 0 auto;
+}
+
+.about-stats {
+    padding: 2.5rem 0;
+    background: var(--mm-surface-muted);
+    border-block: 1px solid var(--mm-border);
+}
+
+.about-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    text-align: center;
+}
+
+.about-stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--mm-brand-600);
+}
+
+.about-stat-label {
+    color: var(--mm-text-muted);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.about-values {
+    padding: 4rem 0;
+}
+
+.about-values-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+}
+
+.about-value-card {
+    padding: 1.25rem;
+    border: 1px solid var(--mm-border);
+    border-radius: var(--mm-radius-lg);
+    background: var(--mm-surface-muted);
+}
+
+.about-team {
+    padding: 3rem 0 4rem;
+    background: var(--mm-surface-muted);
+}
+
+.about-team-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.about-team-card {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    background: var(--mm-surface);
+    border: 1px solid var(--mm-border);
+    border-radius: var(--mm-radius-lg);
+}
+
+.about-team-avatar {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    color: var(--white);
+    background: linear-gradient(135deg, var(--mm-brand-600), var(--mm-accent-violet));
+}
+
+.about-team-name {
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.about-team-role {
+    color: var(--mm-brand-600);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.about-cta {
+    margin-bottom: 3rem;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
     .hero-content {
@@ -1047,6 +1431,28 @@ main {
 
     .footer-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .pricing-page-hero-grid,
+    .about-zigzag-row {
+        grid-template-columns: 1fr;
+    }
+
+    .pricing-page-hero-shot {
+        order: -1;
+    }
+
+    .pricing-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .about-values-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .about-stats-grid,
+    .about-team-grid {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1108,6 +1514,11 @@ main {
 
     .features-integration-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .pricing-faq-grid,
+    .about-values-grid {
+        grid-template-columns: 1fr;
     }
 
     .cta-title {
