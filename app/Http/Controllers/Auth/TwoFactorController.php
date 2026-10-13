@@ -1,13 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\Auth\TwoFactorService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class TwoFactorController extends Controller
 {
@@ -18,10 +23,10 @@ class TwoFactorController extends Controller
     /**
      * Show the two-factor authentication setup page
      */
-    public function showSetupForm()
+    public function showSetupForm(): Response|RedirectResponse
     {
         $user = Auth::user();
-        
+
         if ($user->two_factor_enabled) {
             return redirect()->route('profile.security')->with('info', __('Two-factor authentication is already enabled.'));
         }
@@ -29,7 +34,7 @@ class TwoFactorController extends Controller
         $secret = $this->twoFactorService->generateSecret();
         $qrCodeUrl = $this->twoFactorService->getQRCodeUrl($user, $secret);
 
-        return view('auth.two-factor.setup', [
+        return Inertia::render('Auth/TwoFactor/Setup', [
             'secret' => $secret,
             'qrCodeUrl' => $qrCodeUrl,
         ]);
@@ -48,7 +53,7 @@ class TwoFactorController extends Controller
         $user = Auth::user();
         $secret = $request->input('secret');
 
-        if (!$this->twoFactorService->verify(new User(['two_factor_secret' => encrypt($secret)]), $request->input('code'))) {
+        if (! $this->twoFactorService->verify(new User(['two_factor_secret' => encrypt($secret)]), $request->input('code'))) {
             throw ValidationException::withMessages([
                 'code' => __('The provided code is invalid.'),
             ]);
@@ -81,9 +86,9 @@ class TwoFactorController extends Controller
     /**
      * Show the two-factor challenge form
      */
-    public function showChallengeForm()
+    public function showChallengeForm(): Response
     {
-        return view('auth.two-factor.challenge');
+        return Inertia::render('Auth/TwoFactor/Challenge');
     }
 
     /**
@@ -92,31 +97,32 @@ class TwoFactorController extends Controller
     public function verifyChallenge(Request $request)
     {
         $request->validate([
-            'code' => ['required', 'string'],
+            'code' => ['required_without:recovery_code', 'nullable', 'string'],
+            'recovery_code' => ['nullable', 'string'],
         ]);
 
         $userId = $request->session()->get('login.id');
-        
-        if (!$userId) {
+
+        if (! $userId) {
             return redirect()->route('login');
         }
 
-        $user = \App\Models\User::findOrFail($userId);
+        $user = User::findOrFail($userId);
 
-        if ($this->twoFactorService->verify($user, $request->input('code'))) {
-            Auth::login($user);
-            $request->session()->put('two_factor_verified', true);
-            $request->session()->forget('login.id');
-            return redirect()->intended();
-        }
-
-        if ($request->has('recovery_code')) {
+        if ($request->filled('recovery_code')) {
             if ($this->twoFactorService->verifyRecoveryCode($user, $request->input('recovery_code'))) {
                 Auth::login($user);
                 $request->session()->put('two_factor_verified', true);
                 $request->session()->forget('login.id');
+
                 return redirect()->intended();
             }
+        } elseif ($this->twoFactorService->verify($user, (string) $request->input('code'))) {
+            Auth::login($user);
+            $request->session()->put('two_factor_verified', true);
+            $request->session()->forget('login.id');
+
+            return redirect()->intended();
         }
 
         throw ValidationException::withMessages([
@@ -124,4 +130,3 @@ class TwoFactorController extends Controller
         ]);
     }
 }
-
