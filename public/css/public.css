@@ -168,6 +168,10 @@ main {
     font-size: 0.875rem;
 }
 
+.navbar-menu-auth {
+    display: none;
+}
+
 .nav-link:hover {
     color: var(--primary);
 }
@@ -930,6 +934,7 @@ main {
     }
 
     .navbar-menu-auth {
+        display: block;
         font-weight: 600;
     }
 
