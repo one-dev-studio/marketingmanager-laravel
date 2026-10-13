@@ -4,8 +4,9 @@ namespace App\Services\Organization;
 
 use App\Models\Organization;
 use App\Models\OrganizationSetting;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class StorageSourceService
 {
@@ -17,11 +18,11 @@ class StorageSourceService
             ->map(function ($setting) {
                 $data = json_decode($setting->value, true);
                 $provider = str_replace('storage_source_', '', $setting->key);
-                
+
                 return [
                     'provider' => $provider,
                     'name' => $data['name'] ?? $provider,
-                    'is_connected' => !empty($data['access_token']),
+                    'is_connected' => ! empty($data['access_token']),
                     'connected_at' => $data['connected_at'] ?? null,
                 ];
             })
@@ -36,8 +37,8 @@ class StorageSourceService
             $data = [
                 'name' => $credentials['name'] ?? $provider,
                 'access_token' => Crypt::encryptString($credentials['access_token'] ?? ''),
-                'refresh_token' => isset($credentials['refresh_token']) 
-                    ? Crypt::encryptString($credentials['refresh_token']) 
+                'refresh_token' => isset($credentials['refresh_token'])
+                    ? Crypt::encryptString($credentials['refresh_token'])
                     : null,
                 'connected_at' => now()->toDateTimeString(),
                 'settings' => $credentials['settings'] ?? [],
@@ -70,16 +71,16 @@ class StorageSourceService
             ->where('key', "storage_source_{$provider}")
             ->first();
 
-        if (!$setting) {
+        if (! $setting) {
             return null;
         }
 
         $data = json_decode($setting->value, true);
-        
+
         if (isset($data['access_token'])) {
             $data['access_token'] = Crypt::decryptString($data['access_token']);
         }
-        
+
         if (isset($data['refresh_token'])) {
             $data['refresh_token'] = Crypt::decryptString($data['refresh_token']);
         }
@@ -94,7 +95,7 @@ class StorageSourceService
                 ->where('key', "storage_source_{$provider}")
                 ->first();
 
-            if (!$setting) {
+            if (! $setting) {
                 return;
             }
 
@@ -108,8 +109,8 @@ class StorageSourceService
     public function quota(Organization $organization): array
     {
         $usedBytes = 0;
-        if (class_exists(\App\Models\FileFolder::class)) {
-            $usedBytes = (int) \Illuminate\Support\Facades\DB::table('files')
+        if (Schema::hasTable('files')) {
+            $usedBytes = (int) DB::table('files')
                 ->where('organization_id', $organization->id)
                 ->sum('size');
         }
@@ -119,9 +120,8 @@ class StorageSourceService
         return [
             'used_bytes' => $usedBytes,
             'limit_bytes' => $limit,
-            'used_human' => number_format($usedBytes / 1024 / 1024, 1) . ' MB',
+            'used_human' => number_format($usedBytes / 1024 / 1024, 1).' MB',
             'limit_human' => '5 GB',
         ];
     }
 }
-
