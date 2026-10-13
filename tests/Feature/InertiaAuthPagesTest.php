@@ -85,6 +85,21 @@ class InertiaAuthPagesTest extends TestCase
                 ->has('sessions'));
     }
 
+    public function test_profile_security_renders_inertia_component(): void
+    {
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('profile.security'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Profile/Security')
+                ->where('twoFactorEnabled', false)
+                ->has('sessions'));
+    }
+
     public function test_user_can_confirm_password(): void
     {
         $user = User::factory()->create([
