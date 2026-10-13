@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Survey;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Survey\CreateSurveyRequest;
 use App\Http\Requests\Survey\UpdateSurveyRequest;
+use App\Http\Resources\Survey\SurveyInertiaResource;
 use App\Http\Resources\Survey\SurveyResource;
 use App\Models\Survey;
 use App\Services\Survey\SurveyService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class SurveyController extends Controller
 {
@@ -33,22 +37,31 @@ class SurveyController extends Controller
             return SurveyResource::collection($surveys);
         }
 
-        return view('surveys.index', [
+        return Inertia::render('Surveys/Index', [
             'organizationId' => $organizationId,
-            'surveys' => $surveys,
+            'surveys' => $surveys->through(
+                fn (Survey $survey) => SurveyInertiaResource::listItem($survey, $request)
+            ),
+            'can' => [
+                'create' => $request->user()?->hasAccessToOrganization((int) $organizationId) ?? false,
+            ],
         ]);
     }
 
-    public function create(Request $request, string $organizationId)
+    public function create(Request $request, string $organizationId): Response
     {
-        return view('surveys.create', ['organizationId' => $organizationId]);
+        return Inertia::render('Surveys/Create', [
+            'organizationId' => $organizationId,
+        ]);
     }
 
-    public function builder(Request $request, string $organizationId, Survey $survey)
+    public function builder(Request $request, string $organizationId, Survey $survey): Response
     {
-        return view('surveys.builder', [
+        $survey->load('questions');
+
+        return Inertia::render('Surveys/Builder', [
             'organizationId' => $organizationId,
-            'survey' => $survey->load('questions'),
+            'survey' => SurveyInertiaResource::builder($survey, $request),
         ]);
     }
 
@@ -239,11 +252,10 @@ class SurveyController extends Controller
         $format = $request->get('format', 'csv');
         $content = $this->surveyService->exportResponses($survey, $format);
 
-        $filename = "survey_{$survey->id}_responses." . ($format === 'csv' ? 'csv' : 'json');
+        $filename = "survey_{$survey->id}_responses.".($format === 'csv' ? 'csv' : 'json');
 
         return response($content)
             ->header('Content-Type', $format === 'csv' ? 'text/csv' : 'application/json')
             ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
     }
 }
-
