@@ -53,4 +53,21 @@ class CampaignsInertiaTest extends TestCase
             ->has('campaign.goals')
             ->has('campaign.scheduled_posts'));
     }
+
+    public function test_campaign_create_renders_inertia_wizard_props(): void
+    {
+        [, $organization] = $this->actingAsOrganizationAdmin();
+
+        $response = $this->get(route('main.campaigns.create', [
+            'organizationId' => $organization->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('Campaigns/Create')
+            ->has('brands')
+            ->has('channels')
+            ->has('defaults.start_date')
+            ->has('sidebar'));
+    }
 }

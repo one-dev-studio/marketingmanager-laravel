@@ -12,7 +12,6 @@ use App\Http\Resources\Campaign\CampaignResource;
 use App\Models\Brand;
 use App\Models\Campaign;
 use App\Models\Channel;
-use App\Models\Product;
 use App\Services\Campaign\CampaignService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -53,24 +52,35 @@ class CampaignController extends Controller
         ]);
     }
 
-    public function create(Request $request, string $organizationId)
+    public function create(Request $request, string $organizationId): Response
     {
+        $this->authorize('create', Campaign::class);
+
         $brandId = $request->query('brand_id') ?? $request->query('brandId');
 
-        $brands = Brand::where('organization_id', $organizationId)->get();
-        $products = Product::where('organization_id', $organizationId)
-            ->when($brandId, fn ($q) => $q->where('brand_id', $brandId))
-            ->get();
+        $brands = Brand::where('organization_id', $organizationId)
+            ->orderBy('name')
+            ->get(['id', 'name']);
         $channels = Channel::where('organization_id', $organizationId)
             ->where('status', 'active')
-            ->get();
+            ->orderBy('display_name')
+            ->get(['id', 'display_name']);
 
-        return view('campaigns.create', [
+        return Inertia::render('Campaigns/Create', [
             'organizationId' => $organizationId,
-            'brandId' => $brandId,
-            'brands' => $brands,
-            'products' => $products,
-            'channels' => $channels,
+            'prefillBrandId' => $brandId ? (string) $brandId : null,
+            'brands' => $brands->map(static fn (Brand $brand) => [
+                'id' => $brand->id,
+                'name' => $brand->name,
+            ])->values()->all(),
+            'channels' => $channels->map(static fn (Channel $channel) => [
+                'id' => $channel->id,
+                'display_name' => $channel->display_name,
+            ])->values()->all(),
+            'defaults' => [
+                'start_date' => now()->addDay()->toDateString(),
+                'end_date' => now()->addMonth()->toDateString(),
+            ],
         ]);
     }
 
