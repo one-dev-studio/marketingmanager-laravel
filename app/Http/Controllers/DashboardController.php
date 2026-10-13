@@ -1,11 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Services\Dashboard\DashboardAnalyticsService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class DashboardController extends Controller
 {
@@ -13,7 +17,7 @@ class DashboardController extends Controller
         private DashboardAnalyticsService $analyticsService
     ) {}
 
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response|JsonResponse
     {
         $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date')) : null;
         $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : null;
@@ -37,13 +41,11 @@ class DashboardController extends Controller
             ]);
         }
 
-        return view('dashboard.index', [
+        $user = $request->user();
+
+        return Inertia::render('Dashboard/Index', [
             'organizationId' => $organizationId,
-            'kpis' => $kpis,
-            'campaignPerformance' => $campaignPerformance,
-            'contentCalendar' => $contentCalendar,
-            'pendingTasks' => $pendingTasks,
-            'activityFeed' => $activityFeed,
+            'userName' => $user !== null ? ($user->name ?? 'User') : 'User',
         ]);
     }
 
@@ -88,4 +90,3 @@ class DashboardController extends Controller
         ]);
     }
 }
-
