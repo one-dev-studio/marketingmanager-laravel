@@ -73,11 +73,11 @@ class PublicController extends Controller
         $pages = [
             'privacy' => [
                 'heading' => 'Privacy Policy',
-                'body' => '<p>MarketPulse collects account, organization, and usage data to provide the product. We do not sell personal data. Contact us to request access or deletion.</p>',
+                'body' => '<p>Marketing Manager collects account, organization, and usage data to provide the product. We do not sell personal data. Contact us to request access or deletion.</p>',
             ],
             'terms' => [
                 'heading' => 'Terms of Service',
-                'body' => '<p>Use of MarketPulse is subject to your organization agreement. Do not misuse the service or attempt unauthorized access.</p>',
+                'body' => '<p>Use of Marketing Manager is subject to your organization agreement. Do not misuse the service or attempt unauthorized access.</p>',
             ],
             'cookies' => [
                 'heading' => 'Cookie Policy',
@@ -138,5 +138,3 @@ class PublicController extends Controller
         return response($xml, 200)->header('Content-Type', 'application/xml');
     }
 }
-
-
