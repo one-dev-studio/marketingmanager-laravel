@@ -105,7 +105,7 @@ class CampaignController extends Controller
     {
         $this->authorize('view', $campaign);
 
-        $campaign->load(['channels', 'goals', 'scheduledPosts']);
+        $campaign->load(['brand', 'channels', 'goals', 'scheduledPosts']);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -114,9 +114,9 @@ class CampaignController extends Controller
             ]);
         }
 
-        return view('campaigns.show', [
-            'campaign' => $campaign,
+        return Inertia::render('Campaigns/Show', [
             'organizationId' => $organizationId,
+            'campaign' => CampaignInertiaResource::detail($campaign, $request),
         ]);
     }
 
