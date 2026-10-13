@@ -9,6 +9,7 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
+                'resources/css/public-marketing.css',
                 'resources/js/app.js',
                 'resources/js/inertia/app.tsx',
                 'resources/js/components/LandingPageBuilder.vue',

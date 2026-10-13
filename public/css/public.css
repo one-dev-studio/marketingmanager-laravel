@@ -1,4 +1,4 @@
-/* Marketing Manager — public marketing site styles */
+/* Marketing Manager — public marketing site styles (static fallback; canonical Vite entry: resources/css/public-marketing.css) */
 
 @import url('tokens/mm-theme.css');
 
