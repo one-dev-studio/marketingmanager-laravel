@@ -27,7 +27,7 @@ jobs:
           set -euo pipefail
           DEPLOY_SHA="$(git rev-parse HEAD)"
           git fetch origin staging
-          if ! git branch -r --contains "$DEPLOY_SHA" | tr -d '[:space:]' | grep -qx 'origin/staging'; then
+          if ! git branch -r --contains "$DEPLOY_SHA" | sed 's/^ *//' | grep -qx 'origin/staging'; then
             echo "ERROR: Resolved deploy SHA is not on origin/staging: $DEPLOY_SHA"
             exit 1
           fi
