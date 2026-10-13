@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Organization;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Organization\ConnectStorageSourceRequest;
 use App\Models\Organization;
 use App\Services\Organization\StorageSourceService;
-use App\Http\Requests\Organization\ConnectStorageSourceRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * Organization Storage Source Controller
@@ -23,7 +25,7 @@ class StorageSourceController extends Controller
     /**
      * Display storage sources
      */
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response
     {
         $organization = $this->resolveOrganization($request, $organizationId);
         $this->authorize('update', $organization);
@@ -31,12 +33,31 @@ class StorageSourceController extends Controller
         $sources = $this->storageService->getStorageSources($organization);
         $quota = $this->storageService->quota($organization);
 
-        return view('organization.storage-sources.index', [
-            'title' => 'Storage Sources',
+        $providerLabels = [
+            's3' => 'Amazon S3',
+            'google_drive' => 'Google Drive',
+            'dropbox' => 'Dropbox',
+        ];
+
+        $sourcesByProvider = collect($sources)->keyBy('provider');
+
+        $providers = [];
+        foreach ($providerLabels as $provider => $label) {
+            $source = $sourcesByProvider->get($provider);
+            $providers[] = [
+                'provider' => $provider,
+                'label' => $label,
+                'is_connected' => (bool) ($source['is_connected'] ?? false),
+            ];
+        }
+
+        return Inertia::render('Organization/StorageSources/Index', [
             'organizationId' => $organizationId,
-            'organization' => $organization,
-            'sources' => $sources,
-            'quota' => $quota,
+            'providers' => $providers,
+            'quota' => [
+                'used_human' => $quota['used_human'],
+                'limit_human' => $quota['limit_human'],
+            ],
         ]);
     }
 
@@ -79,7 +100,7 @@ class StorageSourceController extends Controller
 
         $credentials = $this->storageService->getStorageSourceCredentials($organization, $provider);
 
-        if (!$credentials) {
+        if (! $credentials) {
             return response()->json([
                 'success' => false,
                 'message' => 'Storage source not found.',
@@ -91,7 +112,7 @@ class StorageSourceController extends Controller
             'data' => [
                 'provider' => $provider,
                 'name' => $credentials['name'] ?? $provider,
-                'is_connected' => !empty($credentials['access_token']),
+                'is_connected' => ! empty($credentials['access_token']),
             ],
         ]);
     }
@@ -120,4 +141,3 @@ class StorageSourceController extends Controller
         ]);
     }
 }
-

@@ -9,6 +9,8 @@ use App\Models\SubscriptionPlan;
 use App\Services\Billing\PaymentGatewayService;
 use App\Services\Organization\BillingService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class BillingController extends Controller
 {
@@ -17,26 +19,48 @@ class BillingController extends Controller
         private PaymentGatewayService $paymentGatewayService
     ) {}
 
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response
     {
         $organization = $this->resolveOrganization($request, $organizationId);
         $this->authorize('update', $organization);
 
-        $subscription = $this->billingService->getCurrentSubscription($organization);
-        $plans = SubscriptionPlan::where('is_active', true)->get();
+        $subscription = $this->billingService->getCurrentSubscription($organization)?->load('plan');
+        $plans = SubscriptionPlan::where('is_active', true)->orderBy('price')->get();
         $invoices = $this->billingService->getInvoices($organization, 10);
         $usageStats = $this->billingService->getUsageStats($organization, $request->get('period', 'month'));
         $alerts = $this->paymentGatewayService->billingAlerts($organization, $subscription, $usageStats);
 
-        return view('organization.billing.index', [
-            'title' => 'Billing',
+        return Inertia::render('Organization/Billing/Index', [
             'organizationId' => $organizationId,
-            'organization' => $organization,
-            'subscription' => $subscription,
-            'plans' => $plans,
-            'invoices' => $invoices,
-            'usageStats' => $usageStats,
-            'alerts' => $alerts,
+            'subscription' => $subscription ? [
+                'status' => $subscription->status,
+                'trial_ends_at' => $subscription->trial_ends_at?->toDateString(),
+                'plan' => $subscription->plan ? [
+                    'id' => $subscription->plan->id,
+                    'name' => $subscription->plan->name,
+                ] : null,
+            ] : null,
+            'plans' => $plans->map(static fn (SubscriptionPlan $plan): array => [
+                'id' => $plan->id,
+                'name' => $plan->name,
+                'price' => (string) $plan->price,
+                'billing_cycle' => $plan->billing_cycle,
+            ])->values()->all(),
+            'invoices' => $invoices->through(static fn ($invoice): array => [
+                'id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
+                'status' => $invoice->status,
+                'total' => (string) $invoice->total,
+                'due_date' => $invoice->due_date?->toDateString(),
+            ]),
+            'usageStats' => [
+                'period' => (string) $usageStats['period'],
+                'ai_usage' => [
+                    'total_tokens' => (int) ($usageStats['ai_usage']['total_tokens'] ?? 0),
+                    'total_cost' => (string) ($usageStats['ai_usage']['total_cost'] ?? '0'),
+                ],
+            ],
+            'alerts' => array_values($alerts),
             'gateways' => $this->paymentGatewayService->availableGateways(),
         ]);
     }
@@ -66,12 +90,13 @@ class BillingController extends Controller
     public function upgradeSubscription(UpgradeSubscriptionRequest $request, string $organizationId)
     {
         $organization = $this->resolveOrganization($request, $organizationId);
-        $subscription = $this->billingService->getCurrentSubscription($organization);
+        $subscription = $this->billingService->getCurrentSubscription($organization)?->load('plan');
 
-        if (!$subscription) {
+        if (! $subscription) {
             if ($this->wantsJson($request)) {
                 return response()->json(['success' => false, 'message' => 'No active subscription found.'], 404);
             }
+
             return back()->with('error', 'No active subscription found.');
         }
 
@@ -92,12 +117,13 @@ class BillingController extends Controller
     {
         $organization = $this->resolveOrganization($request, $organizationId);
         $this->authorize('update', $organization);
-        $subscription = $this->billingService->getCurrentSubscription($organization);
+        $subscription = $this->billingService->getCurrentSubscription($organization)?->load('plan');
 
-        if (!$subscription) {
+        if (! $subscription) {
             if ($this->wantsJson($request)) {
                 return response()->json(['success' => false, 'message' => 'No active subscription found.'], 404);
             }
+
             return back()->with('error', 'No active subscription found.');
         }
 
