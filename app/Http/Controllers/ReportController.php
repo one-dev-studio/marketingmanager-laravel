@@ -1,13 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Http\Resources\Report\ReportInertiaResource;
 use App\Models\Organization;
 use App\Models\Report;
+use App\Models\User;
 use App\Services\Analytics\ReportService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ReportController extends Controller
 {
@@ -21,7 +27,7 @@ class ReportController extends Controller
     public function index(Request $request, string $organizationId)
     {
         $organization = Organization::findOrFail($organizationId);
-        
+
         $reports = Report::where('organization_id', $organizationId)
             ->with('creator')
             ->latest()
@@ -31,19 +37,22 @@ class ReportController extends Controller
             return response()->json(['success' => true, 'data' => $reports]);
         }
 
-        return view('reports.index', [
-            'title' => 'Reports',
+        return Inertia::render('Reports/Index', [
             'organizationId' => $organizationId,
-            'reports' => $reports,
+            'reports' => $reports->through(
+                fn (Report $report) => ReportInertiaResource::listItem($report, $request)
+            ),
+            'can' => [
+                'create' => $request->user()?->hasAccessToOrganization((int) $organizationId) ?? false,
+            ],
         ]);
     }
 
-    public function create(Request $request, string $organizationId)
+    public function create(Request $request, string $organizationId): Response
     {
-        return view('reports.builder', [
-            'title' => 'Report builder',
+        return Inertia::render('Reports/Builder', [
             'organizationId' => $organizationId,
-            'report' => null,
+            'report' => ReportInertiaResource::builder(null, $request),
         ]);
     }
 
@@ -53,7 +62,7 @@ class ReportController extends Controller
     public function store(Request $request, string $organizationId)
     {
         $organization = Organization::findOrFail($organizationId);
-        
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'string', 'in:campaign,social_media,email,overall,custom'],
@@ -87,10 +96,9 @@ class ReportController extends Controller
             return response()->json(['success' => true, 'data' => $report]);
         }
 
-        return view('reports.builder', [
-            'title' => $report->name,
+        return Inertia::render('Reports/Builder', [
             'organizationId' => $organizationId,
-            'report' => $report,
+            'report' => ReportInertiaResource::builder($report, $request),
         ]);
     }
 
@@ -196,7 +204,7 @@ class ReportController extends Controller
             'permissions.*' => ['string', 'in:view,edit,delete'],
         ]);
 
-        $user = \App\Models\User::findOrFail($request->user_id);
+        $user = User::findOrFail($request->user_id);
 
         $share = $this->reportService->shareReport(
             $report,
@@ -243,4 +251,3 @@ class ReportController extends Controller
         ]);
     }
 }
-
