@@ -15,6 +15,7 @@ use App\Http\Controllers\AI\ProductCatalogController;
 use App\Http\Controllers\AI\SeoController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\Auth\ConfirmPasswordController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -132,15 +133,19 @@ Route::middleware('auth')->group(function () {
 
 // Email verification routes
 Route::middleware(['auth'])->group(function () {
-    Route::get('/email/verify', function () {
-        return view('auth.verify-email');
-    })->name('verification.notice');
+    Route::get('/email/verify', [EmailVerificationController::class, 'showNotice'])
+        ->name('verification.notice');
     Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
         ->middleware(['signed', 'throttle:6,1'])
         ->name('verification.verify');
     Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
         ->middleware('throttle:6,1')
         ->name('verification.send');
+
+    Route::get('/user/confirm-password', [ConfirmPasswordController::class, 'show'])
+        ->name('password.confirm');
+    Route::post('/user/confirm-password', [ConfirmPasswordController::class, 'store'])
+        ->name('password.confirm.store');
 });
 
 // Two-factor authentication routes
