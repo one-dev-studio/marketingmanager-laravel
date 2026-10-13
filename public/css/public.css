@@ -75,11 +75,20 @@ body {
 .navbar {
     position: sticky;
     top: 0;
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--gray-200);
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--mm-border);
     z-index: 20;
-    padding: 1rem 0;
+}
+
+.navbar .container {
+    min-height: 4rem;
+    display: flex;
+    align-items: center;
+}
+
+.navbar .navbar-content {
+    width: 100%;
 }
 
 main {
@@ -98,9 +107,33 @@ main {
     align-items: center;
     gap: 0.5rem;
     text-decoration: none;
-    color: var(--gray-900);
-    font-weight: 700;
-    font-size: 1.5rem;
+    color: var(--mm-text);
+    font-weight: 800;
+    font-size: 1.125rem;
+}
+
+.logo-mark {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, var(--mm-brand-600) 0%, var(--mm-accent-violet) 100%);
+    color: var(--white);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.logo-mark-sm {
+    width: 1.75rem;
+    height: 1.75rem;
+}
+
+.logo-mark-icon {
+    display: block;
+}
+
+.logo-wordmark {
+    line-height: 1.2;
 }
 
 .logo-icon {
@@ -118,8 +151,9 @@ main {
 
 .navbar-menu {
     display: flex;
-    gap: 2rem;
+    gap: 1.75rem;
     align-items: center;
+    font-size: 0.9375rem;
 }
 
 .nav-link {
@@ -127,6 +161,11 @@ main {
     text-decoration: none;
     font-weight: 500;
     transition: color 0.2s;
+}
+
+.btn-nav-cta {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
 }
 
 .nav-link:hover {
@@ -508,6 +547,89 @@ main {
     background: var(--gray-900);
     color: var(--gray-400);
     padding: 4rem 0 2rem;
+}
+
+.footer.footer-light {
+    background: var(--mm-surface);
+    color: var(--mm-text-muted);
+    border-top: 1px solid var(--mm-border);
+    padding: 3rem 0 1.5rem;
+}
+
+.footer-light .footer-title {
+    color: var(--mm-text);
+    font-size: 0.875rem;
+}
+
+.footer-light .footer-links a {
+    color: var(--mm-text-muted);
+    font-size: 0.875rem;
+}
+
+.footer-light .footer-links a:hover {
+    color: var(--mm-brand-600);
+}
+
+.footer-light .footer-bottom {
+    border-top-color: var(--mm-border);
+    font-size: 0.8125rem;
+}
+
+.footer-light .footer-brand .logo-text {
+    -webkit-text-fill-color: transparent;
+}
+
+.footer-light .footer-logo-wordmark {
+    font-weight: 800;
+    color: var(--mm-text);
+}
+
+.footer-light .social-links a {
+    background: var(--mm-surface-muted);
+    border: 1px solid var(--mm-border);
+    color: var(--mm-text-muted);
+}
+
+.footer-light .social-links a:hover {
+    background: var(--mm-brand-50);
+    color: var(--mm-brand-600);
+    border-color: var(--mm-brand-100);
+}
+
+/* Cookie banner */
+.cookie-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: var(--mm-surface);
+    border-top: 1px solid var(--mm-border);
+    box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
+    font-size: 0.875rem;
+    color: var(--mm-text-muted);
+}
+
+.cookie-banner-text {
+    flex: 1;
+    min-width: 12rem;
+    margin: 0;
+}
+
+.cookie-banner a {
+    color: var(--mm-brand-600);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.cookie-banner-accept {
+    flex-shrink: 0;
 }
 
 .footer-grid {
