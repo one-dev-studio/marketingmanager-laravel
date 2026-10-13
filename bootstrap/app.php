@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureAgencyAccess;
 use App\Http\Middleware\EnsureAgencyAdmin;
 use App\Http\Middleware\EnsureBrandContext;
 use App\Http\Middleware\EnsureClientAccess;
+use App\Http\Middleware\EnsureClientPortal;
 use App\Http\Middleware\EnsureNotClientRole;
 use App\Http\Middleware\EnsureOrganizationAccess;
 use App\Http\Middleware\EnsureOrganizationAdmin;
@@ -53,6 +54,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'brand.context' => EnsureBrandContext::class,
             'require.confirmation' => RequireConfirmation::class,
             'agency.client' => EnsureClientAccess::class,
+            'client.portal' => EnsureClientPortal::class,
             'api.rate_limit' => ApiRateLimit::class,
         ]);
 
