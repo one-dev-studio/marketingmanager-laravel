@@ -3,30 +3,34 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\UpdatePlatformSettingRequest;
 use App\Http\Requests\Admin\UpdateFeatureFlagRequest;
+use App\Http\Requests\Admin\UpdatePlatformSettingRequest;
 use App\Models\FeatureFlag;
 use App\Services\Admin\PlatformSettingsService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class SettingsController extends Controller
 {
     public function __construct(
         private PlatformSettingsService $settingsService
-    ) {
-    }
+    ) {}
 
     /**
      * Display platform settings
      */
-    public function index()
+    public function index(): Response
     {
         $settings = $this->settingsService->getGlobalSettings();
         $featureFlags = $this->settingsService->getFeatureFlags();
-        $apiKeys = $this->settingsService->getApiKeys();
         $maintenanceMode = $this->settingsService->isMaintenanceModeEnabled();
 
-        return view('admin.settings.index', compact('settings', 'featureFlags', 'apiKeys', 'maintenanceMode'));
+        return Inertia::render('Admin/Settings/Index', [
+            'settings' => $settings,
+            'featureFlags' => $featureFlags,
+            'maintenanceMode' => $maintenanceMode,
+        ]);
     }
 
     /**
@@ -49,11 +53,11 @@ class SettingsController extends Controller
      */
     public function toggleFeatureFlag(FeatureFlag $featureFlag)
     {
-        $enabled = !$featureFlag->enabled;
+        $enabled = ! $featureFlag->enabled;
         $this->settingsService->toggleFeatureFlag($featureFlag, $enabled);
 
         return redirect()->route('admin.settings.index')
-            ->with('success', "Feature flag {$featureFlag->name} " . ($enabled ? 'enabled' : 'disabled') . '.');
+            ->with('success', "Feature flag {$featureFlag->name} ".($enabled ? 'enabled' : 'disabled').'.');
     }
 
     /**
@@ -112,4 +116,3 @@ class SettingsController extends Controller
             ->with('success', 'Maintenance mode disabled.');
     }
 }
-

@@ -16,7 +16,6 @@ export default defineConfig({
                 'resources/js/components/SurveyBuilder.vue',
                 'resources/js/components/EmailTemplateBuilder.vue',
                 'resources/js/components/ReportBuilder.vue',
-                'resources/js/components/TaskKanban.vue',
             ],
             refresh: true,
         }),
