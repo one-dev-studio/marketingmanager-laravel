@@ -12,6 +12,7 @@ use App\Http\Resources\LandingPage\LandingPageResource;
 use App\Models\LandingPage;
 use App\Models\LandingPageVariant;
 use App\Services\LandingPage\LandingPageService;
+use App\Services\Security\UserHtmlSanitizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,7 +21,8 @@ use Inertia\Response;
 class LandingPageController extends Controller
 {
     public function __construct(
-        private LandingPageService $landingPageService
+        private LandingPageService $landingPageService,
+        private UserHtmlSanitizer $htmlSanitizer,
     ) {}
 
     public function index(Request $request, string $organizationId)
@@ -68,7 +70,10 @@ class LandingPageController extends Controller
 
     public function preview(Request $request, string $organizationId, LandingPage $landingPage)
     {
-        return view('landing-pages.preview', ['page' => $landingPage]);
+        return view('landing-pages.preview', [
+            'page' => $landingPage,
+            'safeHtml' => $this->htmlSanitizer->sanitize($landingPage->html_content),
+        ]);
     }
 
     public function analytics(Request $request, string $organizationId, LandingPage $landingPage): Response

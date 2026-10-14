@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Vite;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -16,10 +17,22 @@ class SecurityHeaders
      */
     public function handle(Request $request, Closure $next): Response
     {
+        Vite::useCspNonce();
+
         $response = $next($request);
 
-        // Content Security Policy
-        $csp = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.pusher.com wss://ws.pusher.com; frame-ancestors 'none';";
+        $nonce = Vite::cspNonce();
+        $nonceDirective = $nonce !== null && $nonce !== '' ? "'nonce-{$nonce}'" : '';
+
+        $scriptSrc = trim("'self' {$nonceDirective} https://cdn.jsdelivr.net https://unpkg.com");
+        if (app()->environment('local')) {
+            // Vite dev server / React refresh require eval in local only.
+            $scriptSrc .= " 'unsafe-eval'";
+        }
+
+        $styleSrc = trim("'self' {$nonceDirective} 'unsafe-inline' https://fonts.googleapis.com");
+
+        $csp = "default-src 'self'; script-src {$scriptSrc}; style-src {$styleSrc}; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.pusher.com wss://ws.pusher.com".(app()->environment('local') ? ' ws://localhost:* http://localhost:*' : '')."; frame-ancestors 'none';";
 
         $response->headers->set('Content-Security-Policy', $csp);
 

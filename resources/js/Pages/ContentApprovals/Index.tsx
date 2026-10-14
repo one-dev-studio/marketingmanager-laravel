@@ -1,4 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
+import { paginationLabelText } from '@/lib/paginationLabel';
 import type { ContentApprovalListItem } from '@/types/content-workflow';
 import { Link, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
@@ -150,14 +151,14 @@ export default function Index({ organizationId, filters, approvals }: ContentApp
                                     }`}
                                     preserveScroll
                                 >
-                                    <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                    <span>{paginationLabelText(link.label)}</span>
                                 </Link>
                             ) : (
                                 <span
                                     key={link.label}
-                                    className="rounded border border-gray-200 px-3 py-1 text-sm text-gray-400"
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
+                                    className="rounded border border-gray-200 px-3 py-1 text-sm text-gray-400">
+                                        {paginationLabelText(link.label)}
+                                    </span>
                             ),
                         )}
                     </nav>

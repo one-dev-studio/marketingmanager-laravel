@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "ezyang/htmlpurifier": "^4.19",
         "inertiajs/inertia-laravel": "^3.5",
         "intervention/image": "^3.0",
         "laravel/framework": "^13.0",

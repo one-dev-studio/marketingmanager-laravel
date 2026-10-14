@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { paginationLabelText } from '@/lib/paginationLabel';
 import AppLayout from '@/Layouts/AppLayout';
 import type { SurveyListItem } from '@/types/surveys';
 import { Link } from '@inertiajs/react';
@@ -112,14 +113,14 @@ export default function Index({ organizationId, surveys, can }: SurveysIndexProp
                                     }
                                     preserveScroll
                                 >
-                                    <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                    <span>{paginationLabelText(link.label)}</span>
                                 </Link>
                             ) : (
                                 <span
                                     key={link.label}
-                                    className="text-gray-400"
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
+                                    className="text-gray-400">
+                                        {paginationLabelText(link.label)}
+                                    </span>
                             ),
                         )}
                     </div>

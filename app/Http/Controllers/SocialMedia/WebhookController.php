@@ -1,22 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\SocialMedia;
 
 use App\Http\Controllers\Controller;
 use App\Models\PublishedPost;
-use App\Models\SocialConnection;
+use App\Services\SocialMedia\Webhook\SocialWebhookVerificationGate;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class WebhookController extends Controller
 {
+    public function __construct(
+        private readonly SocialWebhookVerificationGate $webhookVerificationGate,
+    ) {}
+
     public function handleFacebook(Request $request)
     {
-        $data = $request->all();
-
         if ($request->get('hub_mode') === 'subscribe' && $request->get('hub_verify_token') === config('services.facebook.webhook_verify_token')) {
             return response($request->get('hub_challenge'), 200);
         }
+
+        $this->webhookVerificationGate->assertMetaWebhook($request, 'facebook');
+
+        $data = $request->all();
 
         if (isset($data['entry'])) {
             foreach ($data['entry'] as $entry) {
@@ -43,6 +50,8 @@ class WebhookController extends Controller
 
     public function handleInstagram(Request $request)
     {
+        $this->webhookVerificationGate->assertMetaWebhook($request, 'instagram');
+
         $data = $request->all();
 
         if (isset($data['entry'])) {
@@ -67,6 +76,8 @@ class WebhookController extends Controller
 
     public function handleLinkedIn(Request $request)
     {
+        $this->webhookVerificationGate->assertLinkedInWebhook($request);
+
         $data = $request->all();
 
         if (isset($data['eventType']) && $data['eventType'] === 'POST_CREATED') {
@@ -81,6 +92,8 @@ class WebhookController extends Controller
 
     public function handleTwitter(Request $request)
     {
+        $this->webhookVerificationGate->assertTwitterWebhook($request);
+
         $data = $request->all();
 
         if (isset($data['tweet_create_events'])) {
@@ -97,6 +110,8 @@ class WebhookController extends Controller
 
     public function handleTikTok(Request $request)
     {
+        $this->webhookVerificationGate->assertTikTokWebhook($request);
+
         $data = $request->all();
 
         if (isset($data['event'])) {
@@ -114,6 +129,8 @@ class WebhookController extends Controller
 
     public function handlePinterest(Request $request)
     {
+        $this->webhookVerificationGate->assertPinterestWebhook($request);
+
         $data = $request->all();
 
         if (isset($data['data']['id'])) {
@@ -175,5 +192,3 @@ class WebhookController extends Controller
         };
     }
 }
-
-

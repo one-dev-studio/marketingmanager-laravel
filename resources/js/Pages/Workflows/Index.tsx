@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { paginationLabelText } from '@/lib/paginationLabel';
 import AppLayout from '@/Layouts/AppLayout';
 import { Link } from '@inertiajs/react';
 import { route } from 'ziggy-js';
@@ -98,14 +99,15 @@ export default function Index({ organizationId, workflows, can }: WorkflowsIndex
                                             : 'text-gray-600 hover:bg-gray-100'
                                     }`}
                                 >
-                                    <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                    <span>{paginationLabelText(link.label)}</span>
                                 </Link>
                             ) : (
                                 <span
                                     key={`${link.label}-${index}`}
                                     className="rounded px-3 py-1 text-sm text-gray-400"
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
+                                >
+                                    {paginationLabelText(link.label)}
+                                </span>
                             ),
                         )}
                     </nav>
