@@ -12,7 +12,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\View\View;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -148,15 +147,32 @@ class FileController extends Controller
     /**
      * Display file preview
      */
-    public function show(Request $request, string $organizationId, ImageLibrary $file): View
+    public function show(Request $request, string $organizationId, ImageLibrary $file): Response
     {
         if ($file->organization_id != $organizationId) {
             abort(404);
         }
 
-        return view('files.show', [
-            'organization' => Organization::findOrFail($organizationId),
-            'file' => $file->load('uploadedBy'),
+        $file->load('uploadedBy');
+        $organization = Organization::findOrFail($organizationId);
+
+        return Inertia::render('Files/Show', [
+            'organizationId' => (string) $organizationId,
+            'organizationName' => $organization->name,
+            'brandId' => $request->query('brandId') ? (string) $request->query('brandId') : null,
+            'file' => [
+                'id' => $file->id,
+                'name' => $file->name,
+                'description' => $file->description,
+                'mime_type' => $file->mime_type,
+                'file_url' => $file->file_url,
+                'file_size' => $file->file_size,
+                'width' => $file->width,
+                'height' => $file->height,
+                'tags' => $file->tags ?? [],
+                'created_at' => $file->created_at?->format('M j, Y'),
+                'uploaded_by_name' => $file->uploadedBy?->name,
+            ],
         ]);
     }
 
