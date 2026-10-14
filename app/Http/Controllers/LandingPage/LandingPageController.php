@@ -71,11 +71,23 @@ class LandingPageController extends Controller
         return view('landing-pages.preview', ['page' => $landingPage]);
     }
 
-    public function analytics(Request $request, string $organizationId, LandingPage $landingPage)
+    public function analytics(Request $request, string $organizationId, LandingPage $landingPage): Response
     {
-        return view('landing-pages.analytics', [
+        $landingPage->load('analytics', 'variants');
+
+        return Inertia::render('LandingPages/Analytics', [
             'organizationId' => $organizationId,
-            'page' => $landingPage->load('analytics', 'variants'),
+            'page' => [
+                'id' => $landingPage->id,
+                'name' => $landingPage->name,
+            ],
+            'analytics' => $landingPage->analytics->map(static fn ($row) => [
+                'id' => $row->id,
+                'event' => $row->visits !== null ? "{$row->visits} visits" : null,
+                'metric' => $row->conversions !== null ? "{$row->conversions} conversions" : null,
+                'created_at' => $row->analytics_date?->format('Y-m-d') ?? $row->created_at?->toDateTimeString(),
+            ])->values()->all(),
+            'variantsCount' => $landingPage->variants->count(),
         ]);
     }
 

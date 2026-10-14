@@ -148,7 +148,7 @@ class BrandCrudTest extends TestCase
         $response = $this->get("/main/{$this->organization->id}/brands/choose-name");
 
         $response->assertOk();
-        $response->assertViewIs('brands.choose-name');
+        $response->assertInertia(fn ($page) => $page->component('Brands/ChooseName'));
     }
 
     public function test_factory_stores_keywords_as_array(): void
