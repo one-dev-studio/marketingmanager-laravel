@@ -177,7 +177,7 @@ class BrandController extends Controller
     /**
      * Display brand assets page with brand guidelines and assets
      */
-    public function brandAssets(Request $request, string $organizationId)
+    public function brandAssets(Request $request, string $organizationId): Response
     {
         $brandId = $request->query('brandId');
 
@@ -196,9 +196,10 @@ class BrandController extends Controller
         $guidelines = $this->brandService->getBrandGuidelines($brand);
         $assetsGrouped = $this->brandService->getAssetsGroupedByType($brand);
 
-        return view('brand-assets.index', [
-            'organizationId' => $organizationId,
-            'brand' => $brand,
+        return Inertia::render('BrandAssets/Index', [
+            'organizationId' => (string) $organizationId,
+            'brandId' => (string) $brand->id,
+            'brandName' => $brand->name,
             'guidelines' => $guidelines,
             'assetsGrouped' => $assetsGrouped,
         ]);
