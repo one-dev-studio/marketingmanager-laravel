@@ -9,6 +9,7 @@ use App\Http\Resources\PressRelease\PressContactResource;
 use App\Models\PressContact;
 use App\Services\PressRelease\PressContactService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -36,18 +37,26 @@ class PressContactController extends Controller
         return PressContactResource::collection($contacts);
     }
 
-    public function store(CreatePressContactRequest $request): JsonResponse
+    public function store(CreatePressContactRequest $request): JsonResponse|RedirectResponse
     {
         $contact = $this->pressContactService->createContact(
             $request->validated(),
             $request->user()
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => new PressContactResource($contact),
-            'message' => 'Press contact created successfully.',
-        ], 201);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => new PressContactResource($contact),
+                'message' => 'Press contact created successfully.',
+            ], 201);
+        }
+
+        $organizationId = $request->route('organizationId');
+
+        return redirect()
+            ->route('main.press-releases.index', ['organizationId' => $organizationId])
+            ->with('success', 'Press contact created successfully.');
     }
 
     public function show(PressContact $pressContact): JsonResponse
@@ -108,4 +117,3 @@ class PressContactController extends Controller
         ]);
     }
 }
-
