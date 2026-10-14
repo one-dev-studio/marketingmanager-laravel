@@ -6,19 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Models\SubscriptionPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class PackageController extends Controller
 {
-    public function index()
+    public function index(): Response
     {
-        return view('admin.packages.index', [
+        return Inertia::render('Admin/Packages/Index', [
             'packages' => SubscriptionPlan::orderBy('name')->get(),
         ]);
     }
 
-    public function create()
+    public function create(): Response
     {
-        return view('admin.packages.create');
+        return Inertia::render('Admin/Packages/Create');
     }
 
     public function store(Request $request)
@@ -30,14 +32,18 @@ class PackageController extends Controller
         return redirect()->route('admin.packages.index')->with('success', 'Package created.');
     }
 
-    public function show(SubscriptionPlan $package)
+    public function show(SubscriptionPlan $package): Response
     {
-        return view('admin.packages.show', compact('package'));
+        return Inertia::render('Admin/Packages/Show', [
+            'package' => $package,
+        ]);
     }
 
-    public function edit(SubscriptionPlan $package)
+    public function edit(SubscriptionPlan $package): Response
     {
-        return view('admin.packages.edit', compact('package'));
+        return Inertia::render('Admin/Packages/Edit', [
+            'package' => $package,
+        ]);
     }
 
     public function update(Request $request, SubscriptionPlan $package)

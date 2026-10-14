@@ -2,7 +2,6 @@ import './bootstrap';
 import '../css/app.css';
 import Alpine from 'alpinejs';
 import { createApp } from 'vue';
-import TaskKanban from './components/TaskKanban.vue';
 import LandingPageBuilder from './components/LandingPageBuilder.vue';
 import SurveyBuilder from './components/SurveyBuilder.vue';
 import EmailTemplateBuilder from './components/EmailTemplateBuilder.vue';
@@ -30,13 +29,6 @@ function mount(selector, component, extraProps = {}) {
         return;
     }
     createApp(component, { ...propsFrom(el), ...extraProps }).mount(el);
-}
-
-const kanban = document.getElementById('task-kanban-app');
-if (kanban) {
-    createApp({})
-        .component('task-kanban', TaskKanban)
-        .mount(kanban);
 }
 
 const lp = document.getElementById('lp-builder');

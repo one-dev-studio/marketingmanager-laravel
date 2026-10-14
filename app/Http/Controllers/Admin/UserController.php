@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Http\Requests\Admin\AssignRolesRequest;
+use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User;
 use App\Services\Admin\UserManagementService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class UserController extends Controller
 {
@@ -20,29 +22,53 @@ class UserController extends Controller
     /**
      * Display user list with search and filtering
      */
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $filters = $request->only(['search', 'user_type', 'status', 'email_verified']);
         $users = $this->userService->getUsers($filters);
 
-        return view('admin.users.index', compact('users', 'filters'));
+        return Inertia::render('Admin/Users/Index', [
+            'users' => $users,
+            'filters' => $filters,
+        ]);
     }
 
     /**
      * Show user details
      */
-    public function show(User $user)
+    public function show(User $user): Response
     {
         $activityLogs = $this->userService->getUserActivityLogs($user);
-        return view('admin.users.show', compact('user', 'activityLogs'));
+
+        return Inertia::render('Admin/Users/Show', [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'user_type' => $user->user_type,
+                'status' => $user->status,
+                'email_verified_at' => $user->email_verified_at?->toDateTimeString(),
+            ],
+            'activityLogs' => $activityLogs->map(fn ($log) => [
+                'action' => $log->action ?? null,
+                'created_at' => $log->created_at?->diffForHumans(),
+            ])->values()->all(),
+        ]);
     }
 
     /**
      * Show edit user form
      */
-    public function edit(User $user)
+    public function edit(User $user): Response
     {
-        return view('admin.users.edit', compact('user'));
+        return Inertia::render('Admin/Users/Edit', [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'status' => $user->status,
+            ],
+        ]);
     }
 
     /**
@@ -93,5 +119,3 @@ class UserController extends Controller
             ->with('success', 'User reactivated successfully.');
     }
 }
-
-

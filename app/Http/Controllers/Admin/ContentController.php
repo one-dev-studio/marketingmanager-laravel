@@ -3,25 +3,26 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\ModerateContentRequest;
 use App\Http\Requests\Admin\FlagContentRequest;
-use App\Models\ModerationQueue;
+use App\Http\Requests\Admin\ModerateContentRequest;
 use App\Models\ContentFlag;
+use App\Models\ModerationQueue;
 use App\Models\ScheduledPost;
 use App\Services\Admin\ContentModerationService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ContentController extends Controller
 {
     public function __construct(
         private ContentModerationService $moderationService
-    ) {
-    }
+    ) {}
 
     /**
      * Display content moderation queue
      */
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $filters = $request->only(['status', 'type']);
         $moderationQueue = $this->moderationService->getModerationQueue($filters);
@@ -30,7 +31,15 @@ class ContentController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        return view('admin.content.index', compact('moderationQueue', 'contentFlags', 'filters'));
+        return Inertia::render('Admin/Content/Index', [
+            'moderationQueueTotal' => $moderationQueue->total(),
+            'contentFlags' => $contentFlags->through(fn (ContentFlag $flag) => [
+                'id' => $flag->id,
+                'reason' => $flag->reason,
+                'created_at' => $flag->created_at?->diffForHumans(),
+            ]),
+            'filters' => $filters,
+        ]);
     }
 
     /**
@@ -114,4 +123,3 @@ class ContentController extends Controller
             ->with('success', 'Content flag reviewed.');
     }
 }
-
