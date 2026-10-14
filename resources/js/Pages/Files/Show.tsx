@@ -44,7 +44,7 @@ export default function Show({ organizationId, organizationName, brandId, file }
     const isImage = file.mime_type?.startsWith('image/') ?? false;
     const isPdf = file.mime_type === 'application/pdf';
 
-    const downloadHref = route('files.download', { organizationId, file: file.id });
+    const downloadHref = route('main.files.download', { organizationId, file: file.id });
 
     const copyFileUrl = useCallback(async () => {
         if (!file.file_url) {
@@ -60,7 +60,7 @@ export default function Show({ organizationId, organizationName, brandId, file }
             return;
         }
         try {
-            const response = await fetch(route('files.destroy', { organizationId, file: file.id }), {
+            const response = await fetch(route('main.files.destroy', { organizationId, file: file.id }), {
                 method: 'DELETE',
                 headers: { 'X-CSRF-TOKEN': getCsrfToken(), Accept: 'application/json' },
             });

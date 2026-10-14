@@ -29,8 +29,11 @@ await mkdir(outRoot, { recursive: true });
 
 for (const shot of shots) {
     await page.goto(`${base}${shot.path}`, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(1200);
     const bodyText = await page.locator('body').innerText();
+    if (bodyText.includes('403') || bodyText.includes('404')) {
+        throw new Error(`Error page for ${shot.file}: ${bodyText.slice(0, 120)}`);
+    }
     if (bodyText.trim().length < 20) {
         throw new Error(`Blank or tiny page for ${shot.file}`);
     }
