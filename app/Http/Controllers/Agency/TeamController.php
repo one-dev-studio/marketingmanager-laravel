@@ -1,17 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Agency;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Agency\AddTeamMemberRequest;
+use App\Http\Requests\Agency\ManageClientAccessRequest;
+use App\Http\Requests\Agency\UpdateTeamMemberRoleRequest;
 use App\Models\Agency;
+use App\Models\Organization;
 use App\Models\User;
 use App\Services\AgencyTeamService;
-use App\Http\Requests\Agency\AddTeamMemberRequest;
-use App\Http\Requests\Agency\UpdateTeamMemberRoleRequest;
-use App\Http\Requests\Agency\ManageClientAccessRequest;
-use App\Models\Organization;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * Agency Team Controller
@@ -27,23 +32,27 @@ class TeamController extends Controller
     /**
      * Display team member list
      */
-    public function index(Request $request, Agency $agency)
+    public function index(Request $request, Agency $agency): Response
     {
         $teamMembers = $this->teamService->getTeamMembers($agency);
 
-        return view('agency.team.index', [
-            'agency' => $agency,
-            'teamMembers' => $teamMembers,
+        return Inertia::render('Agency/Team/Index', [
+            'agencyId' => (string) $agency->id,
+            'teamMembers' => $teamMembers->map(fn (User $member) => [
+                'id' => $member->id,
+                'name' => $member->name,
+                'role' => $member->pivot->role ?? 'member',
+            ])->values()->all(),
         ]);
     }
 
     /**
      * Add team member to agency
      */
-    public function store(AddTeamMemberRequest $request, Agency $agency)
+    public function store(AddTeamMemberRequest $request, Agency $agency): RedirectResponse
     {
         $user = User::findOrFail($request->user_id);
-        
+
         $this->teamService->addTeamMember($agency, $user, $request->role);
 
         return redirect()->route('agency.team.index', ['agency' => $agency])
@@ -53,7 +62,7 @@ class TeamController extends Controller
     /**
      * Update team member role
      */
-    public function update(UpdateTeamMemberRoleRequest $request, Agency $agency, User $user)
+    public function update(UpdateTeamMemberRoleRequest $request, Agency $agency, User $user): RedirectResponse
     {
         $this->teamService->updateTeamMemberRole($agency, $user, $request->role);
 
@@ -64,7 +73,7 @@ class TeamController extends Controller
     /**
      * Remove team member from agency
      */
-    public function destroy(Agency $agency, User $user)
+    public function destroy(Agency $agency, User $user): RedirectResponse
     {
         $this->teamService->removeTeamMember($agency, $user);
 
@@ -187,4 +196,3 @@ class TeamController extends Controller
         ]);
     }
 }
-
