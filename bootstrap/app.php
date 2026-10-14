@@ -72,6 +72,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             NormalizeSubdirectoryRedirects::class,
         ]);
+
+        // External providers cannot send CSRF tokens; rely on webhook signature verification.
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
