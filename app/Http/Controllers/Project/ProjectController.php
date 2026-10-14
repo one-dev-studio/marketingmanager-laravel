@@ -1,16 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Project;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Project\CreateProjectRequest;
 use App\Http\Requests\Project\UpdateProjectRequest;
+use App\Http\Resources\Project\ProjectInertiaResource;
 use App\Http\Resources\Project\ProjectResource;
 use App\Models\Project;
+use App\Models\ProjectTemplate;
 use App\Services\Project\ProjectService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ProjectController extends Controller
 {
@@ -18,7 +24,7 @@ class ProjectController extends Controller
         private ProjectService $projectService
     ) {}
 
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response|AnonymousResourceCollection
     {
         $query = Project::where('organization_id', $organizationId)
             ->with(['projectManager', 'creator', 'client', 'members.user', 'tasks']);
@@ -35,6 +41,7 @@ class ProjectController extends Controller
 
         $projects->getCollection()->transform(function ($project) {
             $project->progress = $this->projectService->calculateProgress($project);
+
             return $project;
         });
 
@@ -42,12 +49,18 @@ class ProjectController extends Controller
             return ProjectResource::collection($projects);
         }
 
-        return view('projects.index', [
-            'title' => 'Projects',
-            'organizationId' => $organizationId,
-            'projects' => $projects,
-            'templates' => \App\Models\ProjectTemplate::where('organization_id', $organizationId)->get(),
-            'members' => \App\Models\User::whereHas('organizations', fn ($q) => $q->where('organizations.id', $organizationId))->get(['id', 'name']),
+        $templates = ProjectTemplate::where('organization_id', $organizationId)
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('Projects/Index', [
+            'organizationId' => (string) $organizationId,
+            'projects' => $projects->through(
+                fn (Project $project) => ProjectInertiaResource::listItem($project)
+            ),
+            'templates' => $templates->map(
+                fn (ProjectTemplate $template) => ProjectInertiaResource::templateOption($template)
+            )->values()->all(),
         ]);
     }
 
@@ -187,4 +200,3 @@ class ProjectController extends Controller
         ]);
     }
 }
-

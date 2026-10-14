@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\PressRelease;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PressRelease\CreatePressReleaseRequest;
 use App\Http\Requests\PressRelease\UpdatePressReleaseRequest;
+use App\Http\Resources\PressRelease\PressReleaseInertiaResource;
 use App\Http\Resources\PressRelease\PressReleaseResource;
 use App\Models\PressRelease;
 use App\Models\PressReleaseTemplate;
@@ -12,6 +15,8 @@ use App\Services\PressRelease\PressReleaseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class PressReleaseController extends Controller
 {
@@ -19,7 +24,7 @@ class PressReleaseController extends Controller
         private PressReleaseService $pressReleaseService
     ) {}
 
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response|AnonymousResourceCollection
     {
         $query = PressRelease::where('organization_id', $organizationId)
             ->with(['campaign', 'creator', 'distributions.pressContact']);
@@ -34,11 +39,11 @@ class PressReleaseController extends Controller
             return PressReleaseResource::collection($pressReleases);
         }
 
-        return view('press-releases.index', [
-            'title' => 'Press Releases',
-            'organizationId' => $organizationId,
-            'pressReleases' => $pressReleases,
-            'templates' => PressReleaseTemplate::query()->orderBy('name')->get(),
+        return Inertia::render('PressReleases/Index', [
+            'organizationId' => (string) $organizationId,
+            'pressReleases' => $pressReleases->through(
+                fn (PressRelease $release) => PressReleaseInertiaResource::listItem($release)
+            ),
         ]);
     }
 
@@ -194,4 +199,3 @@ class PressReleaseController extends Controller
         ], 201);
     }
 }
-

@@ -1,21 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Review;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Review\CreateReviewResponseRequest;
-use App\Http\Requests\Review\UpdateReviewResponseRequest;
 use App\Http\Requests\Review\ImportReviewsRequest;
+use App\Http\Requests\Review\UpdateReviewResponseRequest;
+use App\Http\Resources\Review\ReviewInertiaResource;
 use App\Http\Resources\Review\ReviewResource;
 use App\Http\Resources\Review\ReviewResponseResource;
+use App\Models\Brand;
+use App\Models\Organization;
 use App\Models\Review;
 use App\Models\ReviewResponse;
-use App\Models\Organization;
-use App\Models\Brand;
 use App\Services\ReviewManagementService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * Review Controller
@@ -30,7 +36,7 @@ class ReviewController extends Controller
     /**
      * Get all reviews for organization
      */
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response|AnonymousResourceCollection
     {
         $organization = Organization::findOrFail($organizationId);
         $brandId = $request->query('brand_id');
@@ -43,8 +49,8 @@ class ReviewController extends Controller
         if ($rating) {
             $reviews = $this->reviewManagementService->getReviewsByRating(
                 $organization,
-                (int)$rating,
-                (int)$rating,
+                (int) $rating,
+                (int) $rating,
                 $brand
             );
         } elseif ($sentiment) {
@@ -68,12 +74,15 @@ class ReviewController extends Controller
         $aggregation = $this->reviewManagementService->getReviewAggregation($organization, $brand, $sourceSlug);
         $sources = $this->reviewManagementService->getActiveReviewSources();
 
-        return view('reviews.index', [
-            'title' => 'Customer Reviews',
-            'organizationId' => $organizationId,
-            'reviews' => $reviews,
+        return Inertia::render('Reviews/Index', [
+            'organizationId' => (string) $organizationId,
+            'reviews' => ReviewInertiaResource::collection($reviews),
             'aggregation' => $aggregation,
-            'sources' => $sources,
+            'sources' => $sources->map(fn ($source) => [
+                'id' => $source->id,
+                'name' => $source->name,
+                'slug' => $source->slug,
+            ])->values()->all(),
         ]);
     }
 
@@ -126,7 +135,7 @@ class ReviewController extends Controller
         CreateReviewResponseRequest $request,
         string $organizationId,
         Review $review
-    ): JsonResponse {
+    ): JsonResponse|RedirectResponse {
         $response = $this->reviewManagementService->createResponse(
             $review,
             $request->user(),
@@ -134,11 +143,17 @@ class ReviewController extends Controller
             $request->validated()['response_type']
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => new ReviewResponseResource($response->load('respondedBy')),
-            'message' => 'Review response created successfully.',
-        ], 201);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => new ReviewResponseResource($response->load('respondedBy')),
+                'message' => 'Review response created successfully.',
+            ], 201);
+        }
+
+        return redirect()
+            ->route('main.reviews.index', ['organizationId' => $organizationId])
+            ->with('success', 'Review response created successfully.');
     }
 
     /**
@@ -183,7 +198,7 @@ class ReviewController extends Controller
     public function importReviews(
         ImportReviewsRequest $request,
         string $organizationId
-    ): JsonResponse {
+    ): JsonResponse|RedirectResponse {
         $organization = Organization::findOrFail($organizationId);
         $brandId = $request->validated()['brand_id'] ?? null;
 
@@ -196,13 +211,19 @@ class ReviewController extends Controller
             $brand
         );
 
-        return response()->json([
-            'success' => true,
-            'message' => "Successfully imported {$imported} reviews.",
-            'data' => [
-                'imported_count' => $imported,
-            ],
-        ], 201);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully imported {$imported} reviews.",
+                'data' => [
+                    'imported_count' => $imported,
+                ],
+            ], 201);
+        }
+
+        return redirect()
+            ->route('main.reviews.index', ['organizationId' => $organizationId])
+            ->with('success', "Successfully imported {$imported} reviews.");
     }
 
     /**
@@ -218,4 +239,3 @@ class ReviewController extends Controller
         ]);
     }
 }
-
