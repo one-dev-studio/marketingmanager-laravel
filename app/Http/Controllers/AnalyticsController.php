@@ -1,20 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Analytics\AnalyzeCampaignRequest;
 use App\Jobs\ProcessAnalyticsJob;
+use App\Models\AnalyticsReport;
 use App\Models\Brand;
 use App\Models\Campaign;
 use App\Models\Organization;
+use App\Models\Review;
 use App\Models\ScheduledPost;
 use App\Services\Analytics\AnalyticsService;
-use App\Services\Analytics\SentimentAnalysisService;
 use App\Services\Analytics\PredictiveAnalyticsService;
+use App\Services\Analytics\SentimentAnalysisService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Carbon\Carbon;
+use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * Analytics Controller
@@ -33,11 +38,11 @@ class AnalyticsController extends Controller
      * Display analytics page
      * Requires brand context (brandId query parameter)
      */
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response|JsonResponse
     {
         $brand = $request->get('brand');
-        
-        if (!$brand) {
+
+        if (! $brand) {
             if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
@@ -48,7 +53,7 @@ class AnalyticsController extends Controller
         }
 
         $organization = Organization::findOrFail($organizationId);
-        
+
         $campaigns = ScheduledPost::where('organization_id', $organizationId)
             ->when($brand instanceof Brand, function ($query) use ($brand) {
                 $query->whereHas('campaign', function ($q) use ($brand) {
@@ -77,12 +82,24 @@ class AnalyticsController extends Controller
             ]);
         }
 
-        return view('analytics.index', [
-            'title' => 'Analytics',
-            'organizationId' => $organizationId,
-            'brand' => $brand,
-            'campaigns' => $campaigns,
-            'reports' => \App\Models\AnalyticsReport::where('organization_id', $organizationId)->latest()->limit(10)->get(),
+        $reports = AnalyticsReport::where('organization_id', $organizationId)
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return Inertia::render('Analytics/Index', [
+            'organizationId' => (string) $organizationId,
+            'brandId' => $brand instanceof Brand ? (string) $brand->id : '',
+            'brandName' => $brand instanceof Brand ? $brand->name : '',
+            'campaigns' => $campaigns->map(fn ($campaign) => [
+                'id' => $campaign->id,
+                'name' => $campaign->name,
+            ])->values()->all(),
+            'reports' => $reports->map(fn ($report) => [
+                'id' => $report->id,
+                'title' => $report->name ?? 'Report #'.$report->id,
+                'created_at' => $report->created_at?->toIso8601String(),
+            ])->values()->all(),
         ]);
     }
 
@@ -93,7 +110,7 @@ class AnalyticsController extends Controller
     {
         $organization = Organization::findOrFail($organizationId);
         $campaign = Campaign::findOrFail($request->campaign_id);
-        
+
         $startDate = $request->start_date ? Carbon::parse($request->start_date) : null;
         $endDate = $request->end_date ? Carbon::parse($request->end_date) : null;
 
@@ -116,7 +133,7 @@ class AnalyticsController extends Controller
      */
     public function getAnalysis(Request $request, string $organizationId, int $reportId): JsonResponse
     {
-        $report = \App\Models\AnalyticsReport::where('organization_id', $organizationId)
+        $report = AnalyticsReport::where('organization_id', $organizationId)
             ->findOrFail($reportId);
 
         return response()->json([
@@ -150,7 +167,7 @@ class AnalyticsController extends Controller
     public function getSocialMediaEngagement(Request $request, string $organizationId): JsonResponse
     {
         $organization = Organization::findOrFail($organizationId);
-        
+
         $startDate = $request->start_date ? Carbon::parse($request->start_date) : null;
         $endDate = $request->end_date ? Carbon::parse($request->end_date) : null;
 
@@ -187,7 +204,7 @@ class AnalyticsController extends Controller
     public function getCompetitorComparison(Request $request, string $organizationId): JsonResponse
     {
         $organization = Organization::findOrFail($organizationId);
-        
+
         $request->validate([
             'competitor_ids' => ['required', 'array'],
             'competitor_ids.*' => ['integer', 'exists:competitors,id'],
@@ -217,7 +234,7 @@ class AnalyticsController extends Controller
     public function analyzeSentiment(Request $request, string $organizationId): JsonResponse
     {
         $organization = Organization::findOrFail($organizationId);
-        
+
         $request->validate([
             'content_type' => ['nullable', 'string', 'in:review,social_media,text'],
             'content_id' => ['nullable', 'integer'],
@@ -233,12 +250,12 @@ class AnalyticsController extends Controller
         } elseif ($contentType === 'social_media') {
             $startDate = $request->start_date ? Carbon::parse($request->start_date) : null;
             $endDate = $request->end_date ? Carbon::parse($request->end_date) : null;
-            
+
             $result = $this->sentimentService->analyzeSocialMediaSentiment($organization, $startDate, $endDate);
         } else {
-            $review = \App\Models\Review::where('organization_id', $organizationId)
+            $review = Review::where('organization_id', $organizationId)
                 ->findOrFail($request->content_id);
-            
+
             $result = $this->sentimentService->analyzeReviewSentiment($review);
         }
 
@@ -254,7 +271,7 @@ class AnalyticsController extends Controller
     public function getSentimentTrends(Request $request, string $organizationId): JsonResponse
     {
         $organization = Organization::findOrFail($organizationId);
-        
+
         $startDate = $request->start_date ? Carbon::parse($request->start_date) : null;
         $endDate = $request->end_date ? Carbon::parse($request->end_date) : null;
 
@@ -272,7 +289,7 @@ class AnalyticsController extends Controller
     public function getSentimentAlerts(Request $request, string $organizationId): JsonResponse
     {
         $organization = Organization::findOrFail($organizationId);
-        
+
         $threshold = $request->threshold ?? -0.5;
 
         $alerts = $this->sentimentService->checkSentimentAlerts($organization, $threshold);
@@ -306,7 +323,7 @@ class AnalyticsController extends Controller
     public function predictContentEngagement(Request $request, string $organizationId): JsonResponse
     {
         $organization = Organization::findOrFail($organizationId);
-        
+
         $request->validate([
             'content' => ['required', 'string'],
             'platform' => ['required', 'string'],
@@ -355,7 +372,7 @@ class AnalyticsController extends Controller
     public function getOptimalPostingTimes(Request $request, string $organizationId): JsonResponse
     {
         $organization = Organization::findOrFail($organizationId);
-        
+
         $request->validate([
             'platform' => ['required', 'string'],
         ]);
@@ -377,7 +394,7 @@ class AnalyticsController extends Controller
     public function getBudgetOptimization(Request $request, string $organizationId): JsonResponse
     {
         $organization = Organization::findOrFail($organizationId);
-        
+
         $request->validate([
             'total_budget' => ['required', 'numeric', 'min:0'],
         ]);
@@ -393,4 +410,3 @@ class AnalyticsController extends Controller
         ]);
     }
 }
-

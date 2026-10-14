@@ -1,39 +1,54 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Campaign;
 
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\Contest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ContestController extends Controller
 {
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response
     {
         $contests = Contest::where('organization_id', $organizationId)
             ->with('campaign')
             ->withCount('entries')
             ->latest()
-            ->paginate();
+            ->paginate()
+            ->through(fn (Contest $contest) => [
+                'id' => $contest->id,
+                'name' => $contest->name,
+                'status' => $contest->status,
+                'entries_count' => $contest->entries_count,
+                'campaign_name' => $contest->campaign?->name,
+            ]);
 
-        return view('competitions.index', [
-            'title' => 'Competitions',
-            'organizationId' => $organizationId,
+        return Inertia::render('Competitions/Index', [
+            'organizationId' => (string) $organizationId,
             'contests' => $contests,
         ]);
     }
 
-    public function create(Request $request, string $organizationId)
+    public function create(Request $request, string $organizationId): Response
     {
-        return view('competitions.create', [
-            'title' => 'Create Competition',
-            'organizationId' => $organizationId,
-            'campaigns' => Campaign::where('organization_id', $organizationId)->orderBy('name')->get(),
+        $campaigns = Campaign::where('organization_id', $organizationId)->orderBy('name')->get();
+
+        return Inertia::render('Competitions/Create', [
+            'organizationId' => (string) $organizationId,
+            'campaigns' => $campaigns->map(fn (Campaign $campaign) => [
+                'id' => $campaign->id,
+                'name' => $campaign->name,
+            ])->values()->all(),
         ]);
     }
 
-    public function store(Request $request, string $organizationId)
+    public function store(Request $request, string $organizationId): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -55,18 +70,29 @@ class ContestController extends Controller
             ->with('success', 'Competition created.');
     }
 
-    public function show(Request $request, string $organizationId, Contest $contest)
+    public function show(Request $request, string $organizationId, Contest $contest): Response
     {
         $contest->load('entries', 'campaign');
 
-        return view('competitions.show', [
-            'title' => $contest->name,
-            'organizationId' => $organizationId,
-            'contest' => $contest,
+        return Inertia::render('Competitions/Show', [
+            'organizationId' => (string) $organizationId,
+            'contest' => [
+                'id' => $contest->id,
+                'name' => $contest->name,
+                'status' => $contest->status,
+                'prize' => $contest->prize,
+                'entries' => $contest->entries->map(fn ($entry) => [
+                    'id' => $entry->id,
+                    'entrant_name' => $entry->entrant_name,
+                    'entrant_email' => $entry->entrant_email,
+                    'answer' => $entry->answer,
+                    'is_winner' => (bool) $entry->is_winner,
+                ])->values()->all(),
+            ],
         ]);
     }
 
-    public function storeEntry(Request $request, string $organizationId, Contest $contest)
+    public function storeEntry(Request $request, string $organizationId, Contest $contest): RedirectResponse
     {
         $validated = $request->validate([
             'entrant_name' => 'required|string|max:255',
@@ -80,7 +106,7 @@ class ContestController extends Controller
         return back()->with('success', 'Entry recorded.');
     }
 
-    public function close(Request $request, string $organizationId, Contest $contest)
+    public function close(Request $request, string $organizationId, Contest $contest): RedirectResponse
     {
         $winner = $contest->entries()->inRandomOrder()->first();
         if ($winner) {
