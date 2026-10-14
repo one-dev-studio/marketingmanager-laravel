@@ -37,6 +37,7 @@ class PaymentWebhookSecurityTest extends TestCase
         ]);
 
         $response->assertStatus(400);
+        $this->assertNotSame(419, $response->status());
         $this->assertSame('pending', $invoice->fresh()->status);
     }
 
@@ -81,6 +82,7 @@ class PaymentWebhookSecurityTest extends TestCase
         );
 
         $response->assertStatus(200);
+        $this->assertNotSame(419, $response->status());
         $this->assertSame('paid', $invoice->fresh()->status);
     }
 
@@ -96,5 +98,6 @@ class PaymentWebhookSecurityTest extends TestCase
         ]);
 
         $response->assertStatus(400);
+        $this->assertNotSame(419, $response->status());
     }
 }

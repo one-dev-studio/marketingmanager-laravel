@@ -37,6 +37,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Payment and social webhooks authenticate via platform signatures, not session CSRF.
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/*',
+        ]);
+
         $middleware->redirectGuestsTo(function (Request $request) {
             return $request->is('admin', 'admin/*') ? route('admin.login') : route('login');
         });
