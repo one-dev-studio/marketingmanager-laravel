@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { paginationLabelText } from '@/lib/paginationLabel';
 import AppLayout from '@/Layouts/AppLayout';
 import type { EmailTemplateListItem } from '@/types/email-templates';
 import { Link } from '@inertiajs/react';
@@ -73,7 +74,7 @@ export default function Index({ organizationId, templates, can }: EmailTemplates
                                     }
                                     preserveScroll
                                 >
-                                    <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                    <span>{paginationLabelText(link.label)}</span>
                                 </Link>
                             ) : (
                                 <span

@@ -9,6 +9,7 @@ use App\Http\Requests\EmailMarketing\CreateEmailTemplateRequest;
 use App\Http\Resources\EmailMarketing\EmailTemplateInertiaResource;
 use App\Http\Resources\EmailMarketing\EmailTemplateResource;
 use App\Models\EmailTemplate;
+use App\Services\Security\UserHtmlSanitizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,6 +17,10 @@ use Inertia\Response;
 
 class EmailTemplateController extends Controller
 {
+    public function __construct(
+        private readonly UserHtmlSanitizer $htmlSanitizer,
+    ) {}
+
     public function index(Request $request, string $organizationId)
     {
         $query = EmailTemplate::where(function ($q) use ($organizationId) {
@@ -55,7 +60,7 @@ class EmailTemplateController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'subject' => $request->subject,
-            'html_content' => $request->html_content,
+            'html_content' => $this->htmlSanitizer->sanitize($request->html_content),
             'text_content' => $request->text_content,
             'variables' => $request->variables ?? [],
             'category' => $request->category ?? 'custom',
@@ -93,7 +98,7 @@ class EmailTemplateController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'subject' => $request->subject,
-            'html_content' => $request->html_content,
+            'html_content' => $this->htmlSanitizer->sanitize($request->html_content),
             'text_content' => $request->text_content,
             'variables' => $request->variables ?? $emailTemplate->variables,
             'category' => $request->category ?? $emailTemplate->category,

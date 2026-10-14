@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { paginationLabelText } from '@/lib/paginationLabel';
 import AppLayout from '@/Layouts/AppLayout';
 import type { BrandListItem } from '@/types/brands';
 import { Link, router } from '@inertiajs/react';
@@ -137,14 +138,16 @@ export default function Index({ organizationId, brands, can }: BrandsIndexProps)
                                             ? 'border-primary-600 bg-primary-50 text-primary-800'
                                             : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                                     }`}
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
+                                >
+                                    {paginationLabelText(link.label)}
+                                </Link>
                             ) : (
                                 <span
                                     key={`${link.label}-${index}`}
                                     className="rounded border border-gray-200 px-3 py-1 text-sm text-gray-400"
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
+                                >
+                                    {paginationLabelText(link.label)}
+                                </span>
                             ),
                         )}
                     </nav>

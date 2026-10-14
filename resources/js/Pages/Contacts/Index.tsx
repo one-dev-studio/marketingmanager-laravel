@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { paginationLabelText } from '@/lib/paginationLabel';
 import AppLayout from '@/Layouts/AppLayout';
 import type { ContactListItem, ContactListOption } from '@/types/contacts';
 import { Link, router } from '@inertiajs/react';
@@ -156,8 +157,7 @@ export default function Index({ organizationId, contacts, lists, filters }: Cont
                                             ? 'bg-primary-600 text-white'
                                             : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
                                     }`}
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
+                                    >{paginationLabelText(link.label)}</Link>
                             ) : null,
                         )}
                     </div>

@@ -7,6 +7,6 @@
     <meta name="description" content="{{ $page->seo_settings['description'] ?? $page->description }}">
 </head>
 <body>
-{!! $variant->html_content ?? $page->html_content !!}
+{!! $safeHtml ?? '' !!}
 </body>
 </html>
