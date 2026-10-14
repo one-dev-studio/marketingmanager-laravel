@@ -9,6 +9,7 @@ use App\Http\Resources\Agency\AgencyClientInertiaResource;
 use App\Models\Agency;
 use App\Models\Organization;
 use App\Services\AgencyService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -55,12 +56,14 @@ class ClientController extends Controller
         ]);
     }
 
-    public function create(Agency $agency)
+    public function create(Agency $agency): Response
     {
-        return view('agency.clients.create', compact('agency'));
+        return Inertia::render('Agency/Clients/Create', [
+            'agencyId' => (string) $agency->id,
+        ]);
     }
 
-    public function store(Request $request, Agency $agency)
+    public function store(Request $request, Agency $agency): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
