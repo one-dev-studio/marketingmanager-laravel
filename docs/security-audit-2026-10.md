@@ -2,9 +2,9 @@
 
 **Repository:** [one-dev-studio/marketingmanager-laravel](https://github.com/one-dev-studio/marketingmanager-laravel)  
 **Audit baseline SHA:** `7b55d87da7498d1c4dc544eba0f86f3555ff5bd5`  
-**Staging tip after High remediation:** `ede3653c07b9f0abeaf4544be04a0fc430a59ded` (merge of [#81](https://github.com/one-dev-studio/marketingmanager-laravel/pull/81))  
+**Staging tip after npm remediation:** _(pending merge — see PR in npm section)_  
 **Host probe:** `https://marketing-manager.staging.oneinternetmedia.com` (read-only)  
-**Last updated:** 2026-10-14
+**Last updated:** 2026-10-15
 
 ---
 
@@ -37,14 +37,15 @@ No **open Critical** findings remain in application code at staging tip, provide
 | Info | `gitleaks detect`: no leaks in sampled history | git | — | — |
 | Info | Staging sensitive paths → **404** | host probe | — | — |
 
-### npm / frontend toolchain (2026-10-14)
+### npm / frontend toolchain (2026-10-15)
 
 | Item | Status |
 |------|--------|
-| `npm audit fix` (non-breaking) | Applied in [#81](https://github.com/one-dev-studio/marketingmanager-laravel/pull/81) (`package-lock.json`) |
-| Remaining advisories | Mostly **dev-only** (Tailwind/chokidar/braces, Vite→esbuild). **11** reported after fix; no safe fix without major Vite 8 / Tailwind chain upgrades |
-| Runtime on server | PHP/Laravel only; JS CVEs affect local `vite` dev/build, not production PHP deploy |
-| Recommended follow-up | Plan Vite 8 + Tailwind 4 migration on a dedicated branch; prove `npm run build` + smoke |
+| Prior state (#81) | `npm audit fix` (non-breaking) left **11** advisories (6 high: braces→chokidar→Tailwind 3; moderate: esbuild/Vite 5, postcss-selector-parser) |
+| Remediation | **Vite 8.3.4**, **Tailwind CSS 4.3** (`@tailwindcss/vite`), plugin majors (`@vitejs/plugin-vue` 6, `@vitejs/plugin-react` 6, `laravel-vite-plugin` 3); `postcss-selector-parser` **override** `^7.1.6` for `@tailwindcss/typography` transitive dep |
+| `npm audit` (2026-10-15, after `npm ci`) | **0 vulnerabilities** |
+| Prove (Cursor Environment) | `npm ci`, `npm audit`, `npm run typecheck`, `npm run build` — pass. `php vendor/bin/phpunit` requires **PHP ≥8.4** per `composer.lock` (Symfony 8.1); Ubuntu 24.04 agent image ships PHP 8.3 only — run full suite on deploy host or PHP 8.4+ dev box |
+| Runtime on server | PHP/Laravel only; JS toolchain is dev/build-time |
 
 ---
 
@@ -65,8 +66,7 @@ No **open Critical** findings remain in application code at staging tip, provide
 1. **CoS redeploy** staging to `ede3653…` and configure social webhook secrets (appendix).
 2. **Authenticated builder XSS** — product risk acceptance or further sandboxing for `v-html` / `dangerouslySetInnerHTML` in admin UI.
 3. **CSP** — remove `style-src 'unsafe-inline'` when Tailwind build emits hashed/nonce styles.
-4. **npm** — residual dev-toolchain CVEs; track Vite major upgrade.
-5. **Integration tests** — `PaymentProcessingTest` routes/assertions may be stale (pre-existing).
+4. **Integration tests** — `PaymentProcessingTest` routes/assertions may be stale (pre-existing); full `phpunit` needs PHP ≥8.4 locally.
 
 ---
 

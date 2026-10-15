@@ -2,10 +2,15 @@ import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import react from '@vitejs/plugin-react';
-import path from 'path';
+import tailwindcss from '@tailwindcss/vite';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
     plugins: [
+        tailwindcss(),
         laravel({
             input: [
                 'resources/css/app.css',
