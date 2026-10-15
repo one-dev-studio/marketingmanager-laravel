@@ -2,7 +2,7 @@
 
 **Repository:** [one-dev-studio/marketingmanager-laravel](https://github.com/one-dev-studio/marketingmanager-laravel)  
 **Audit baseline SHA:** `7b55d87da7498d1c4dc544eba0f86f3555ff5bd5`  
-**Staging tip after npm remediation:** _(pending merge — see PR in npm section)_  
+**Staging tip after npm remediation:** `65cd857c5b2e6332de16c9d1fe68f42a5e0804dd` ([#84](https://github.com/one-dev-studio/marketingmanager-laravel/pull/84))  
 **Host probe:** `https://marketing-manager.staging.oneinternetmedia.com` (read-only)  
 **Last updated:** 2026-10-15
 
@@ -42,7 +42,7 @@ No **open Critical** findings remain in application code at staging tip, provide
 | Item | Status |
 |------|--------|
 | Prior state (#81) | `npm audit fix` (non-breaking) left **11** advisories (6 high: braces→chokidar→Tailwind 3; moderate: esbuild/Vite 5, postcss-selector-parser) |
-| Remediation | **Vite 8.3.4**, **Tailwind CSS 4.3** (`@tailwindcss/vite`), plugin majors (`@vitejs/plugin-vue` 6, `@vitejs/plugin-react` 6, `laravel-vite-plugin` 3); `postcss-selector-parser` **override** `^7.1.6` for `@tailwindcss/typography` transitive dep |
+| Remediation | [#84](https://github.com/one-dev-studio/marketingmanager-laravel/pull/84): **Vite 8.3.4**, **Tailwind CSS 4.3** (`@tailwindcss/vite`), plugin majors (`@vitejs/plugin-vue` 6, `@vitejs/plugin-react` 6, `laravel-vite-plugin` 3); `postcss-selector-parser` **override** `^7.1.6` for `@tailwindcss/typography` transitive dep |
 | `npm audit` (2026-10-15, after `npm ci`) | **0 vulnerabilities** |
 | Prove (Cursor Environment) | `npm ci`, `npm audit`, `npm run typecheck`, `npm run build` — pass. `php vendor/bin/phpunit` requires **PHP ≥8.4** per `composer.lock` (Symfony 8.1); Ubuntu 24.04 agent image ships PHP 8.3 only — run full suite on deploy host or PHP 8.4+ dev box |
 | Runtime on server | PHP/Laravel only; JS toolchain is dev/build-time |
@@ -58,6 +58,8 @@ No **open Critical** findings remain in application code at staging tip, provide
 | [#78](https://github.com/one-dev-studio/marketingmanager-laravel/pull/78) | Composer dependency security bumps | `91960321c4df4a765b8e809fc0fded9e5c292f0a` |
 | [#79](https://github.com/one-dev-studio/marketingmanager-laravel/pull/79) | Webhook CSRF exemption | `17c1c49c07b9f0abeaf4544be04a0fc430a59ded` |
 | [#81](https://github.com/one-dev-studio/marketingmanager-laravel/pull/81) | Social webhooks, HTML sanitization, CSP nonces, npm lock refresh | `ede3653c07b9f0abeaf4544be04a0fc430a59ded` |
+| [#83](https://github.com/one-dev-studio/marketingmanager-laravel/pull/83) | Security audit report (October 2026) | `0384c5fc31522fc6e2a38ef48414c502263687f4` |
+| [#84](https://github.com/one-dev-studio/marketingmanager-laravel/pull/84) | Vite 8 / Tailwind 4 — clear npm audit advisories | `65cd857c5b2e6332de16c9d1fe68f42a5e0804dd` |
 
 ---
 
