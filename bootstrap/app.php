@@ -9,6 +9,7 @@ use App\Http\Middleware\EnsureClientPortal;
 use App\Http\Middleware\EnsureNotClientRole;
 use App\Http\Middleware\EnsureOrganizationAccess;
 use App\Http\Middleware\EnsureOrganizationAdmin;
+use App\Http\Middleware\EnsurePlatformSuperAdmin;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\NormalizeSubdirectoryRedirects;
 use App\Http\Middleware\PermissionMiddleware;
@@ -60,6 +61,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'require.confirmation' => RequireConfirmation::class,
             'agency.client' => EnsureClientAccess::class,
             'client.portal' => EnsureClientPortal::class,
+            'platform.super_admin' => EnsurePlatformSuperAdmin::class,
             'api.rate_limit' => ApiRateLimit::class,
         ]);
 

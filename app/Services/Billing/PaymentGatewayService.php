@@ -2,6 +2,7 @@
 
 namespace App\Services\Billing;
 
+use App\Models\ActivityLog;
 use App\Models\Invoice;
 use App\Models\Organization;
 use App\Models\Payment;
@@ -16,14 +17,15 @@ use Illuminate\Support\Str;
 class PaymentGatewayService
 {
     public function __construct(
-        private BillingService $billingService
+        private BillingService $billingService,
+        private BillingPaymentConfigResolver $billingPaymentConfigResolver,
     ) {}
 
     public function availableGateways(): array
     {
         return [
             'stripe' => (bool) config('services.stripe.secret'),
-            'paypal' => (bool) config('services.paypal.client_id'),
+            'paypal' => (bool) $this->billingPaymentConfigResolver->paypalClientId(),
         ];
     }
 
@@ -53,7 +55,7 @@ class PaymentGatewayService
         );
 
         $this->billingService->generateInvoice($organization, $subscription, [[
-            'description' => $plan->name . ' subscription',
+            'description' => $plan->name.' subscription',
             'quantity' => 1,
             'unit_price' => $plan->price,
             'total' => $plan->price,
@@ -76,10 +78,10 @@ class PaymentGatewayService
     {
         $alerts = [];
 
-        if (!$subscription) {
+        if (! $subscription) {
             $alerts[] = ['type' => 'warning', 'message' => 'No active subscription. Choose a plan to keep using paid features.'];
         } elseif ($subscription->status === 'trial' && $subscription->trial_ends_at) {
-            $alerts[] = ['type' => 'info', 'message' => 'Trial ends ' . $subscription->trial_ends_at->diffForHumans() . '.'];
+            $alerts[] = ['type' => 'info', 'message' => 'Trial ends '.$subscription->trial_ends_at->diffForHumans().'.'];
         } elseif ($subscription->cancel_at_period_end) {
             $alerts[] = ['type' => 'warning', 'message' => 'Subscription will cancel at period end.'];
         }
@@ -96,7 +98,7 @@ class PaymentGatewayService
                 if ($limit->is_unlimited) {
                     continue;
                 }
-                $used = (float) data_get($usageStats, "ai_usage.total_tokens", 0);
+                $used = (float) data_get($usageStats, 'ai_usage.total_tokens', 0);
                 if ($limit->feature === 'ai_tokens' && $used >= (float) $limit->limit_value) {
                     $alerts[] = ['type' => 'warning', 'message' => 'AI token usage is at or over the plan limit.'];
                 }
@@ -127,7 +129,7 @@ class PaymentGatewayService
             ? Invoice::where('invoice_number', $invoiceNumber)->first()
             : null;
 
-        if (!$invoice) {
+        if (! $invoice) {
             return;
         }
 
@@ -146,10 +148,10 @@ class PaymentGatewayService
                 'status' => 'completed',
                 'processed_at' => now(),
             ]);
-            \App\Models\ActivityLog::log('invoice.paid', $invoice, auth()->user(), ['status' => 'paid']);
+            ActivityLog::log('invoice.paid', $invoice, auth()->user(), ['status' => 'paid']);
         } elseif (in_array($type, $failedTypes, true)) {
             $invoice->update(['status' => 'failed']);
-            \App\Models\ActivityLog::log('invoice.payment_failed', $invoice, auth()->user(), ['status' => 'failed']);
+            ActivityLog::log('invoice.payment_failed', $invoice, auth()->user(), ['status' => 'failed']);
         }
     }
 
@@ -161,8 +163,8 @@ class PaymentGatewayService
                     ->asForm()
                     ->post('https://api.stripe.com/v1/checkout/sessions', [
                         'mode' => 'subscription',
-                        'success_url' => url('/main/' . $organization->id . '/billing'),
-                        'cancel_url' => url('/main/' . $organization->id . '/billing'),
+                        'success_url' => url('/main/'.$organization->id.'/billing'),
+                        'cancel_url' => url('/main/'.$organization->id.'/billing'),
                         'metadata[organization_id]' => $organization->id,
                         'line_items[0][quantity]' => 1,
                         'line_items[0][price_data][currency]' => 'usd',
@@ -178,9 +180,9 @@ class PaymentGatewayService
         }
 
         if ($gateway === 'paypal' && config('services.paypal.client_id')) {
-            return 'paypal-local-' . Str::uuid();
+            return 'paypal-local-'.Str::uuid();
         }
 
-        return 'local-' . Str::uuid();
+        return 'local-'.Str::uuid();
     }
 }

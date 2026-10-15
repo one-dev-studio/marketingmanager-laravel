@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Notifications\VerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Enumerable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -146,6 +148,22 @@ class User extends Authenticatable
         return $this->user_type === 'admin';
     }
 
+    /**
+     * Platform-level super-admins who may manage billing webhooks and payment secrets.
+     */
+    public function isPlatformSuperAdmin(): bool
+    {
+        if (! $this->isAdmin()) {
+            return false;
+        }
+
+        return $this->hasAnyRole([
+            'super_admin',
+            'super-admin',
+            'platform-admin',
+        ]);
+    }
+
     public function isAgency(): bool
     {
         return $this->user_type === 'agency';
@@ -176,7 +194,7 @@ class User extends Authenticatable
             return $this->hasTenantRole($roles, $guard);
         }
 
-        if (is_array($roles) || $roles instanceof \Illuminate\Support\Enumerable) {
+        if (is_array($roles) || $roles instanceof Enumerable) {
             foreach ($roles as $role) {
                 if ($this->hasRole($role, $guard)) {
                     return true;
@@ -264,7 +282,7 @@ class User extends Authenticatable
      */
     public function hasCustomLocale(): bool
     {
-        return !empty($this->locale);
+        return ! empty($this->locale);
     }
 
     /**
@@ -288,7 +306,6 @@ class User extends Authenticatable
      */
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new \App\Notifications\VerifyEmail);
+        $this->notify(new VerifyEmail);
     }
 }
-

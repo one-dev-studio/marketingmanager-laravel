@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\CostingController;
 use App\Http\Controllers\Admin\LogController;
 use App\Http\Controllers\Admin\PackageController;
+use App\Http\Controllers\Admin\PaymentWebhookSettingsController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Agency\CalendarController;
 use App\Http\Controllers\Agency\ClientController;
@@ -816,6 +817,11 @@ Route::prefix('admin')->middleware(['auth:admin', 'role:admin'])->name('admin.')
     Route::post('/settings/api-keys', [App\Http\Controllers\Admin\SettingsController::class, 'updateApiKey'])->name('settings.update-api-key');
     Route::post('/settings/maintenance/enable', [App\Http\Controllers\Admin\SettingsController::class, 'enableMaintenanceMode'])->name('settings.enable-maintenance');
     Route::post('/settings/maintenance/disable', [App\Http\Controllers\Admin\SettingsController::class, 'disableMaintenanceMode'])->name('settings.disable-maintenance');
+
+    Route::middleware('platform.super_admin')->prefix('settings/payments')->name('settings.payments.')->group(function () {
+        Route::get('/', [PaymentWebhookSettingsController::class, 'index'])->name('index');
+        Route::put('/', [PaymentWebhookSettingsController::class, 'update'])->name('update');
+    });
 
     // System Logs
     Route::get('/logs', [LogController::class, 'index'])->name('logs.index');

@@ -147,6 +147,8 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'agency_admin', 'description' => 'Agency Administrator', 'level' => 80],
             ['name' => 'agency_member', 'description' => 'Agency Member', 'level' => 40],
             ['name' => 'agency', 'description' => 'Agency user', 'level' => 40],
+            ['name' => 'super-admin', 'description' => 'Super Administrator (platform)', 'level' => 100],
+            ['name' => 'platform-admin', 'description' => 'Platform Administrator', 'level' => 95],
         ];
 
         foreach ($roles as $role) {
