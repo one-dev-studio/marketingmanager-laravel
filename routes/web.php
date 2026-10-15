@@ -765,6 +765,7 @@ Route::middleware(['auth', 'verified'])->prefix('main')->name('main.')->group(fu
             Route::put('/billing/subscription/upgrade', [BillingController::class, 'upgradeSubscription'])->name('billing.subscription.upgrade');
             Route::put('/billing/subscription/cancel', [BillingController::class, 'cancelSubscription'])->name('billing.subscription.cancel');
             Route::get('/billing/invoices', [BillingController::class, 'getInvoices'])->name('billing.invoices');
+            Route::get('/billing/payments', [BillingController::class, 'getPayments'])->name('billing.payments');
             Route::get('/billing/invoices/{invoice}/download', [BillingController::class, 'downloadInvoice'])->name('billing.invoices.download');
             Route::post('/billing/invoices/{invoice}/pay', [BillingController::class, 'payInvoice'])->name('billing.invoices.pay');
             Route::get('/billing/usage', [BillingController::class, 'getUsageStats'])->name('billing.usage');

@@ -2,14 +2,15 @@
 
 namespace App\Services\Organization;
 
-use App\Models\Organization;
-use App\Models\Subscription;
-use App\Models\SubscriptionPlan;
+use App\Models\AiUsageLog;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Organization;
 use App\Models\Payment;
+use App\Models\Subscription;
+use App\Models\SubscriptionPlan;
 use App\Models\UsageTracking;
-use App\Models\AiUsageLog;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -24,14 +25,14 @@ class BillingService
     {
         return DB::transaction(function () use ($organization, $planId, $isTrial) {
             $plan = SubscriptionPlan::findOrFail($planId);
-            
+
             $subscription = Subscription::create([
                 'organization_id' => $organization->id,
                 'plan_id' => $planId,
                 'status' => $isTrial ? 'trial' : 'active',
                 'current_period_start' => now(),
-                'current_period_end' => $isTrial 
-                    ? now()->addDays(14) 
+                'current_period_end' => $isTrial
+                    ? now()->addDays(14)
                     : ($plan->billing_cycle === 'yearly' ? now()->addYear() : now()->addMonth()),
                 'trial_ends_at' => $isTrial ? now()->addDays(14) : null,
             ]);
@@ -46,7 +47,7 @@ class BillingService
     {
         return DB::transaction(function () use ($subscription, $newPlanId) {
             $newPlan = SubscriptionPlan::findOrFail($newPlanId);
-            
+
             $subscription->update([
                 'plan_id' => $newPlanId,
                 'status' => 'active',
@@ -80,7 +81,7 @@ class BillingService
             $invoice = Invoice::create([
                 'organization_id' => $organization->id,
                 'subscription_id' => $subscription->id,
-                'invoice_number' => 'INV-' . strtoupper(Str::random(10)),
+                'invoice_number' => 'INV-'.strtoupper(Str::random(10)),
                 'status' => 'pending',
                 'subtotal' => $subtotal,
                 'tax' => $tax,
@@ -105,7 +106,7 @@ class BillingService
 
     public function getUsageStats(Organization $organization, string $period = 'month'): array
     {
-        $startDate = match($period) {
+        $startDate = match ($period) {
             'week' => now()->subWeek(),
             'month' => now()->subMonth(),
             'year' => now()->subYear(),
@@ -136,11 +137,21 @@ class BillingService
         ];
     }
 
-    public function getInvoices(Organization $organization, int $limit = 10): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    public function getInvoices(Organization $organization, int $limit = 10): LengthAwarePaginator
     {
         return Invoice::where('organization_id', $organization->id)
             ->with(['subscription.plan', 'payments'])
             ->orderBy('created_at', 'desc')
+            ->paginate($limit);
+    }
+
+    public function getPaymentHistory(Organization $organization, int $limit = 20): LengthAwarePaginator
+    {
+        return Payment::query()
+            ->where('organization_id', $organization->id)
+            ->with('invoice')
+            ->orderByDesc('processed_at')
+            ->orderByDesc('created_at')
             ->paginate($limit);
     }
 
@@ -167,4 +178,3 @@ class BillingService
         });
     }
 }
-

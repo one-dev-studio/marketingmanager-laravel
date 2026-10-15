@@ -124,35 +124,55 @@ class PaymentGatewayService
 
     private function applyWebhookStatus(string $type, ?string $remoteId, array $object): void
     {
-        $invoiceNumber = $object['metadata']['invoice_number'] ?? null;
-        $invoice = $invoiceNumber
-            ? Invoice::where('invoice_number', $invoiceNumber)->first()
-            : null;
+        $invoice = $this->resolveInvoiceFromWebhookObject($object);
 
         if (! $invoice) {
             return;
         }
 
-        $paidTypes = ['invoice.paid', 'checkout.session.completed', 'PAYMENT.CAPTURE.COMPLETED'];
+        $paidTypes = [
+            'invoice.paid',
+            'checkout.session.completed',
+            'payment_intent.succeeded',
+            'PAYMENT.CAPTURE.COMPLETED',
+        ];
         $failedTypes = ['invoice.payment_failed', 'PAYMENT.CAPTURE.DENIED'];
 
         if (in_array($type, $paidTypes, true)) {
-            $invoice->update(['status' => 'paid', 'paid_at' => now()]);
-            Payment::create([
-                'organization_id' => $invoice->organization_id,
-                'invoice_id' => $invoice->id,
-                'payment_method' => str_contains($type, 'PAYMENT') ? 'paypal' : 'stripe',
-                'transaction_id' => $remoteId ?? Str::uuid()->toString(),
-                'amount' => $invoice->total,
-                'currency' => $invoice->currency ?? 'USD',
-                'status' => 'completed',
-                'processed_at' => now(),
-            ]);
-            ActivityLog::log('invoice.paid', $invoice, auth()->user(), ['status' => 'paid']);
-        } elseif (in_array($type, $failedTypes, true)) {
+            $transactionId = $remoteId ?? Str::uuid()->toString();
+            if (Payment::where('transaction_id', $transactionId)->exists()) {
+                return;
+            }
+
+            $paymentMethod = str_contains($type, 'PAYMENT') ? 'paypal' : 'stripe';
+            if ($invoice->status !== 'paid') {
+                $this->billingService->markInvoiceAsPaid($invoice, $transactionId, $paymentMethod);
+                ActivityLog::log('invoice.paid', $invoice, auth()->user(), ['status' => 'paid']);
+            }
+
+            return;
+        }
+
+        if (in_array($type, $failedTypes, true)) {
             $invoice->update(['status' => 'failed']);
             ActivityLog::log('invoice.payment_failed', $invoice, auth()->user(), ['status' => 'failed']);
         }
+    }
+
+    private function resolveInvoiceFromWebhookObject(array $object): ?Invoice
+    {
+        $metadata = $object['metadata'] ?? [];
+        $invoiceNumber = $metadata['invoice_number'] ?? null;
+        if (is_string($invoiceNumber) && $invoiceNumber !== '') {
+            return Invoice::where('invoice_number', $invoiceNumber)->first();
+        }
+
+        $invoiceId = $metadata['invoice_id'] ?? null;
+        if ($invoiceId !== null && $invoiceId !== '') {
+            return Invoice::find((int) $invoiceId);
+        }
+
+        return null;
     }
 
     private function createRemoteSubscription(Organization $organization, SubscriptionPlan $plan, string $gateway, bool $isTrial): ?string

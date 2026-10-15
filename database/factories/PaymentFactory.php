@@ -18,7 +18,7 @@ class PaymentFactory extends Factory
             'payment_method' => fake()->randomElement(['stripe', 'paypal', 'bank_transfer']),
             'transaction_id' => fake()->uuid(),
             'status' => fake()->randomElement(['pending', 'completed', 'failed', 'refunded']),
-            'paid_at' => fake()->dateTimeBetween('-1 month', 'now'),
+            'processed_at' => fake()->dateTimeBetween('-1 month', 'now'),
         ];
     }
 }
