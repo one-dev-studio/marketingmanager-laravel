@@ -1,3 +1,4 @@
+import { BuilderHtmlPreview } from '@/components/builders/BuilderHtmlPreview';
 import { Button } from '@/components/ui/button';
 import type { EmailBlock, EmailBlockType, EmailTemplateBuilderData } from '@/types/email-templates';
 import axios from 'axios';
@@ -166,7 +167,7 @@ export function EmailTemplateBuilderPanel({ organizationId, template }: EmailTem
             </form>
             <div className="rounded-lg border border-gray-200 bg-white p-4">
                 <h2 className="mb-2 font-medium text-gray-900">Preview</h2>
-                <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                <BuilderHtmlPreview html={previewHtml} className="prose max-w-none" />
             </div>
         </div>
     );
