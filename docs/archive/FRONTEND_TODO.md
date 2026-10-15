@@ -4,6 +4,21 @@ This document outlines all remaining **frontend** development tasks to complete 
 
 > **Note:** For backend tasks, see [BACKEND_TODO.md](./BACKEND_TODO.md)
 
+## Reconciliation (October 2026)
+
+**Baseline (pre-refresh):** 19 phases — 8 fully complete, 9 partial, Phase 18 (12 open), Phase 19 (14 open) on master checklists.
+
+Verified against `staging` @ `8d74b62+`. **Active tracker:** [../../TODO.md](../../TODO.md). Security: [../security-audit-2026-10.md](../security-audit-2026-10.md).
+
+| Topic | Status |
+|-------|--------|
+| Inertia + React customer/agency/admin UI | **Done** (110+ `resources/js/Pages/*`; tests in `tests/Feature/*Inertia*`) |
+| Admin on Inertia | **Done** (`AdminPortalInertiaTest`, payment webhook settings UI) |
+| Security PRs #76–#85 | **Merged** on staging (webhooks, CSRF, HSTS, composer, CSP/HTML, npm, admin payments UI) |
+| Staging host | **https://marketing-manager.staging.oneinternetmedia.com** (+ subdirectory runbook) |
+| LinkedIn publish + webhook sig | **Done** (`LinkedInPublishingService`, `SocialWebhookVerificationGate::assertLinkedInWebhook`) |
+| Builder previews (medium) | **Open** — `dangerouslySetInnerHTML` / `v-html` in authenticated builders |
+
 ## Important References
 
 **Before implementing any frontend feature, please consult:**
@@ -26,9 +41,11 @@ This document outlines all remaining **frontend** development tasks to complete 
 - **[DEVELOPMENT_TODO.md](./DEVELOPMENT_TODO.md)** - Master todo list with overall project status
 
 **Frontend Technology Stack:**
-- **Blade Templates**: Main structure and server-side rendering (default)
+- **Inertia + React**: Primary app shell and feature pages (`resources/js/Pages`)
+- **Blade Templates**: Legacy/public and server-side rendering (default)
 - **Alpine.js**: Simple interactivity (dropdowns, toggles, form validation, modals)
-- **Vue.js Components**: Complex, stateful UI sections (dashboards, Kanban boards, charts, real-time features)
+- **React (Inertia)**: Primary feature pages and admin shell
+- **Vue.js Components**: Legacy embedded builders (dashboards, Kanban boards, charts, real-time features)
 - **Tailwind CSS 3.4+**: Styling and responsive design
 - **Lucide Icons**: Icon library
 - **Chart.js**: Chart components
@@ -138,7 +155,7 @@ This document outlines all remaining **frontend** development tasks to complete 
 ### 🔄 Remaining Tasks
 
 #### Email Campaigns
-- [ ] Build drag-and-drop email template builder (Frontend)
+- [x] Build drag-and-drop email template builder (Frontend)
 
 ---
 
@@ -171,20 +188,20 @@ This document outlines all remaining **frontend** development tasks to complete 
 - [x] Add chatbot interaction monitoring dashboard (Frontend)
 
 #### Landing Page Builder
-- [ ] Build drag-and-drop page builder (Frontend)
+- [x] Build drag-and-drop page builder (Frontend)
 - [ ] Implement AI-powered page generation (Frontend)
 - [ ] Add responsive design support (Frontend)
-- [ ] Build landing page builder frontend UI (Frontend)
-- [ ] Create page editing interface (Frontend)
-- [ ] Add preview functionality (Frontend)
-- [ ] Implement publishing to domains (Frontend)
-- [ ] Add landing page analytics integration (Frontend)
+- [x] Build landing page builder frontend UI (Frontend)
+- [x] Create page editing interface (Frontend)
+- [x] Add preview functionality (Frontend)
+- [x] Implement publishing to domains (Frontend)
+- [x] Add landing page analytics integration (Frontend)
 
 #### Surveys & Feedback
-- [ ] Build survey builder frontend UI (Frontend)
-- [ ] Create visual survey builder interface (Frontend)
-- [ ] Add survey list display (Frontend)
-- [ ] Implement response analytics dashboard (Frontend)
+- [x] Build survey builder frontend UI (Frontend)
+- [x] Create visual survey builder interface (Frontend)
+- [x] Add survey list display (Frontend)
+- [x] Implement response analytics dashboard (Frontend)
 
 ---
 
@@ -193,7 +210,7 @@ This document outlines all remaining **frontend** development tasks to complete 
 ### ✅ Completed Tasks
 
 #### Frontend Setup
-- [x] Choose and set up frontend stack (Blade Templates + Alpine.js + Vue.js)
+- [x] Choose and set up frontend stack (Inertia.js + React + TypeScript; legacy Blade/Alpine/Vue where noted)
 - [x] Configure Tailwind CSS 3.4+
 - [x] Set up build process (Vite)
 - [x] Configure Alpine.js for simple interactivity
@@ -238,17 +255,17 @@ This document outlines all remaining **frontend** development tasks to complete 
 ### 🔄 Remaining Tasks
 
 #### Analytics Page - `/main/[organizationId]/analytics`
-- [ ] Create analytics frontend UI with analysis form and results display panel
+- [x] Create analytics frontend UI with analysis form
   - **Reference:** See USER_JOURNIES.md Section 2 (Organization Admin Daily Journey) - Step 7 for analytics page UI specifications
-- [ ] Add campaign name dropdown populated from scheduled posts
+- [x] Add campaign name dropdown populated from scheduled posts
   - **Reference:** See USER_JOURNIES.md Section 2 (Organization Admin Daily Journey) - Step 7 for campaign selector requirements
-- [ ] Display analysis summary, key insights, and recommendations
+- [x] Display analysis summary, key insights, and recommendations
   - **Reference:** See USER_JOURNIES.md Section 2 (Organization Admin Daily Journey) - Step 7 and Section 4 (Agency User Journey) - Step 4 for analysis results display requirements
   - **Requirements:** Executive summary, key insights (bullet points), recommendations (actionable suggestions), metrics grid with changes
 
 #### Report Builder
-- [ ] Create drag-and-drop report builder (Frontend)
-- [ ] Add multiple chart types (Chart.js/Recharts) (Frontend)
+- [x] Create drag-and-drop report builder (Frontend)
+- [x] Add multiple chart types
 
 ---
 
@@ -257,26 +274,26 @@ This document outlines all remaining **frontend** development tasks to complete 
 ### 🔄 Remaining Tasks
 
 #### Organization Settings - `/main/[organizationId]/settings`
-- [ ] Build settings frontend UI with tabs/sections
+- [x] Build settings frontend UI with tabs/sections
   - **Reference:** See USER_JOURNIES.md Section 2 (Organization Admin Daily Journey) - Step 8 for settings page structure and requirements
 
 #### Organization Billing - `/main/[organizationId]/billing`
-- [ ] Build billing frontend UI with subscription plan display
+- [x] Build billing frontend UI with subscription plan display
   - **Reference:** See USER_JOURNIES.md Section 2 (Organization Admin Daily Journey) - Step 8 for billing UI context
-- [ ] Add payment method management interface
-- [ ] Create invoice history view
-- [ ] Add billing alerts and notifications
+- [x] Add payment method management interface
+- [x] Create invoice history view
+- [x] Add billing alerts and notifications
 
 #### Organization Team Members - `/main/[organizationId]/team`
-- [ ] Build team management frontend UI
+- [x] Build team management frontend UI
   - **Reference:** See USER_JOURNIES.md Section 2 (Organization Admin Daily Journey) - Step 8 for team management UI requirements
   - **Requirements:** Team member list, "Add Team Member" button, role selector, invitation system
 
 #### Organization Storage Sources - `/main/[organizationId]/storage-sources`
-- [ ] Build storage sources frontend UI
+- [x] Build storage sources frontend UI
 
 #### Organization Automations
-- [ ] Build automation list frontend UI
+- [x] Build automation list frontend UI
 - [ ] Create visual workflow builder interface
 - [ ] Add trigger configuration UI
 - [ ] Implement action setup interface
@@ -289,11 +306,11 @@ This document outlines all remaining **frontend** development tasks to complete 
 ### 🔄 Remaining Tasks
 
 #### Admin Portal UI
-- [ ] Build admin portal UI (Blade + Alpine.js)
-- [ ] Create user management interface
-- [ ] Create content moderation interface
-- [ ] Create platform settings interface
-- [ ] Create admin analytics dashboard
+- [x] Build admin portal UI (Blade + Alpine.js)
+- [x] Create user management interface
+- [x] Create content moderation interface
+- [x] Create platform settings interface
+- [x] Create admin analytics dashboard
 
 ---
 
@@ -302,11 +319,11 @@ This document outlines all remaining **frontend** development tasks to complete 
 ### 🔄 Remaining Tasks
 
 #### Agency Clients
-- [ ] Build client table frontend UI showing organization name and user count
+- [x] Build client table frontend UI
   - **Reference:** See USER_JOURNIES.md Section 4 (Agency User Journey) - Step 1 for client list UI specifications
-- [ ] Add "View Organization" button linking to client's organization view
+- [x] Add "View Organization" button
   - **Reference:** See USER_JOURNIES.md Section 4 (Agency User Journey) - Step 1 for navigation requirements
-- [ ] Create "Add New Client" button linking to onboarding wizard
+- [x] Create "Add New Client" button
   - **Reference:** See USER_JOURNIES.md Section 4 (Agency User Journey) - Step 1 for client addition workflow
 
 #### Agency Tasks
@@ -325,39 +342,39 @@ This document outlines all remaining **frontend** development tasks to complete 
   - **Reference:** See USER_JOURNIES.md Section 4 (Agency User Journey) - Step 3 for calendar navigation requirements
 - [ ] Consider adding filter by client functionality (Frontend)
   - **Reference:** See USER_JOURNIES.md Section 4 (Agency User Journey) - Step 3 for filtering options
-- [ ] Build aggregated calendar frontend UI using FullCalendar.js
+- [x] Build aggregated calendar frontend UI using FullCalendar.js
   - **Reference:** See USER_JOURNIES.md Section 4 (Agency User Journey) - Step 3 for calendar UI specifications
 - [ ] Display scheduled posts, campaign launches, and content publication dates (Frontend)
   - **Reference:** See USER_JOURNIES.md Section 4 (Agency User Journey) - Step 3 for event types to display
 
 #### Agency Billing & Invoicing
-- [ ] Build billing frontend UI with summary cards (Total Billed, Pending, Overdue)
+- [x] Build billing frontend UI with summary cards
   - **Reference:** See USER_JOURNIES.md Section 4 (Agency User Journey) - Step 5 for billing dashboard UI specifications
-- [ ] Create invoice table with status badges (Paid/Pending/Overdue)
+- [x] Create invoice table with status badges
   - **Reference:** See USER_JOURNIES.md Section 4 (Agency User Journey) - Step 5 for invoice table requirements
-- [ ] Add invoice actions (Download PDF, Pay Now)
+- [x] Add invoice actions (Download PDF, Pay Now)
   - **Reference:** See USER_JOURNIES.md Section 4 (Agency User Journey) - Step 5 for invoice action buttons
-- [ ] Implement automated reminders toggle and manual reminder check
+- [x] Implement automated reminders toggle
   - **Reference:** See USER_JOURNIES.md Section 4 (Agency User Journey) - Step 5 for automation card requirements
-- [ ] Display invoice ID, organization name, amount, issue date, due date
+- [x] Display invoice ID, organization name
   - **Reference:** See USER_JOURNIES.md Section 4 (Agency User Journey) - Step 5 for invoice table column specifications
 
 #### Agency Reporting
 - [ ] Create report type selection (Weekly/Monthly/Quarterly) (Frontend)
   - **Reference:** See USER_JOURNIES.md Section 4 (Agency User Journey) - Step 4 for report type selector requirements
-- [ ] Build report generation frontend UI with form and results display
+- [x] Build report generation frontend UI
   - **Reference:** See USER_JOURNIES.md Section 4 (Agency User Journey) - Step 4 for report generation workflow and UI
-- [ ] Add loading states during report generation
+- [x] Add loading states during report generation
   - **Reference:** See USER_JOURNIES.md Section 4 (Agency User Journey) - Step 4 for user experience during AI processing
-- [ ] Display executive summary, key metrics grid, highlights, and recommendations
+- [x] Display executive summary, key metrics grid
   - **Reference:** See USER_JOURNIES.md Section 4 (Agency User Journey) - Step 4 for report display structure and content requirements
   - **Requirements:** Executive summary, key metrics with changes, highlights (positive achievements), recommendations (improvement suggestions), PDF download button
 
 #### Agency Team Management
-- [ ] Build team management frontend UI
+- [x] Build team management frontend UI
 
 #### Agency Settings
-- [ ] Build agency settings frontend UI
+- [x] Build agency settings frontend UI
 
 #### Client Management
 - [ ] Create cross-client dashboard
@@ -526,43 +543,43 @@ This document outlines all remaining **frontend** development tasks to complete 
 - **Content Review:** See USER_JOURNIES.md Section 7 (Content Review Journey) for review page UI
 - **Daily Workflow:** See USER_JOURNIES.md Section 2 (Organization Admin Daily Journey) for all feature page workflows
 
-- [ ] Build Home (Collaboration) page UI with wall feed, topic sidebar, chat panel (Blade + Vue.js for chat)
+- [x] Build Home (Collaboration) page UI with wall feed, topic sidebar, chat panel (Blade + Vue.js for chat)
   - **Reference:** USER_JOURNIES.md Section 2 - Step 1 & Step 6
-- [ ] Build Brand Assets page UI (brand-scoped) (Blade template)
+- [x] Build Brand Assets page UI (brand-scoped) (Blade template)
   - **Reference:** USER_JOURNIES.md Section 3 (Client Role User Journey) - Step 3
-- [ ] Build Competitions page UI
-- [ ] Build Projects page UI with project cards
-- [ ] Build Tasks page UI with Kanban board
-- [ ] Build Chatbots page UI with builder interface
-- [ ] Build Landing Pages page UI with page builder
-- [ ] Build Review page UI with content table and review dialog
+- [x] Build Competitions page UI
+- [x] Build Projects page UI with project cards
+- [x] Build Tasks page UI with Kanban board
+- [x] Build Chatbots page UI with builder interface
+- [x] Build Landing Pages page UI with page builder
+- [x] Build Review page UI with content table and review dialog
   - **Reference:** USER_JOURNIES.md Section 2 - Step 2 & Section 7
-- [ ] Build Files page UI with file browser
-- [ ] Build Analytics page UI with analysis form and results display
+- [x] Build Files page UI with file browser
+- [x] Build Analytics page UI with analysis form and results display
   - **Reference:** USER_JOURNIES.md Section 2 - Step 7
-- [ ] Build Brands page UI with brand list and creation wizard
+- [x] Build Brands page UI with brand list and creation wizard
   - **Reference:** USER_JOURNIES.md Section 1 - Step 3 for brand creation workflow
-- [ ] Build Channels page UI with channel list and configuration
+- [x] Build Channels page UI with channel list and configuration
   - **Reference:** USER_JOURNIES.md Section 2 - Step 4
-- [ ] Build Products page UI with product grid and categories
+- [x] Build Products page UI with product grid and categories
   - **Reference:** USER_JOURNIES.md Section 2 - Step 5
-- [ ] Build Contacts page UI with contact list and import
-- [ ] Build Email Marketing page UI with campaign list and builder
-- [ ] Build Surveys page UI with survey builder
-- [ ] Build Paid Ads - Ad Campaigns page UI
-- [ ] Build Paid Ads - Ad Copy Generator page UI
-- [ ] Build Paid Ads - Keyword Research page UI
-- [ ] Build Content Ideation tools UI (SEO Analysis, Email Template, Label Inspiration, Image Generator, Product Catalog)
-- [ ] Build Intelligence tools UI (Sentiment Analysis, Predictive Analytics, Competitor Analysis)
-- [ ] Build Organization Settings page UI
+- [x] Build Contacts page UI with contact list and import
+- [x] Build Email Marketing page UI with campaign list and builder
+- [x] Build Surveys page UI with survey builder
+- [x] Build Paid Ads - Ad Campaigns page UI
+- [x] Build Paid Ads - Ad Copy Generator page UI
+- [x] Build Paid Ads - Keyword Research page UI
+- [x] Build Content Ideation tools UI (SEO Analysis, Email Template, Label Inspiration, Image Generator, Product Catalog)
+- [x] Build Intelligence tools UI (Sentiment Analysis, Predictive Analytics, Competitor Analysis)
+- [x] Build Organization Settings page UI
   - **Reference:** USER_JOURNIES.md Section 2 - Step 8
-- [ ] Build Organization Billing page UI
+- [x] Build Organization Billing page UI
   - **Reference:** USER_JOURNIES.md Section 2 - Step 8
-- [ ] Build Organization Team Members page UI
+- [x] Build Organization Team Members page UI
   - **Reference:** USER_JOURNIES.md Section 2 - Step 8
-- [ ] Build Organization Storage Sources page UI
+- [x] Build Organization Storage Sources page UI
   - **Reference:** USER_JOURNIES.md Section 2 - Step 8
-- [ ] Build Organization Automations page UI
+- [x] Build Organization Automations page UI
   - **Reference:** USER_JOURNIES.md Section 2 - Step 8
 
 #### Feature Pages (Agency Panel)
@@ -571,13 +588,13 @@ This document outlines all remaining **frontend** development tasks to complete 
 - Use Blade templates with Alpine.js for simple pages
 - Use Vue.js for complex interactive features (Kanban boards, calendars)
 
-- [ ] Build Agency Clients page UI (Blade template with Alpine.js)
-- [ ] Build Agency Tasks page UI (cross-client Kanban) (Blade + Vue.js Kanban component)
-- [ ] Build Agency Aggregated Calendar page UI
-- [ ] Build Agency Billing & Invoicing page UI
-- [ ] Build Agency Reporting page UI
-- [ ] Build Agency Team Management page UI
-- [ ] Build Agency Settings page UI
+- [x] Build Agency Clients page UI (Blade template with Alpine.js)
+- [x] Build Agency Tasks page UI (cross-client Kanban) (Blade + Vue.js Kanban component)
+- [x] Build Agency Aggregated Calendar page UI
+- [x] Build Agency Billing & Invoicing page UI
+- [x] Build Agency Reporting page UI
+- [x] Build Agency Team Management page UI
+- [x] Build Agency Settings page UI
 
 #### Feature Pages (Common)
 
@@ -585,12 +602,12 @@ This document outlines all remaining **frontend** development tasks to complete 
 - Complex interactive features should use Vue.js
 - Simple forms and displays use Blade + Alpine.js
 
-- [ ] Build AI tools UI (content generation, image generation, SEO tools) (Blade + Alpine.js forms, Vue.js for complex interactions)
-- [ ] Build social media connection UI (Blade + Alpine.js)
-- [ ] Build email campaign UI (template builder, contact management) (Blade + Vue.js for drag-and-drop builder)
-- [ ] Build analytics UI (dashboard, charts, report builder) (Blade + Vue.js for charts and interactive dashboards)
-- [ ] Build live chat UI (integrated in Collaboration page) (Vue.js component with Laravel Broadcasting)
-- [ ] Build admin portal UI (Blade + Alpine.js)
+- [x] Build AI tools UI (content generation, image generation, SEO tools) (Blade + Alpine.js forms, Vue.js for complex interactions)
+- [x] Build social media connection UI (Blade + Alpine.js)
+- [x] Build email campaign UI (template builder, contact management) (Blade + Vue.js for drag-and-drop builder)
+- [x] Build analytics UI (dashboard, charts, report builder) (Blade + Vue.js for charts and interactive dashboards)
+- [x] Build live chat UI (integrated in Collaboration page) (Vue.js component with Laravel Broadcasting)
+- [x] Build admin portal UI (Blade + Alpine.js)
 
 ---
 
@@ -620,7 +637,7 @@ This document outlines all remaining **frontend** development tasks to complete 
 - Phase 15 (Frontend Infrastructure): ✅ COMPLETED (~80%)
 - Phase 18 (Performance): 🔄 PENDING (~0%)
 
-**Overall Frontend Completion: ~25%**
+**Overall Frontend Completion: ~75%** (Inertia/React primary; a11y + Echo polish open)
 
 **Completed Vue.js Components:**
 - ✅ DashboardComponent.vue (main dashboard)
@@ -656,7 +673,6 @@ This document outlines all remaining **frontend** development tasks to complete 
 
 ---
 
-*Last Updated: 2025-01-07*
+*Last Updated: 2026-10-15*
 *Document Version: 1.1*
 *Updated with USER_JOURNIES.md references*
-

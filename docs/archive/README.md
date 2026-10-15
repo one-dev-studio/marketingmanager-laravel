@@ -1,6 +1,6 @@
 # Archived planning docs
 
-These files are **historical**. They were frozen on 19 Aug 2026 when remaining work was reconciled against the codebase. Feature ideas were pulled into [`../../TODO.md`](../../TODO.md) again on **20 Aug 2026** (press releases, customer reviews, report builder, brand name generator, and related archive items).
+These files are **historical phase checklists**. They were frozen on 19 Aug 2026, then feature work was tracked in [`../../TODO.md`](../../TODO.md). **October 2026:** `DEVELOPMENT_TODO.md`, `BACKEND_TODO.md`, `FRONTEND_TODO.md`, and `PROJECT_STATUS.md` were re-ticked against `staging` (Inertia/React, security PRs #76–#85, staging host, LinkedIn). See [`../PLAN-2026-10.md`](../PLAN-2026-10.md).
 
 **Do not use them as a todo list.** They contain stale checkboxes (onboarding/campaign wizard marked incomplete, PROJECT_STATUS listing AI/social/email as pending, Livewire references, localStorage persistence).
 
