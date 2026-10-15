@@ -196,6 +196,7 @@ Last reconciled with the codebase: **20 Aug 2026**.
 ### 3.3 Collaboration / chat
 
 - [x] Echo/Pusher wiring in `bootstrap.js`
+- [x] Echo/Pusher production env (`.env.example`, broadcast fallback, Inertia `realtime` share)
 - [x] Wall: pending reviews + activity from DB
 - [x] Notification preferences in org settings
 

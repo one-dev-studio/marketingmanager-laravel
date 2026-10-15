@@ -1,7 +1,9 @@
 <?php
 
+use App\Services\Broadcasting\BroadcastingConfiguration;
+
 return [
-    'default' => env('BROADCAST_DRIVER', 'log'),
+    'default' => (new BroadcastingConfiguration)->effectiveDriver(),
 
     'connections' => [
         'pusher' => [
@@ -36,4 +38,3 @@ return [
         ],
     ],
 ];
-

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Services\Agency\ClientPortalBrandingSharing;
+use App\Services\Broadcasting\BroadcastingConfiguration;
 use App\Services\Navigation\AdminShellContextBuilder;
 use App\Services\Navigation\AdminSidebarMenuBuilder;
 use App\Services\Navigation\AgencyShellContextBuilder;
@@ -68,6 +69,7 @@ class HandleInertiaRequests extends Middleware
             'adminSidebar' => fn () => app(AdminSidebarMenuBuilder::class)->buildForRequest($request),
             'adminShell' => fn () => app(AdminShellContextBuilder::class)->buildForRequest($request),
             'clientPortalBranding' => fn () => app(ClientPortalBrandingSharing::class)->forRequest($request),
+            'realtime' => fn () => app(BroadcastingConfiguration::class)->clientConfig(),
         ];
     }
 }

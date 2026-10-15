@@ -41,6 +41,7 @@ Verified against `staging` @ `8d74b62+`. **Active tracker:** [../../TODO.md](../
 | Security PRs #76–#85 | **Merged** on staging (webhooks, CSRF, HSTS, composer, CSP/HTML, npm, admin payments UI) |
 | Staging host | **https://marketing-manager.staging.oneinternetmedia.com** (+ subdirectory runbook) |
 | LinkedIn publish + webhook sig | **Done** (`LinkedInPublishingService`, `SocialWebhookVerificationGate::assertLinkedInWebhook`) |
+| Echo/Pusher production wiring | **Done** — env documented; safe broadcast driver fallback + Inertia `realtime` share |
 | Builder previews (medium) | **Open** — `dangerouslySetInnerHTML` / `v-html` in authenticated builders |
 
 ## Current Status
