@@ -16,6 +16,7 @@ use App\Policies\ReviewPolicy;
 use App\Policies\TaskTemplatePolicy;
 use App\Repositories\Contracts\CampaignRepositoryInterface;
 use App\Repositories\Eloquent\CampaignRepository;
+use App\Services\Broadcasting\BroadcastingConfiguration;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -38,6 +39,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function register(): void
     {
+        $this->app->singleton(BroadcastingConfiguration::class);
+
         $this->app->bind(CampaignRepositoryInterface::class, CampaignRepository::class);
     }
 
