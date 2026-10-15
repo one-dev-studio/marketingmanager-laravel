@@ -1,3 +1,4 @@
+import { ShellMobileSidebar } from '@/components/layout/ShellMobileSidebar';
 import { SidebarIcon } from '@/components/layout/SidebarIcon';
 import type { SidebarMenuItem, SidebarNavigation } from '@/types/sidebar';
 import { Link } from '@inertiajs/react';
@@ -6,6 +7,8 @@ import { useState, type ReactElement } from 'react';
 
 interface AppSidebarProps {
     navigation: SidebarNavigation;
+    mobileOpen: boolean;
+    onMobileClose: () => void;
 }
 
 function badgeClasses(variant: string): string {
@@ -16,7 +19,13 @@ function badgeClasses(variant: string): string {
     return 'bg-gray-200 text-gray-700';
 }
 
-function SidebarLink({ item }: { item: SidebarMenuItem & { type: 'link' } }): ReactElement {
+function SidebarLink({
+    item,
+    onNavigate,
+}: {
+    item: SidebarMenuItem & { type: 'link' };
+    onNavigate?: () => void;
+}): ReactElement {
     const activeClasses = item.isActive
         ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-600'
         : 'text-gray-700 hover:bg-gray-100';
@@ -26,6 +35,7 @@ function SidebarLink({ item }: { item: SidebarMenuItem & { type: 'link' } }): Re
             href={item.href}
             className={`flex items-center rounded-lg px-3 py-2 transition-colors ${activeClasses}`}
             aria-current={item.isActive ? 'page' : undefined}
+            onClick={onNavigate}
         >
             {item.icon ? (
                 <span className="mr-3 flex-shrink-0">
@@ -131,17 +141,21 @@ function BrandSwitcher({ navigation }: { navigation: SidebarNavigation }): React
     );
 }
 
-export function AppSidebar({ navigation }: AppSidebarProps): ReactElement {
-    const [collapsed, setCollapsed] = useState(false);
-    const widthClass = collapsed ? 'w-16' : 'w-64';
-
+function AppSidebarPanel({
+    navigation,
+    collapsed,
+    onCollapsedToggle,
+    onNavigate,
+}: {
+    navigation: SidebarNavigation;
+    collapsed: boolean;
+    onCollapsedToggle?: () => void;
+    onNavigate?: () => void;
+}): ReactElement {
     return (
-        <aside
-            className={`fixed left-0 top-0 z-40 hidden h-screen bg-white shadow-lg transition-all duration-300 ease-in-out md:block ${widthClass}`}
-        >
-            <div className="flex h-full flex-col overflow-y-auto p-4">
+        <div className="flex h-full flex-col overflow-y-auto p-4">
                 <div className="mb-4">
-                    <Link href={navigation.dashboardHref} className="flex items-center space-x-2">
+                    <Link href={navigation.dashboardHref} className="flex items-center space-x-2" onClick={onNavigate}>
                         <svg className="h-8 w-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
                                 strokeLinecap="round"
@@ -160,7 +174,13 @@ export function AppSidebar({ navigation }: AppSidebarProps): ReactElement {
                 <nav className="flex-1 space-y-1">
                     {navigation.items.map((item) => {
                         if (item.type === 'link') {
-                            return <SidebarLink key={`${item.label}-${item.href}`} item={item} />;
+                            return (
+                                <SidebarLink
+                                    key={`${item.label}-${item.href}`}
+                                    item={item}
+                                    onNavigate={onNavigate}
+                                />
+                            );
                         }
 
                         return <SidebarGroup key={item.label} item={item} />;
@@ -168,29 +188,53 @@ export function AppSidebar({ navigation }: AppSidebarProps): ReactElement {
                 </nav>
 
                 <div className="mt-4 border-t border-gray-200 pt-4">
-                    <button
-                        type="button"
-                        onClick={() => setCollapsed((value) => !value)}
-                        className="mb-2 rounded-lg p-2 text-gray-600 hover:bg-gray-100"
-                        aria-label="Toggle sidebar"
-                    >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-                            />
-                        </svg>
-                    </button>
+                    {onCollapsedToggle ? (
+                        <button
+                            type="button"
+                            onClick={onCollapsedToggle}
+                            className="mb-2 rounded-lg p-2 text-gray-600 hover:bg-gray-100"
+                            aria-label="Toggle sidebar"
+                        >
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                                />
+                            </svg>
+                        </button>
+                    ) : null}
                     <Link
                         href={route('profile.show')}
                         className="block truncate text-sm text-primary-600 hover:text-primary-800"
+                        onClick={onNavigate}
                     >
                         Profile
                     </Link>
                 </div>
-            </div>
-        </aside>
+        </div>
+    );
+}
+
+export function AppSidebar({ navigation, mobileOpen, onMobileClose }: AppSidebarProps): ReactElement {
+    const [collapsed, setCollapsed] = useState(false);
+    const widthClass = collapsed ? 'w-16' : 'w-64';
+
+    return (
+        <>
+            <aside
+                className={`fixed left-0 top-0 z-40 hidden h-screen bg-white shadow-lg transition-all duration-300 ease-in-out md:block ${widthClass}`}
+            >
+                <AppSidebarPanel
+                    navigation={navigation}
+                    collapsed={collapsed}
+                    onCollapsedToggle={() => setCollapsed((value) => !value)}
+                />
+            </aside>
+            <ShellMobileSidebar open={mobileOpen} onClose={onMobileClose} navLabel="Main navigation">
+                <AppSidebarPanel navigation={navigation} collapsed={false} onNavigate={onMobileClose} />
+            </ShellMobileSidebar>
+        </>
     );
 }
