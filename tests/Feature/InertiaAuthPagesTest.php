@@ -19,14 +19,17 @@ class InertiaAuthPagesTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Auth/Login')
-                ->where('canResetPassword', true));
+                ->where('canResetPassword', true)
+                ->where('googleAuthEnabled', false));
     }
 
     public function test_register_page_renders_inertia_component(): void
     {
         $this->get(route('register'))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->component('Auth/Register'));
+            ->assertInertia(fn ($page) => $page
+                ->component('Auth/Register')
+                ->where('googleAuthEnabled', false));
     }
 
     public function test_forgot_password_page_renders_inertia_component(): void
