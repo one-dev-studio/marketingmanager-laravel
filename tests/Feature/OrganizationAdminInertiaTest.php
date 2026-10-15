@@ -38,6 +38,8 @@ class OrganizationAdminInertiaTest extends TestCase
             ->component('Organization/Billing/Index')
             ->has('plans')
             ->has('invoices')
+            ->has('payments')
+            ->has('paymentMethod')
             ->has('sidebar')
             ->has('appShell'));
     }
