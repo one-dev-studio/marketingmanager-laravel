@@ -40,4 +40,35 @@ class SecurityHeadersMiddlewareTest extends TestCase
         $this->assertStringNotContainsString('unsafe-eval', explode(';', explode('script-src', $csp)[1])[0]);
         $this->assertMatchesRegularExpression("/'nonce-[^']+'/", $csp);
     }
+
+    public function test_csp_omits_unsafe_inline_for_styles_outside_local(): void
+    {
+        $this->app['env'] = 'staging';
+
+        $middleware = new SecurityHeaders;
+        $request = Request::create('https://example.com/login');
+
+        $response = $middleware->handle($request, fn () => response('ok'));
+
+        $csp = (string) $response->headers->get('Content-Security-Policy');
+        $styleSegment = explode(';', explode('style-src', $csp)[1])[0];
+
+        $this->assertStringNotContainsString('unsafe-inline', $styleSegment);
+        $this->assertMatchesRegularExpression("/'nonce-[^']+'/", $styleSegment);
+    }
+
+    public function test_csp_allows_unsafe_inline_styles_in_local_environment(): void
+    {
+        $this->app['env'] = 'local';
+
+        $middleware = new SecurityHeaders;
+        $request = Request::create('http://localhost/login');
+
+        $response = $middleware->handle($request, fn () => response('ok'));
+
+        $csp = (string) $response->headers->get('Content-Security-Policy');
+        $styleSegment = explode(';', explode('style-src', $csp)[1])[0];
+
+        $this->assertStringContainsString('unsafe-inline', $styleSegment);
+    }
 }
