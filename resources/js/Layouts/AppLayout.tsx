@@ -1,6 +1,7 @@
 import { AppHeader } from '@/components/layout/AppHeader';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { CommandAssistantFab } from '@/components/layout/CommandAssistantFab';
+import { ShellSkipLink } from '@/components/layout/ShellSkipLink';
 import { FlashStatus } from '@/components/FlashStatus';
 import { ClientPortalBrandingStrip } from '@/Layouts/ClientPortalLayout';
 import type { AppShellContext } from '@/types/appShell';
@@ -43,6 +44,7 @@ export default function AppLayout({ title, children }: AppLayoutProps) {
         <>
             <Head title={title} />
             <div className="min-h-screen bg-gray-50">
+                <ShellSkipLink />
                 <AppSidebar
                     navigation={sidebar}
                     mobileOpen={mobileNavOpen}
@@ -53,8 +55,9 @@ export default function AppLayout({ title, children }: AppLayoutProps) {
                         title={title}
                         shell={appShell}
                         onMobileMenuToggle={() => setMobileNavOpen((open) => !open)}
+                        mobileNavOpen={mobileNavOpen}
                     />
-                    <main className="flex-1 p-4 md:p-6">
+                    <main id="main-content" className="flex-1 p-4 md:p-6" tabIndex={-1}>
                         <FlashStatus />
                         {clientPortalBranding?.enabled ? (
                             <ClientPortalBrandingStrip branding={clientPortalBranding} />

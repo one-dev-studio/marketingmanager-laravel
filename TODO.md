@@ -310,7 +310,7 @@ Last reconciled with the codebase: **20 Aug 2026**.
 - [x] SEO sitemap (`/sitemap.xml`); image enhance still generate-only
 - [x] Public contact persistence, cookie banner, sitemap
 - [x] Menu count badges (review + mentions)
-- [x] Accessibility: sidebar toggle `aria-label`, locale menu ARIA
+- [x] Accessibility: sidebar toggle `aria-label`, locale/org menus ARIA + Escape, skip link, `main-content` target
 
 ---
 

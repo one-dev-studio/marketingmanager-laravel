@@ -1,16 +1,19 @@
+import { useMenuDisclosure } from '@/hooks/useMenuDisclosure';
 import type { AppShellContext } from '@/types/appShell';
 import { Link } from '@inertiajs/react';
-import { useState, type ReactElement } from 'react';
+import type { ReactElement } from 'react';
 
 export function OrganizationSwitcher({ shell }: { shell: AppShellContext }): ReactElement {
-    const [open, setOpen] = useState(false);
+    const { open, toggle, close, buttonProps, menuId } = useMenuDisclosure();
 
     return (
         <div className="relative">
             <button
                 type="button"
-                onClick={() => setOpen((value) => !value)}
-                className="flex items-center space-x-2 rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100"
+                onClick={toggle}
+                className="flex items-center space-x-2 rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                aria-label="Switch organization"
+                {...buttonProps}
             >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -26,7 +29,11 @@ export function OrganizationSwitcher({ shell }: { shell: AppShellContext }): Rea
                 </svg>
             </button>
             {open ? (
-                <div className="absolute right-0 z-50 mt-2 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                <div
+                    id={menuId}
+                    role="menu"
+                    className="absolute right-0 z-50 mt-2 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+                >
                     {shell.organizations.map((org) => (
                         <Link
                             key={org.id}
@@ -36,7 +43,8 @@ export function OrganizationSwitcher({ shell }: { shell: AppShellContext }): Rea
                                     ? 'bg-primary-50 text-primary-700'
                                     : 'text-gray-700'
                             }`}
-                            onClick={() => setOpen(false)}
+                            role="menuitem"
+                            onClick={close}
                         >
                             {org.name}
                         </Link>

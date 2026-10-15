@@ -1,25 +1,28 @@
 import { LocaleSwitcher } from '@/components/layout/LocaleSwitcher';
 import { OrganizationSwitcher } from '@/components/layout/OrganizationSwitcher';
+import { useMenuDisclosure } from '@/hooks/useMenuDisclosure';
 import type { AppShellContext } from '@/types/appShell';
 import { Link } from '@inertiajs/react';
-import { useState, type ReactElement } from 'react';
+import type { ReactElement } from 'react';
 
 interface AppHeaderProps {
     title: string;
     shell: AppShellContext;
     onMobileMenuToggle?: () => void;
+    mobileNavOpen?: boolean;
 }
 
 function NotificationsMenu({ count }: { count: number }): ReactElement {
-    const [open, setOpen] = useState(false);
+    const { open, toggle, buttonProps, menuId } = useMenuDisclosure();
 
     return (
         <div className="relative">
             <button
                 type="button"
-                onClick={() => setOpen((value) => !value)}
-                className="relative rounded-lg p-2 text-gray-600 hover:bg-gray-100"
+                onClick={toggle}
+                className="relative rounded-lg p-2 text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 aria-label="Notifications"
+                {...buttonProps}
             >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -36,7 +39,11 @@ function NotificationsMenu({ count }: { count: number }): ReactElement {
                 ) : null}
             </button>
             {open ? (
-                <div className="absolute right-0 z-50 mt-2 max-h-96 w-80 overflow-y-auto rounded-lg border border-gray-200 bg-white py-2 shadow-lg">
+                <div
+                    id={menuId}
+                    role="menu"
+                    className="absolute right-0 z-50 mt-2 max-h-96 w-80 overflow-y-auto rounded-lg border border-gray-200 bg-white py-2 shadow-lg"
+                >
                     <div className="border-b border-gray-200 px-4 py-2">
                         <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
                     </div>
@@ -67,7 +74,7 @@ function CalendarShortcut({ href }: { href: string }): ReactElement {
     );
 }
 
-export function AppHeader({ title, shell, onMobileMenuToggle }: AppHeaderProps): ReactElement {
+export function AppHeader({ title, shell, onMobileMenuToggle, mobileNavOpen }: AppHeaderProps): ReactElement {
     return (
         <header className="sticky top-0 z-20 border-b border-gray-200 bg-white">
             <div className="flex items-center justify-between px-4 py-4 md:px-6">
@@ -75,8 +82,10 @@ export function AppHeader({ title, shell, onMobileMenuToggle }: AppHeaderProps):
                     <button
                         type="button"
                         onClick={onMobileMenuToggle}
-                        className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 md:hidden"
+                        className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 md:hidden"
                         aria-label="Toggle menu"
+                        aria-expanded={mobileNavOpen ?? false}
+                        aria-controls="main-navigation"
                     >
                         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />

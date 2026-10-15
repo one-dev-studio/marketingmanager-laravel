@@ -1,6 +1,7 @@
 import { AgencyHeader } from '@/components/layout/AgencyHeader';
 import { AgencySidebar } from '@/components/layout/AgencySidebar';
 import { FlashStatus } from '@/components/FlashStatus';
+import { ShellSkipLink } from '@/components/layout/ShellSkipLink';
 import type { AgencyShellContext, AgencySidebarNavigation } from '@/types/agencyShell';
 import { Head, usePage } from '@inertiajs/react';
 import { useState, type ReactNode } from 'react';
@@ -36,6 +37,7 @@ export default function AgencyLayout({ title, children }: AgencyLayoutProps) {
         <>
             <Head title={title} />
             <div className="min-h-screen bg-gray-50">
+                <ShellSkipLink />
                 <AgencySidebar
                     navigation={agencySidebar}
                     exitAgencyHref={agencyShell.exitAgencyHref}
@@ -47,8 +49,9 @@ export default function AgencyLayout({ title, children }: AgencyLayoutProps) {
                         title={title}
                         shell={agencyShell}
                         onMobileMenuToggle={() => setMobileNavOpen((open) => !open)}
+                        mobileNavOpen={mobileNavOpen}
                     />
-                    <main className="flex-1 p-4 md:p-6">
+                    <main id="main-content" className="flex-1 p-4 md:p-6" tabIndex={-1}>
                         <FlashStatus />
                         {children}
                     </main>

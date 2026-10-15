@@ -232,7 +232,12 @@ export function AppSidebar({ navigation, mobileOpen, onMobileClose }: AppSidebar
                     onCollapsedToggle={() => setCollapsed((value) => !value)}
                 />
             </aside>
-            <ShellMobileSidebar open={mobileOpen} onClose={onMobileClose} navLabel="Main navigation">
+            <ShellMobileSidebar
+                open={mobileOpen}
+                onClose={onMobileClose}
+                navLabel="Main navigation"
+                panelId="main-navigation"
+            >
                 <AppSidebarPanel navigation={navigation} collapsed={false} onNavigate={onMobileClose} />
             </ShellMobileSidebar>
         </>
