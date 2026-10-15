@@ -1,3 +1,4 @@
+import { ShellMobileSidebar } from '@/components/layout/ShellMobileSidebar';
 import { SidebarIcon } from '@/components/layout/SidebarIcon';
 import type { AgencySidebarNavigation } from '@/types/agencyShell';
 import { Link } from '@inertiajs/react';
@@ -6,11 +7,21 @@ import type { ReactElement } from 'react';
 interface AgencySidebarProps {
     navigation: AgencySidebarNavigation;
     exitAgencyHref: string;
+    mobileOpen: boolean;
+    onMobileClose: () => void;
 }
 
-export function AgencySidebar({ navigation, exitAgencyHref }: AgencySidebarProps): ReactElement {
+function AgencySidebarNav({
+    navigation,
+    exitAgencyHref,
+    onNavigate,
+}: {
+    navigation: AgencySidebarNavigation;
+    exitAgencyHref: string;
+    onNavigate?: () => void;
+}): ReactElement {
     return (
-        <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-gray-200 bg-white md:flex">
+        <>
             <div className="flex h-16 items-center border-b border-gray-200 px-4">
                 <svg className="h-6 w-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -34,6 +45,7 @@ export function AgencySidebar({ navigation, exitAgencyHref }: AgencySidebarProps
                             href={item.href}
                             className={`flex items-center rounded-lg px-3 py-2 transition-colors ${activeClasses}`}
                             aria-current={item.isActive ? 'page' : undefined}
+                            onClick={onNavigate}
                         >
                             {item.icon ? (
                                 <span className="mr-3 flex-shrink-0">
@@ -49,10 +61,33 @@ export function AgencySidebar({ navigation, exitAgencyHref }: AgencySidebarProps
                 <Link
                     href={exitAgencyHref}
                     className="block rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                    onClick={onNavigate}
                 >
                     Exit Agency View
                 </Link>
             </div>
-        </aside>
+        </>
+    );
+}
+
+export function AgencySidebar({
+    navigation,
+    exitAgencyHref,
+    mobileOpen,
+    onMobileClose,
+}: AgencySidebarProps): ReactElement {
+    return (
+        <>
+            <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-gray-200 bg-white md:flex">
+                <AgencySidebarNav navigation={navigation} exitAgencyHref={exitAgencyHref} />
+            </aside>
+            <ShellMobileSidebar open={mobileOpen} onClose={onMobileClose} navLabel="Agency navigation">
+                <AgencySidebarNav
+                    navigation={navigation}
+                    exitAgencyHref={exitAgencyHref}
+                    onNavigate={onMobileClose}
+                />
+            </ShellMobileSidebar>
+        </>
     );
 }

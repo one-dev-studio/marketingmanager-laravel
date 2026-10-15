@@ -7,7 +7,7 @@ import type { AppShellContext } from '@/types/appShell';
 import type { ClientPortalBranding } from '@/types/client-portal';
 import type { SidebarNavigation } from '@/types/sidebar';
 import { Head, usePage } from '@inertiajs/react';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 
 interface AppLayoutProps {
     title: string;
@@ -23,6 +23,7 @@ interface SharedPageProps {
 
 export default function AppLayout({ title, children }: AppLayoutProps) {
     const { sidebar, appShell, clientPortalBranding } = usePage<SharedPageProps>().props;
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
     if (!sidebar || !appShell) {
         return (
@@ -42,9 +43,17 @@ export default function AppLayout({ title, children }: AppLayoutProps) {
         <>
             <Head title={title} />
             <div className="min-h-screen bg-gray-50">
-                <AppSidebar navigation={sidebar} />
+                <AppSidebar
+                    navigation={sidebar}
+                    mobileOpen={mobileNavOpen}
+                    onMobileClose={() => setMobileNavOpen(false)}
+                />
                 <div className={`flex min-h-screen min-w-0 flex-1 flex-col ${insetMargin}`}>
-                    <AppHeader title={title} shell={appShell} />
+                    <AppHeader
+                        title={title}
+                        shell={appShell}
+                        onMobileMenuToggle={() => setMobileNavOpen((open) => !open)}
+                    />
                     <main className="flex-1 p-4 md:p-6">
                         <FlashStatus />
                         {clientPortalBranding?.enabled ? (
