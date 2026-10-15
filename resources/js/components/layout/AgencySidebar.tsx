@@ -81,7 +81,12 @@ export function AgencySidebar({
             <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-gray-200 bg-white md:flex">
                 <AgencySidebarNav navigation={navigation} exitAgencyHref={exitAgencyHref} />
             </aside>
-            <ShellMobileSidebar open={mobileOpen} onClose={onMobileClose} navLabel="Agency navigation">
+            <ShellMobileSidebar
+                open={mobileOpen}
+                onClose={onMobileClose}
+                navLabel="Agency navigation"
+                panelId="agency-navigation"
+            >
                 <AgencySidebarNav
                     navigation={navigation}
                     exitAgencyHref={exitAgencyHref}

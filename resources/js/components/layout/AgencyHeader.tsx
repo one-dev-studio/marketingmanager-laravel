@@ -6,9 +6,10 @@ interface AgencyHeaderProps {
     title: string;
     shell: AgencyShellContext;
     onMobileMenuToggle?: () => void;
+    mobileNavOpen?: boolean;
 }
 
-export function AgencyHeader({ title, shell, onMobileMenuToggle }: AgencyHeaderProps): ReactElement {
+export function AgencyHeader({ title, shell, onMobileMenuToggle, mobileNavOpen }: AgencyHeaderProps): ReactElement {
     return (
         <header className="sticky top-0 z-20 border-b border-gray-200 bg-white">
             <div className="flex items-center justify-between px-4 py-4 md:px-6">
@@ -16,8 +17,10 @@ export function AgencyHeader({ title, shell, onMobileMenuToggle }: AgencyHeaderP
                     <button
                         type="button"
                         onClick={onMobileMenuToggle}
-                        className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 md:hidden"
+                        className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 md:hidden"
                         aria-label="Toggle menu"
+                        aria-expanded={mobileNavOpen ?? false}
+                        aria-controls="agency-navigation"
                     >
                         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />

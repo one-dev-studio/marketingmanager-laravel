@@ -7,6 +7,8 @@ interface ShellMobileSidebarProps {
     children: ReactNode;
     /** Accessible name for the navigation region */
     navLabel: string;
+    /** DOM id referenced by the header menu button (`aria-controls`) */
+    panelId: string;
 }
 
 /**
@@ -17,6 +19,7 @@ export function ShellMobileSidebar({
     onClose,
     children,
     navLabel,
+    panelId,
 }: ShellMobileSidebarProps): ReactElement | null {
     useEffect(() => {
         if (!open) {
@@ -49,6 +52,7 @@ export function ShellMobileSidebar({
                 aria-label="Close navigation menu"
             />
             <aside
+                id={panelId}
                 className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-200 bg-white shadow-xl md:hidden"
                 aria-label={navLabel}
             >
