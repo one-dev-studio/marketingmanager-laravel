@@ -1,3 +1,4 @@
+import { BuilderHtmlPreview } from '@/components/builders/BuilderHtmlPreview';
 import type { LandingPageBlock, LandingPageBlockType, LandingPageBuilderData } from '@/types/landing-pages';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
@@ -136,10 +137,9 @@ export function LandingPageBuilderPanel({ organizationId, page }: LandingPageBui
                     {saveMessage ? <span className="text-sm text-gray-600">{saveMessage}</span> : null}
                 </div>
             </div>
-            <div
-                className="rounded-lg border border-gray-200 bg-white p-4 prose max-w-none"
-                dangerouslySetInnerHTML={{ __html: previewHtml }}
-            />
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <BuilderHtmlPreview html={previewHtml} className="prose max-w-none" />
+            </div>
         </div>
     );
 }
