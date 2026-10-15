@@ -1,0 +1,3 @@
+{
+  "install": "cp -n .env.example .env && composer install --no-interaction && php artisan key:generate --force && npm ci"
+}
