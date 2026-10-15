@@ -4,10 +4,14 @@ namespace App\Http\Controllers\Organization;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Organization\CreateSubscriptionRequest;
+use App\Http\Requests\Organization\PayInvoiceRequest;
 use App\Http\Requests\Organization\UpgradeSubscriptionRequest;
+use App\Models\Invoice;
+use App\Models\Organization;
 use App\Models\SubscriptionPlan;
 use App\Services\Billing\PaymentGatewayService;
 use App\Services\Organization\BillingService;
+use App\Services\PdfService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,7 +20,8 @@ class BillingController extends Controller
 {
     public function __construct(
         private BillingService $billingService,
-        private PaymentGatewayService $paymentGatewayService
+        private PaymentGatewayService $paymentGatewayService,
+        private PdfService $pdfService,
     ) {}
 
     public function index(Request $request, string $organizationId): Response
@@ -152,6 +157,49 @@ class BillingController extends Controller
             'success' => true,
             'data' => $this->billingService->getInvoices($organization, (int) $request->get('limit', 20)),
         ]);
+    }
+
+    public function downloadInvoice(Request $request, string $organizationId, Invoice $invoice)
+    {
+        $organization = $this->resolveOrganization($request, $organizationId);
+        $this->authorize('update', $organization);
+        $this->ensureInvoiceBelongsToOrganization($invoice, $organization);
+
+        return $this->pdfService->downloadInvoicePdf($invoice);
+    }
+
+    public function payInvoice(PayInvoiceRequest $request, string $organizationId, Invoice $invoice)
+    {
+        $organization = $this->resolveOrganization($request, $organizationId);
+        $this->authorize('update', $organization);
+        $this->ensureInvoiceBelongsToOrganization($invoice, $organization);
+
+        if ($invoice->status === 'paid') {
+            if ($this->wantsJson($request)) {
+                return response()->json(['success' => false, 'message' => 'Invoice is already paid.'], 422);
+            }
+
+            return back()->with('error', 'Invoice is already paid.');
+        }
+
+        $this->billingService->markInvoiceAsPaid(
+            $invoice,
+            $request->string('payment_id')->toString(),
+            $request->string('payment_method')->toString(),
+        );
+
+        if ($this->wantsJson($request)) {
+            return response()->json(['success' => true, 'message' => 'Invoice marked as paid.']);
+        }
+
+        return back()->with('success', 'Invoice marked as paid.');
+    }
+
+    private function ensureInvoiceBelongsToOrganization(Invoice $invoice, Organization $organization): void
+    {
+        if ((int) $invoice->organization_id !== (int) $organization->id) {
+            abort(404);
+        }
     }
 
     public function getUsageStats(Request $request, string $organizationId)
