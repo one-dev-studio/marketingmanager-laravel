@@ -13,6 +13,7 @@ Verified against `staging` @ `8d74b62+`. **Active tracker:** [../../TODO.md](../
 | Topic | Status |
 |-------|--------|
 | Inertia + React customer/agency/admin UI | **Done** (110+ `resources/js/Pages/*`; tests in `tests/Feature/*Inertia*`) |
+| Legacy Blade app shell + Vue builder islands retired | **Done** (`InertiaCutoverLegacyCleanupTest`; Vite → `inertia/app.tsx` only) |
 | Admin on Inertia | **Done** (`AdminPortalInertiaTest`, payment webhook settings UI) |
 | Security PRs #76–#85 | **Merged** on staging (webhooks, CSRF, HSTS, composer, CSP/HTML, npm, admin payments UI) |
 | Staging host | **https://marketing-manager.staging.oneinternetmedia.com** (+ subdirectory runbook) |

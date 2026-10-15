@@ -10,7 +10,7 @@
 |-------|------------|
 | Backend | **Laravel 13**, PHP **8.3+** (lockfile may require 8.4 for full `phpunit` on Symfony 8.1) |
 | Customer / agency / admin UI | **Inertia.js 3 + React 19 + TypeScript** (`resources/js/Pages/*`, 110+ screens) |
-| Legacy / embedded | Blade layouts, Alpine.js, some Vue builder panels (email/landing) |
+| Legacy / embedded | Public marketing Blade, emails/PDFs, landing previews only (Inertia cutover complete) |
 | Styling | Tailwind CSS 4, Vite 8 |
 | Auth / RBAC | Sanctum, Spatie Permission, 2FA |
 | Queues / cache | Redis |
