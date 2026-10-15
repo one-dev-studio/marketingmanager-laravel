@@ -30,7 +30,11 @@ class SecurityHeaders
             $scriptSrc .= " 'unsafe-eval'";
         }
 
-        $styleSrc = trim("'self' {$nonceDirective} 'unsafe-inline' https://fonts.googleapis.com");
+        $styleSrc = trim("'self' {$nonceDirective} https://fonts.googleapis.com");
+        if (app()->environment('local')) {
+            // Vite dev / Tailwind HMR may inject inline styles locally only.
+            $styleSrc .= " 'unsafe-inline'";
+        }
 
         $csp = "default-src 'self'; script-src {$scriptSrc}; style-src {$styleSrc}; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.pusher.com wss://ws.pusher.com".(app()->environment('local') ? ' ws://localhost:* http://localhost:*' : '')."; frame-ancestors 'none';";
 
