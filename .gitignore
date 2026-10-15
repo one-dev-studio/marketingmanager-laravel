@@ -16,5 +16,8 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+/.cursor/*
+!/.cursor/CLOUD.md
+!/.cursor/environment.json
 
 
