@@ -1,6 +1,6 @@
 # MarketPulse
 
-AI-powered marketing automation (Laravel 12+/13, PHP 8.3, Blade + Vue 3 + Alpine + Tailwind).
+AI-powered marketing automation (Laravel 12+/13, PHP 8.3+, Inertia.js + React + TypeScript, Tailwind).
 
 ## Requirements
 
@@ -21,6 +21,16 @@ php artisan serve
 ```
 
 Health check: `GET /up`
+
+## Frontend (Vite)
+
+| Entry | Purpose |
+| --- | --- |
+| `resources/js/inertia/app.tsx` | Authenticated customer, agency, admin, and auth UI (Inertia + React) |
+| `resources/css/app.css` | Tailwind for Inertia shell |
+| `resources/css/public-marketing.css` | Marketing site (`resources/views/public/*`) |
+
+Legacy Blade app shells and Vue builder islands were removed after the Inertia cutover; public pages, emails, PDFs, and landing-page previews remain Blade.
 
 ## Deploy
 

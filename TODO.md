@@ -295,7 +295,7 @@ Last reconciled with the codebase: **20 Aug 2026**.
 - [x] Sentry config stub; Telescope install noted in README
 - [x] API inventory via `php artisan route:list` (Scribe not installed)
 - [x] User + deploy notes in README
-- [x] Vue builders split as extra Vite entries
+- [x] Vue builders split as extra Vite entries (superseded: React builder panels; legacy Vue entries removed)
 
 ---
 
