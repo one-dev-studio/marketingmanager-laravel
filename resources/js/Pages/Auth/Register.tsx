@@ -2,12 +2,18 @@ import { InputError } from '@/components/InputError';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { AuthDivider } from '@/components/AuthDivider';
+import { GoogleSignInButton } from '@/components/GoogleSignInButton';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Link, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 import { route } from 'ziggy-js';
 
-export default function Register() {
+export interface RegisterProps {
+    googleAuthEnabled: boolean;
+}
+
+export default function Register({ googleAuthEnabled }: RegisterProps) {
     const form = useForm({
         name: '',
         email: '',
@@ -22,6 +28,12 @@ export default function Register() {
 
     return (
         <GuestLayout title="Create Account" subtitle="Start your free trial">
+            {googleAuthEnabled ? (
+                <>
+                    <GoogleSignInButton />
+                    <AuthDivider />
+                </>
+            ) : null}
             <form onSubmit={submit} className="space-y-5">
                 <div>
                     <Label htmlFor="name">Name</Label>

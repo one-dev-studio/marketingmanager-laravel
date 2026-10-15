@@ -2,6 +2,8 @@ import { InputError } from '@/components/InputError';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { AuthDivider } from '@/components/AuthDivider';
+import { GoogleSignInButton } from '@/components/GoogleSignInButton';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Link, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
@@ -9,9 +11,10 @@ import { route } from 'ziggy-js';
 
 export interface LoginProps {
     canResetPassword: boolean;
+    googleAuthEnabled: boolean;
 }
 
-export default function Login({ canResetPassword }: LoginProps) {
+export default function Login({ canResetPassword, googleAuthEnabled }: LoginProps) {
     const form = useForm({
         email: '',
         password: '',
@@ -25,6 +28,12 @@ export default function Login({ canResetPassword }: LoginProps) {
 
     return (
         <GuestLayout title="Sign In" subtitle="Sign in to your account">
+            {googleAuthEnabled ? (
+                <>
+                    <GoogleSignInButton />
+                    <AuthDivider />
+                </>
+            ) : null}
             <form onSubmit={submit} className="space-y-5">
                 <div>
                     <Label htmlFor="email">Email</Label>
