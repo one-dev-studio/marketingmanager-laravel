@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Models\ContentApproval;
+use App\Models\PaymentWebhookSetting;
 use App\Models\ProjectTemplate;
 use App\Models\ScheduledPost;
 use App\Models\TaskTemplate;
 use App\Models\User;
+use App\Policies\AdminPaymentWebhookSettingsPolicy;
 use App\Policies\AdminUserPolicy;
 use App\Policies\ContentPolicy;
 use App\Policies\ProjectTemplatePolicy;
@@ -31,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
         TaskTemplate::class => TaskTemplatePolicy::class,
         ProjectTemplate::class => ProjectTemplatePolicy::class,
         User::class => AdminUserPolicy::class,
+        PaymentWebhookSetting::class => AdminPaymentWebhookSettingsPolicy::class,
         ScheduledPost::class => ContentPolicy::class,
     ];
 

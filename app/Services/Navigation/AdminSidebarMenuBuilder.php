@@ -49,8 +49,22 @@ class AdminSidebarMenuBuilder
             $this->link('Billing', route('admin.billing.index'), 'billing', $request->routeIs('admin.billing.*')),
             $this->link('Agency Team', route('admin.team.index'), 'contacts', $request->routeIs('admin.team.*')),
             $this->link('System Logs', route('admin.logs.index'), 'files', $request->routeIs('admin.logs.*')),
-            $this->link('Platform Settings', route('admin.settings.index'), 'settings', $request->routeIs('admin.settings.*')),
+            $this->link(
+                'Platform Settings',
+                route('admin.settings.index'),
+                'settings',
+                $request->routeIs('admin.settings.*') && ! $request->routeIs('admin.settings.payments.*')
+            ),
         ];
+
+        if ($user->isPlatformSuperAdmin()) {
+            $items[] = $this->link(
+                'Payment & Webhooks',
+                route('admin.settings.payments.index'),
+                'billing',
+                $request->routeIs('admin.settings.payments.*')
+            );
+        }
 
         return [
             'title' => 'Admin Panel',

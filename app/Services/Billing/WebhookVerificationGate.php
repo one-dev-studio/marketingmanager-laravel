@@ -16,6 +16,7 @@ class WebhookVerificationGate
     public function __construct(
         private readonly StripeWebhookSignatureVerifier $stripeVerifier,
         private readonly PayPalWebhookSignatureVerifier $paypalVerifier,
+        private readonly BillingPaymentConfigResolver $billingPaymentConfigResolver,
     ) {}
 
     /**
@@ -23,7 +24,7 @@ class WebhookVerificationGate
      */
     public function assertStripeWebhook(Request $request): array
     {
-        $secret = (string) config('services.stripe.webhook_secret');
+        $secret = $this->billingPaymentConfigResolver->stripeWebhookSecret();
         $payload = $request->getContent();
 
         if ($secret !== '') {
@@ -45,10 +46,10 @@ class WebhookVerificationGate
      */
     public function assertPaypalWebhook(Request $request): array
     {
-        $clientId = (string) config('services.paypal.client_id');
-        $clientSecret = (string) config('services.paypal.secret');
-        $webhookId = (string) config('services.paypal.webhook_id');
-        $mode = (string) config('services.paypal.mode', 'sandbox');
+        $clientId = $this->billingPaymentConfigResolver->paypalClientId();
+        $clientSecret = $this->billingPaymentConfigResolver->paypalSecret();
+        $webhookId = $this->billingPaymentConfigResolver->paypalWebhookId();
+        $mode = $this->billingPaymentConfigResolver->paypalMode();
 
         $decoded = $request->json()->all();
         if (! is_array($decoded)) {
