@@ -44,6 +44,7 @@ Verified against `staging` @ `8d74b62+`. **Active tracker:** [../../TODO.md](../
 | Echo/Pusher production wiring | **Done** — env documented; safe broadcast driver fallback + Inertia `realtime` share |
 | Builder previews (medium) | **Done** — sandboxed `BuilderHtmlPreview` + DOMPurify for email/landing builders |
 | CSP style-src hardening | **Done** — no `unsafe-inline` on staging/production; local dev exception |
+| Phase 18 performance (indexes + lazy Inertia pages) | **Done** — migration + `inertia/app.tsx` lazy glob |
 
 ## Current Status
 
