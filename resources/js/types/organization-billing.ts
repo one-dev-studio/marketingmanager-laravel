@@ -23,3 +23,17 @@ export interface BillingAlert {
     type: string;
     message: string;
 }
+
+export interface BillingPaymentRow {
+    id: number;
+    invoice_number: string | null;
+    payment_method: string;
+    amount: string;
+    status: string;
+    processed_at: string | null;
+}
+
+export interface BillingPaymentMethodSummary {
+    gateway: string;
+    label: string;
+}

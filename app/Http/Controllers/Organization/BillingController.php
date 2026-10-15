@@ -32,6 +32,7 @@ class BillingController extends Controller
         $subscription = $this->billingService->getCurrentSubscription($organization)?->load('plan');
         $plans = SubscriptionPlan::where('is_active', true)->orderBy('price')->get();
         $invoices = $this->billingService->getInvoices($organization, 10);
+        $payments = $this->billingService->getPaymentHistory($organization, 10);
         $usageStats = $this->billingService->getUsageStats($organization, $request->get('period', 'month'));
         $alerts = $this->paymentGatewayService->billingAlerts($organization, $subscription, $usageStats);
 
@@ -58,6 +59,15 @@ class BillingController extends Controller
                 'total' => (string) $invoice->total,
                 'due_date' => $invoice->due_date?->toDateString(),
             ]),
+            'payments' => $payments->through(static fn ($payment): array => [
+                'id' => $payment->id,
+                'invoice_number' => $payment->invoice?->invoice_number,
+                'payment_method' => $payment->payment_method,
+                'amount' => (string) $payment->amount,
+                'status' => $payment->status,
+                'processed_at' => $payment->processed_at?->toDateTimeString(),
+            ]),
+            'paymentMethod' => $this->resolvePaymentMethodSummary($organization),
             'usageStats' => [
                 'period' => (string) $usageStats['period'],
                 'ai_usage' => [
@@ -227,5 +237,37 @@ class BillingController extends Controller
             'success' => true,
             'data' => $payments,
         ]);
+    }
+
+    /**
+     * @return array{gateway: string, label: string}|null
+     */
+    private function resolvePaymentMethodSummary(Organization $organization): ?array
+    {
+        $setting = $organization->settings()->where('key', 'billing_gateway')->first();
+        if ($setting === null) {
+            return null;
+        }
+
+        $decoded = json_decode($setting->value, true);
+        if (! is_array($decoded)) {
+            return null;
+        }
+
+        $gateway = (string) ($decoded['gateway'] ?? '');
+        if ($gateway === '') {
+            return null;
+        }
+
+        $label = match ($gateway) {
+            'stripe' => 'Stripe',
+            'paypal' => 'PayPal',
+            default => ucfirst($gateway),
+        };
+
+        return [
+            'gateway' => $gateway,
+            'label' => $label,
+        ];
     }
 }
