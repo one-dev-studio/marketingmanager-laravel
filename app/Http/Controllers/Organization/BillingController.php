@@ -212,4 +212,20 @@ class BillingController extends Controller
             'data' => $this->billingService->getUsageStats($organization, $request->get('period', 'month')),
         ]);
     }
+
+    public function getPayments(Request $request, string $organizationId)
+    {
+        $organization = $this->resolveOrganization($request, $organizationId);
+        $this->authorize('update', $organization);
+
+        $payments = $this->billingService->getPaymentHistory(
+            $organization,
+            (int) $request->get('limit', 20),
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $payments,
+        ]);
+    }
 }
