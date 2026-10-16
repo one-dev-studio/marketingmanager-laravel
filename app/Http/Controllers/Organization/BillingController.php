@@ -4,39 +4,78 @@ namespace App\Http\Controllers\Organization;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Organization\CreateSubscriptionRequest;
+use App\Http\Requests\Organization\PayInvoiceRequest;
 use App\Http\Requests\Organization\UpgradeSubscriptionRequest;
+use App\Models\Invoice;
+use App\Models\Organization;
 use App\Models\SubscriptionPlan;
 use App\Services\Billing\PaymentGatewayService;
 use App\Services\Organization\BillingService;
+use App\Services\PdfService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class BillingController extends Controller
 {
     public function __construct(
         private BillingService $billingService,
-        private PaymentGatewayService $paymentGatewayService
+        private PaymentGatewayService $paymentGatewayService,
+        private PdfService $pdfService,
     ) {}
 
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response
     {
         $organization = $this->resolveOrganization($request, $organizationId);
         $this->authorize('update', $organization);
 
-        $subscription = $this->billingService->getCurrentSubscription($organization);
-        $plans = SubscriptionPlan::where('is_active', true)->get();
+        $subscription = $this->billingService->getCurrentSubscription($organization)?->load('plan');
+        $plans = SubscriptionPlan::where('is_active', true)->orderBy('price')->get();
         $invoices = $this->billingService->getInvoices($organization, 10);
+        $payments = $this->billingService->getPaymentHistory($organization, 10);
         $usageStats = $this->billingService->getUsageStats($organization, $request->get('period', 'month'));
         $alerts = $this->paymentGatewayService->billingAlerts($organization, $subscription, $usageStats);
 
-        return view('organization.billing.index', [
-            'title' => 'Billing',
+        return Inertia::render('Organization/Billing/Index', [
             'organizationId' => $organizationId,
-            'organization' => $organization,
-            'subscription' => $subscription,
-            'plans' => $plans,
-            'invoices' => $invoices,
-            'usageStats' => $usageStats,
-            'alerts' => $alerts,
+            'subscription' => $subscription ? [
+                'status' => $subscription->status,
+                'trial_ends_at' => $subscription->trial_ends_at?->toDateString(),
+                'plan' => $subscription->plan ? [
+                    'id' => $subscription->plan->id,
+                    'name' => $subscription->plan->name,
+                ] : null,
+            ] : null,
+            'plans' => $plans->map(static fn (SubscriptionPlan $plan): array => [
+                'id' => $plan->id,
+                'name' => $plan->name,
+                'price' => (string) $plan->price,
+                'billing_cycle' => $plan->billing_cycle,
+            ])->values()->all(),
+            'invoices' => $invoices->through(static fn ($invoice): array => [
+                'id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
+                'status' => $invoice->status,
+                'total' => (string) $invoice->total,
+                'due_date' => $invoice->due_date?->toDateString(),
+            ]),
+            'payments' => $payments->through(static fn ($payment): array => [
+                'id' => $payment->id,
+                'invoice_number' => $payment->invoice?->invoice_number,
+                'payment_method' => $payment->payment_method,
+                'amount' => (string) $payment->amount,
+                'status' => $payment->status,
+                'processed_at' => $payment->processed_at?->toDateTimeString(),
+            ]),
+            'paymentMethod' => $this->resolvePaymentMethodSummary($organization),
+            'usageStats' => [
+                'period' => (string) $usageStats['period'],
+                'ai_usage' => [
+                    'total_tokens' => (int) ($usageStats['ai_usage']['total_tokens'] ?? 0),
+                    'total_cost' => (string) ($usageStats['ai_usage']['total_cost'] ?? '0'),
+                ],
+            ],
+            'alerts' => array_values($alerts),
             'gateways' => $this->paymentGatewayService->availableGateways(),
         ]);
     }
@@ -66,12 +105,13 @@ class BillingController extends Controller
     public function upgradeSubscription(UpgradeSubscriptionRequest $request, string $organizationId)
     {
         $organization = $this->resolveOrganization($request, $organizationId);
-        $subscription = $this->billingService->getCurrentSubscription($organization);
+        $subscription = $this->billingService->getCurrentSubscription($organization)?->load('plan');
 
-        if (!$subscription) {
+        if (! $subscription) {
             if ($this->wantsJson($request)) {
                 return response()->json(['success' => false, 'message' => 'No active subscription found.'], 404);
             }
+
             return back()->with('error', 'No active subscription found.');
         }
 
@@ -92,12 +132,13 @@ class BillingController extends Controller
     {
         $organization = $this->resolveOrganization($request, $organizationId);
         $this->authorize('update', $organization);
-        $subscription = $this->billingService->getCurrentSubscription($organization);
+        $subscription = $this->billingService->getCurrentSubscription($organization)?->load('plan');
 
-        if (!$subscription) {
+        if (! $subscription) {
             if ($this->wantsJson($request)) {
                 return response()->json(['success' => false, 'message' => 'No active subscription found.'], 404);
             }
+
             return back()->with('error', 'No active subscription found.');
         }
 
@@ -128,6 +169,49 @@ class BillingController extends Controller
         ]);
     }
 
+    public function downloadInvoice(Request $request, string $organizationId, Invoice $invoice)
+    {
+        $organization = $this->resolveOrganization($request, $organizationId);
+        $this->authorize('update', $organization);
+        $this->ensureInvoiceBelongsToOrganization($invoice, $organization);
+
+        return $this->pdfService->downloadInvoicePdf($invoice);
+    }
+
+    public function payInvoice(PayInvoiceRequest $request, string $organizationId, Invoice $invoice)
+    {
+        $organization = $this->resolveOrganization($request, $organizationId);
+        $this->authorize('update', $organization);
+        $this->ensureInvoiceBelongsToOrganization($invoice, $organization);
+
+        if ($invoice->status === 'paid') {
+            if ($this->wantsJson($request)) {
+                return response()->json(['success' => false, 'message' => 'Invoice is already paid.'], 422);
+            }
+
+            return back()->with('error', 'Invoice is already paid.');
+        }
+
+        $this->billingService->markInvoiceAsPaid(
+            $invoice,
+            $request->string('payment_id')->toString(),
+            $request->string('payment_method')->toString(),
+        );
+
+        if ($this->wantsJson($request)) {
+            return response()->json(['success' => true, 'message' => 'Invoice marked as paid.']);
+        }
+
+        return back()->with('success', 'Invoice marked as paid.');
+    }
+
+    private function ensureInvoiceBelongsToOrganization(Invoice $invoice, Organization $organization): void
+    {
+        if ((int) $invoice->organization_id !== (int) $organization->id) {
+            abort(404);
+        }
+    }
+
     public function getUsageStats(Request $request, string $organizationId)
     {
         $organization = $this->resolveOrganization($request, $organizationId);
@@ -137,5 +221,53 @@ class BillingController extends Controller
             'success' => true,
             'data' => $this->billingService->getUsageStats($organization, $request->get('period', 'month')),
         ]);
+    }
+
+    public function getPayments(Request $request, string $organizationId)
+    {
+        $organization = $this->resolveOrganization($request, $organizationId);
+        $this->authorize('update', $organization);
+
+        $payments = $this->billingService->getPaymentHistory(
+            $organization,
+            (int) $request->get('limit', 20),
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $payments,
+        ]);
+    }
+
+    /**
+     * @return array{gateway: string, label: string}|null
+     */
+    private function resolvePaymentMethodSummary(Organization $organization): ?array
+    {
+        $setting = $organization->settings()->where('key', 'billing_gateway')->first();
+        if ($setting === null) {
+            return null;
+        }
+
+        $decoded = json_decode($setting->value, true);
+        if (! is_array($decoded)) {
+            return null;
+        }
+
+        $gateway = (string) ($decoded['gateway'] ?? '');
+        if ($gateway === '') {
+            return null;
+        }
+
+        $label = match ($gateway) {
+            'stripe' => 'Stripe',
+            'paypal' => 'PayPal',
+            default => ucfirst($gateway),
+        };
+
+        return [
+            'gateway' => $gateway,
+            'label' => $label,
+        ];
     }
 }

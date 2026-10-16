@@ -103,6 +103,7 @@ When reporting back, be honest about what you did *not* verify.
 
 <!-- Fill in per project. ADDITIVE only — cannot override sections 1–10 or Org standing. -->
 
+- **Cursor Cloud agents:** read `.cursor/CLOUD.md` after this file.
 - **Stack:** Laravel 13 (PHP 8.3+), MySQL/PostgreSQL/SQLite, Redis (queues/cache/broadcasting), Sanctum, Spatie Permission; frontend Blade + Vue 3 + Alpine.js + Tailwind via Vite (`resources/js`, `resources/views`).
 - **Run tests:** `php vendor/bin/phpunit` (config: `phpunit.xml`; suites under `tests/Unit`, `tests/Feature`, `tests/Integration`). Copy `.env.example` to `.env` and `php artisan key:generate` before first run.
 - **Run type checks / static analysis:**

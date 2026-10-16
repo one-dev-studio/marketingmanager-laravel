@@ -1,13 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Services\Auth\SessionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
 use Illuminate\Validation\Rules\Password as PasswordRule;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ProfileController extends Controller
 {
@@ -18,14 +21,24 @@ class ProfileController extends Controller
     /**
      * Show user profile page
      */
-    public function show()
+    public function show(): Response
     {
         $user = Auth::user();
         $sessions = $this->sessionService->getActiveSessions($user);
 
-        return view('profile.show', [
-            'user' => $user,
-            'sessions' => $sessions,
+        return Inertia::render('Profile/Show', [
+            'user' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'timezone' => $user->timezone ?? 'UTC',
+                'locale' => $user->locale,
+                'country_code' => $user->country_code,
+            ],
+            'sessions' => $sessions->map(static fn ($session) => [
+                'browser' => $session->browser,
+                'ip_address' => $session->ip_address,
+                'last_activity' => $session->last_activity?->toIso8601String(),
+            ])->values()->all(),
         ]);
     }
 
@@ -38,7 +51,7 @@ class ProfileController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'timezone' => ['required', 'string', 'timezone'],
             'locale' => ['nullable', 'string', 'max:10'],
             'country_code' => ['nullable', 'string', 'size:2'],
@@ -83,8 +96,8 @@ class ProfileController extends Controller
 
         $user = Auth::user();
 
-        if ($user->avatar && file_exists(public_path('storage/' . $user->avatar))) {
-            unlink(public_path('storage/' . $user->avatar));
+        if ($user->avatar && file_exists(public_path('storage/'.$user->avatar))) {
+            unlink(public_path('storage/'.$user->avatar));
         }
 
         $path = $request->file('avatar')->store('avatars', 'public');
@@ -97,14 +110,21 @@ class ProfileController extends Controller
     /**
      * Show security settings page
      */
-    public function showSecurity()
+    public function showSecurity(): Response
     {
         $user = Auth::user();
         $sessions = $this->sessionService->getActiveSessions($user);
+        $currentSessionId = session()->getId();
 
-        return view('profile.security', [
-            'user' => $user,
-            'sessions' => $sessions,
+        return Inertia::render('Profile/Security', [
+            'twoFactorEnabled' => (bool) $user->two_factor_enabled,
+            'sessions' => $sessions->map(static fn ($session) => [
+                'session_id' => $session->session_id,
+                'browser' => $session->browser,
+                'ip_address' => $session->ip_address,
+                'last_activity' => $session->last_activity?->toIso8601String(),
+                'is_current' => $session->session_id === $currentSessionId,
+            ])->values()->all(),
         ]);
     }
 
@@ -138,5 +158,3 @@ class ProfileController extends Controller
             ->with('success', __('All other sessions have been revoked.'));
     }
 }
-
-

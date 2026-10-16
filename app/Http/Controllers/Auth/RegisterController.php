@@ -1,19 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\GoogleAuthConfig;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class RegisterController extends Controller
 {
-    public function showRegistrationForm()
+    public function showRegistrationForm(): Response
     {
-        return view('auth.register');
+        return Inertia::render('Auth/Register', [
+            'googleAuthEnabled' => GoogleAuthConfig::isEnabled(),
+        ]);
     }
 
     public function register(Request $request)
@@ -39,4 +46,3 @@ class RegisterController extends Controller
             ->with('status', __('A verification link has been sent to your email address.'));
     }
 }
-

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Brand;
 
 use App\Http\Controllers\Controller;
@@ -8,6 +10,8 @@ use App\Models\BrandNameSuggestion;
 use App\Services\Brand\BrandNameGeneratorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class BrandNameGeneratorController extends Controller
 {
@@ -15,7 +19,7 @@ class BrandNameGeneratorController extends Controller
         private BrandNameGeneratorService $generatorService
     ) {}
 
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response
     {
         $this->authorize('viewAny', Brand::class);
 
@@ -24,10 +28,15 @@ class BrandNameGeneratorController extends Controller
             ->limit(20)
             ->get();
 
-        return view('brands.choose-name', [
-            'title' => 'Brand name generator',
+        return Inertia::render('Brands/ChooseName', [
             'organizationId' => $organizationId,
-            'suggestions' => $suggestions,
+            'suggestions' => $suggestions->map(static fn (BrandNameSuggestion $suggestion) => [
+                'id' => $suggestion->id,
+                'suggested_name' => $suggestion->suggested_name,
+                'description' => $suggestion->description,
+                'domain_available' => $suggestion->domain_available,
+                'social_handles' => $suggestion->social_handles,
+            ])->values()->all(),
         ]);
     }
 
@@ -84,4 +93,3 @@ class BrandNameGeneratorController extends Controller
         ]);
     }
 }
-

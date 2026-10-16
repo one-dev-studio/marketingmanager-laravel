@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\AI;
 
 use App\Http\Controllers\Controller;
@@ -9,8 +11,8 @@ use App\Models\Product;
 use App\Services\AI\ProductCatalogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ProductCatalogController extends Controller
 {
@@ -21,21 +23,28 @@ class ProductCatalogController extends Controller
     /**
      * Display product catalog generator page
      */
-    public function index(Request $request, string $organizationId): View
+    public function index(Request $request, string $organizationId): Response
     {
         $organization = $request->user()->primaryOrganization();
-        
+
         $brands = Brand::where('organization_id', $organization->id)
             ->where('status', 'active')
             ->orderBy('name')
-            ->get();
-        
-        $products = Product::where('organization_id', $organization->id)
-            ->with(['brand', 'category', 'images'])
-            ->orderBy('name')
-            ->get();
+            ->get(['id', 'name']);
 
-        return view('tools.product-catalog', [
+        $products = Product::where('organization_id', $organization->id)
+            ->with('brand:id,name')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Product $product) => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'brand_name' => $product->brand?->name,
+            ])
+            ->values()
+            ->all();
+
+        return Inertia::render('Tools/ProductCatalog', [
             'organizationId' => $organizationId,
             'brands' => $brands,
             'products' => $products,
@@ -111,4 +120,3 @@ class ProductCatalogController extends Controller
         ]);
     }
 }
-

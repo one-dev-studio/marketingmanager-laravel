@@ -1,143 +1,82 @@
-# MarketPulse Laravel 12 - Project Status
+# MarketPulse — Project Status (October 2026)
 
-## ✅ Completed Components
+**Reconciled with `staging` (tip `8d74b62+`).** For day-to-day remaining work use [`../../TODO.md`](../../TODO.md). Historical phase checklists: [`DEVELOPMENT_TODO.md`](./DEVELOPMENT_TODO.md), [`BACKEND_TODO.md`](./BACKEND_TODO.md), [`FRONTEND_TODO.md`](./FRONTEND_TODO.md).
 
-### Foundation & Architecture
-- ✅ Laravel 12 project structure
-- ✅ Directory organization following specifications
-- ✅ SOLID principles implementation
-- ✅ DRY methodology applied
-- ✅ Service layer pattern
-- ✅ Repository pattern with interfaces
-- ✅ Dependency injection setup
+---
 
-### Database & Models
-- ✅ Core migrations (users, organizations, agencies, campaigns, channels, brands, etc.)
-- ✅ Eloquent models with relationships
-- ✅ Multi-tenancy scope implementation
-- ✅ Model factories for testing
+## Stack (actual)
 
-### Authentication & Authorization
-- ✅ User model with three types (customer, agency, admin)
-- ✅ Authentication controllers (Login, Register)
-- ✅ Admin authentication guard
-- ✅ RBAC foundation (Spatie Permission integration)
-- ✅ Role and Permission models
-- ✅ Policies (CampaignPolicy implemented)
+| Layer | Technology |
+|-------|------------|
+| Backend | **Laravel 13**, PHP **8.3+** (lockfile may require 8.4 for full `phpunit` on Symfony 8.1) |
+| Customer / agency / admin UI | **Inertia.js 3 + React 19 + TypeScript** (`resources/js/Pages/*`, 110+ screens) |
+| Legacy / embedded | Public marketing Blade, emails/PDFs, landing previews only (Inertia cutover complete) |
+| Styling | Tailwind CSS 4, Vite 8 |
+| Auth / RBAC | Sanctum, Spatie Permission, 2FA |
+| Queues / cache | Redis |
+| Payments | `PaymentGatewayService` (Stripe HTTP + PayPal stub); optional live keys |
 
-### Multi-Tenancy
-- ✅ Organization scope trait
-- ✅ Organization access middleware
-- ✅ Agency access middleware
-- ✅ Tenant context handling
+Product name remains **MarketPulse**.
 
-### Campaign Management
-- ✅ Campaign model with relationships
-- ✅ CampaignService (business logic)
-- ✅ CampaignRepository (data access)
-- ✅ CampaignController (API & Web)
-- ✅ Campaign form requests (validation)
-- ✅ CampaignResource (API transformation)
-- ✅ Campaign notifications
-- ✅ Campaign policies
+---
 
-### Routes & Middleware
-- ✅ Web routes (customer, agency, admin portals)
-- ✅ API routes (RESTful endpoints)
-- ✅ Organization access middleware
-- ✅ Agency access middleware
-- ✅ Route organization by portal
+## Completed (verified in repo)
 
-### Controllers
-- ✅ Campaign controllers
-- ✅ Admin controllers (Dashboard, Organization, User)
-- ✅ Agency controllers (Dashboard, Client)
-- ✅ Auth controllers (Login, Register)
-- ✅ Base controllers
+### Foundation
+- Migrations, models, multi-tenancy (`OrganizationScope`), RBAC policies and middleware
+- Feature APIs, jobs, schedulers, activity logging, security headers + CSP nonces (local)
 
-### Notifications
-- ✅ CampaignCreated notification
-- ✅ CampaignUpdated notification
-- ✅ CampaignPublished notification
+### Portals (Inertia)
+- **Customer:** dashboard, campaigns (wizard + calendar), brands/products/contacts/channels, email marketing + template builder, analytics, intelligence tools, billing/settings/team/storage/automations, collaboration, tasks/projects, files, chatbots, workflows, landing pages, surveys, paid ads, press releases, reviews, competitions, client portal
+- **Agency:** clients, cross-client tasks/calendar, billing, reports, team, settings
+- **Admin:** dashboard, users, organizations, content moderation, packages, billing, costing, team, logs, platform settings, **payment webhook settings UI** (`Admin/Settings/Payments`)
 
-## 🚧 In Progress / Pending
+### Integrations
+- Social OAuth (Facebook, Instagram, LinkedIn, Twitter/X, TikTok, Pinterest), token refresh, encrypted storage
+- **LinkedIn publishing** (`LinkedInPublishingService`) and **LinkedIn webhook signature** verification when `LINKEDIN_WEBHOOK_SECRET` is set
+- Billing/social webhooks: signature verification + CSRF exemptions ([#76](https://github.com/one-dev-studio/marketingmanager-laravel/pull/76), [#79](https://github.com/one-dev-studio/marketingmanager-laravel/pull/79)–[#81](https://github.com/one-dev-studio/marketingmanager-laravel/pull/81))
+- Onboarding: Inertia wizard + `Api\OnboardingController` / `OnboardingService`
 
-### Content Management & AI
-- ⏳ AI content generation service
-- ⏳ Image generation service
-- ⏳ Content templates
-- ⏳ Brand guidelines integration
+### Security & supply chain (2026-10)
+- HSTS on staging HTTPS ([#77](https://github.com/one-dev-studio/marketingmanager-laravel/pull/77))
+- Composer dependency bumps ([#78](https://github.com/one-dev-studio/marketingmanager-laravel/pull/78))
+- Public landing HTML sanitization; npm audit clean via Vite 8 / Tailwind 4 ([#84](https://github.com/one-dev-studio/marketingmanager-laravel/pull/84))
+- Audit register: [`../security-audit-2026-10.md`](../security-audit-2026-10.md)
 
-### Social Media Integration
-- ⏳ Social media OAuth integration
-- ⏳ Platform-specific services
-- ⏳ Post publishing jobs
-- ⏳ Token refresh management
+### DevOps
+- Staging deploy workflow (`.github/workflows/deploy-staging.yml`), `GET /up` health check
+- **Staging host:** `https://marketing-manager.staging.oneinternetmedia.com` (see also subdirectory runbook at `docs/ops/deploy-staging.md` for `oneinternetmedia.com/marketingmanager`)
+- Backup script (`scripts/backup.sh`), queue supervisor sample, README deploy section
 
-### Email Marketing
-- ⏳ Email campaign management
-- ⏳ Contact management
-- ⏳ Email templates
-- ⏳ Campaign tracking
+### Testing
+- Broad PHPUnit feature coverage (Inertia assertions, webhooks, brands, campaigns, admin login, etc.)
 
-### Analytics & Reporting
-- ⏳ Analytics dashboard
-- ⏳ Report builder
-- ⏳ Sentiment analysis
-- ⏳ Predictive analytics
+---
 
-### Billing & Subscriptions
-- ⏳ Subscription management
-- ⏳ Payment processing
-- ⏳ Usage tracking
-- ⏳ Invoice generation
+## In progress / open
 
-### Additional Features
-- ⏳ Task management
-- ⏳ Project management
-- ⏳ Collaboration tools
-- ⏳ Landing page builder
-- ⏳ Survey builder
-- ⏳ Website chatbot
-- ⏳ Press release management
-- ⏳ Competitor analysis
+| Area | Notes |
+|------|--------|
+| **Live payment keys** | Stripe/PayPal checkout works locally; production webhooks need CoS secrets |
+| **Builder preview XSS** | Authenticated email/landing builders use `dangerouslySetInnerHTML` / `v-html` — medium risk; see security audit |
+| **CSP hardening** | `style-src 'unsafe-inline'` for Tailwind; target nonce/hashed styles |
+| **CDN + virus scan** | Not wired (external provider) |
+| **Laravel Cashier** | Not adopted on Laravel 13; custom gateway service used instead |
+| **Performance (Phase 18)** | Query/index tuning, frontend code-splitting, APM baselines |
+| **Ops polish (Phase 19)** | DR runbook, backup restore drill, end-user guides, optional Scribe/OpenAPI |
 
-## 📋 Next Steps
+---
 
-1. **Complete Core Modules**
-   - Finish content management system
-   - Implement AI integration layer
-   - Complete social media integrations
+## Documentation map
 
-2. **Frontend Setup**
-   - Set up Livewire 3 or Inertia.js
-   - Configure Tailwind CSS
-   - Create base layouts and components
+| Doc | Purpose |
+|-----|---------|
+| [`SPECIFICATIONS.md`](./SPECIFICATIONS.md) | Original product spec (Laravel 12 wording; implementation on Laravel 13) |
+| [`PAGE_DOCUMENTATION.md`](./PAGE_DOCUMENTATION.md) | Per-page UX and routes |
+| [`USER_JOURNIES.md`](./USER_JOURNIES.md) | Journey maps |
+| [`MODEL_RELATIONS.md`](./MODEL_RELATIONS.md) | Eloquent relationships |
+| [`../PLAN-2026-10.md`](../PLAN-2026-10.md) | Ordered work plan (CRITICAL → HIGH → MEDIUM) |
 
-3. **Testing**
-   - Complete unit tests
-   - Add feature tests
-   - Integration testing
+---
 
-4. **Documentation**
-   - API documentation
-   - Developer guides
-   - User documentation
-
-## 🔧 Configuration Needed
-
-- PHP 8.3+ (currently PHP 7.4 detected - needs upgrade)
-- Composer dependencies installation
-- Database configuration
-- Environment variables setup
-- Frontend build tools (NPM/Vite)
-
-## 📝 Notes
-
-- Project follows all specifications from SPECIFICATIONS.md
-- Code adheres to PSR-12 standards
-- SOLID principles applied throughout
-- Multi-tenancy architecture implemented
-- Ready for further module development
-
-
+*Last updated: 2026-10-15*

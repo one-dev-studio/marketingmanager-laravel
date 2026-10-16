@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Chatbot;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Chatbot\CreateChatbotRequest;
 use App\Http\Requests\Chatbot\UpdateChatbotRequest;
+use App\Http\Resources\Chatbot\ChatbotInertiaResource;
 use App\Http\Resources\Chatbot\ChatbotResource;
 use App\Models\Chatbot;
 use App\Services\Chatbot\ChatbotService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ChatbotController extends Controller
 {
@@ -37,17 +41,19 @@ class ChatbotController extends Controller
             ]);
         }
 
-        return view('chatbots.index', [
+        return Inertia::render('Chatbots/Index', [
             'organizationId' => $organizationId,
-            'chatbots' => $chatbots,
+            'chatbots' => $chatbots->through(
+                fn (Chatbot $chatbot) => ChatbotInertiaResource::listItem($chatbot, $request)
+            ),
+            'can' => [
+                'create' => $request->user()?->can('create', Chatbot::class) ?? false,
+            ],
         ]);
     }
 
-    public function builder(Request $request): \Illuminate\View\View
+    public function builder(Request $request, string $organizationId): Response
     {
-        $organizationId = auth()->user()->primaryOrganization()->id;
-        $organization = auth()->user()->primaryOrganization();
-
         $chatbot = null;
         if ($request->has('id')) {
             $chatbot = Chatbot::where('organization_id', $organizationId)
@@ -55,46 +61,44 @@ class ChatbotController extends Controller
                 ->firstOrFail();
         }
 
-        return view('chatbots.builder', [
-            'organization' => $organization,
-            'chatbot' => $chatbot,
+        return Inertia::render('Chatbots/Builder', [
+            'organizationId' => $organizationId,
+            'chatbot' => ChatbotInertiaResource::builder($chatbot, $request),
         ]);
     }
 
-    public function deployment(Request $request): \Illuminate\View\View
+    public function deployment(Request $request, string $organizationId): Response
     {
-        $organizationId = auth()->user()->primaryOrganization()->id;
-        $organization = auth()->user()->primaryOrganization();
+        $chatbot = Chatbot::where('organization_id', $organizationId)
+            ->where('id', $request->query('id'))
+            ->with(['conversations', 'leads'])
+            ->firstOrFail();
 
-        $chatbot = null;
-        if ($request->has('id')) {
-            $chatbot = Chatbot::where('organization_id', $organizationId)
-                ->where('id', $request->id)
-                ->with(['conversations', 'leads'])
-                ->firstOrFail();
-        }
+        $this->authorize('view', $chatbot);
 
-        return view('chatbots.deployment', [
-            'organization' => $organization,
-            'chatbot' => $chatbot,
+        return Inertia::render('Chatbots/Deployment', [
+            'organizationId' => $organizationId,
+            'chatbot' => ChatbotInertiaResource::deployment($chatbot, $request),
         ]);
     }
 
-    public function analytics(Request $request): \Illuminate\View\View
+    public function analytics(Request $request, string $organizationId): Response
     {
-        $organizationId = auth()->user()->primaryOrganization()->id;
-        $organization = auth()->user()->primaryOrganization();
+        $chatbot = Chatbot::where('organization_id', $organizationId)
+            ->where('id', $request->query('id'))
+            ->firstOrFail();
 
-        $chatbot = null;
-        if ($request->has('id')) {
-            $chatbot = Chatbot::where('organization_id', $organizationId)
-                ->where('id', $request->id)
-                ->firstOrFail();
-        }
+        $this->authorize('view', $chatbot);
 
-        return view('chatbots.analytics', [
-            'organization' => $organization,
-            'chatbot' => $chatbot,
+        $analytics = $this->chatbotService->getAnalytics($chatbot, [
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+        ]);
+
+        return Inertia::render('Chatbots/Analytics', [
+            'organizationId' => $organizationId,
+            'chatbot' => ChatbotInertiaResource::analyticsSummary($chatbot),
+            'analytics' => $analytics,
         ]);
     }
 
@@ -185,7 +189,7 @@ class ChatbotController extends Controller
             'conversation_id' => ['nullable', 'exists:chatbot_conversations,id'],
         ]);
 
-        $conversation = $request->conversation_id 
+        $conversation = $request->conversation_id
             ? \App\Models\ChatbotConversation::find($request->conversation_id)
             : null;
 
@@ -279,4 +283,3 @@ class ChatbotController extends Controller
         ]);
     }
 }
-

@@ -5,9 +5,12 @@ use App\Http\Middleware\EnsureAgencyAccess;
 use App\Http\Middleware\EnsureAgencyAdmin;
 use App\Http\Middleware\EnsureBrandContext;
 use App\Http\Middleware\EnsureClientAccess;
+use App\Http\Middleware\EnsureClientPortal;
 use App\Http\Middleware\EnsureNotClientRole;
 use App\Http\Middleware\EnsureOrganizationAccess;
 use App\Http\Middleware\EnsureOrganizationAdmin;
+use App\Http\Middleware\EnsurePlatformSuperAdmin;
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\NormalizeSubdirectoryRedirects;
 use App\Http\Middleware\PermissionMiddleware;
 use App\Http\Middleware\RequireConfirmation;
@@ -35,6 +38,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Payment and social webhooks authenticate via platform signatures, not session CSRF.
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/*',
+        ]);
+
         $middleware->redirectGuestsTo(function (Request $request) {
             return $request->is('admin', 'admin/*') ? route('admin.login') : route('login');
         });
@@ -52,12 +60,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'brand.context' => EnsureBrandContext::class,
             'require.confirmation' => RequireConfirmation::class,
             'agency.client' => EnsureClientAccess::class,
+            'client.portal' => EnsureClientPortal::class,
+            'platform.super_admin' => EnsurePlatformSuperAdmin::class,
             'api.rate_limit' => ApiRateLimit::class,
         ]);
 
         // Add SetLocale middleware to web group by default
         $middleware->web(append: [
             SetLocale::class,
+            HandleInertiaRequests::class,
         ]);
 
         // Add security headers to all responses
@@ -67,6 +78,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             NormalizeSubdirectoryRedirects::class,
+        ]);
+
+        // External providers cannot send CSRF tokens; rely on webhook signature verification.
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

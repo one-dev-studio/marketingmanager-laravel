@@ -1,3 +1,4 @@
+@use('App\Http\Support\SubdirectoryRequestUriNormalizer')
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -5,30 +6,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ isset($title) ? $title . ' - ' : '' }}MarketPulse - AI-Powered Marketing Automation Platform</title>
+    <title>{{ isset($title) ? $title . ' - ' : '' }}Marketing Manager — AI marketing automation</title>
 
-    <meta name="description" content="MarketPulse is a comprehensive AI-powered marketing automation platform that streamlines digital campaigns, enhances collaboration, and delivers actionable insights.">
+    <meta name="description" content="Marketing Manager helps teams plan campaigns, create content with AI, and publish across channels from one workspace.">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
 
-    <!-- Styles -->
-    <link href="{{ asset('css/public.css') }}" rel="stylesheet">
+    <!-- Styles: Vite marketing bundle when built; static fallback for local/CI without npm build -->
+    @if (! app()->runningUnitTests() && file_exists(public_path('build/manifest.json')))
+        @vite(['resources/css/public-marketing.css'])
+    @else
+        <link href="{{ SubdirectoryRequestUriNormalizer::rootRelativePublicPath('css/public.css') }}" rel="stylesheet">
+    @endif
     
     @stack('styles')
 </head>
 <body class="antialiased">
+    <a class="skip-to-content" href="#main-content">Skip to content</a>
     <!-- Navigation -->
-    <nav class="navbar">
+    <nav class="navbar" aria-label="Primary">
         <div class="container">
             <div class="navbar-content">
                 <div class="navbar-brand">
-                    <a href="{{ route('home') }}" class="logo">
-                        <svg class="logo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                        <span class="logo-text">MarketPulse</span>
+                    <a href="{{ route('home') }}" class="logo" aria-label="Marketing Manager home">
+                        <span class="logo-mark" aria-hidden="true">
+                            <svg class="logo-mark-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>
+                            </svg>
+                        </span>
+                        <span class="logo-wordmark">Marketing <span class="logo-text">Manager</span></span>
                     </a>
                 </div>
                 
@@ -37,16 +45,23 @@
                     <a href="{{ route('pricing') }}" class="nav-link">Pricing</a>
                     <a href="{{ route('about') }}" class="nav-link">About</a>
                     <a href="{{ route('contact') }}" class="nav-link">Contact</a>
-                    <a href="{{ route('login') }}" class="nav-link navbar-menu-auth">Login</a>
-                    <a href="{{ route('register') }}" class="nav-link navbar-menu-auth">Get Started</a>
+                    <a href="{{ route('login') }}" class="nav-link navbar-menu-auth">Log in</a>
+                    <a href="{{ route('register') }}" class="nav-link navbar-menu-auth btn btn-primary btn-nav-cta">Start free trial</a>
                 </div>
 
                 <div class="navbar-actions">
-                    <a href="{{ route('login') }}" class="btn btn-secondary">Login</a>
-                    <a href="{{ route('register') }}" class="btn btn-primary">Get Started</a>
+                    <a href="{{ route('login') }}" class="btn btn-secondary">Log in</a>
+                    <a href="{{ route('register') }}" class="btn btn-primary">Start free trial</a>
                 </div>
 
-                <button class="navbar-toggle" id="navbarToggle">
+                <button
+                    type="button"
+                    class="navbar-toggle"
+                    id="navbarToggle"
+                    aria-label="Open menu"
+                    aria-expanded="false"
+                    aria-controls="navbarMenu"
+                >
                     <span></span>
                     <span></span>
                     <span></span>
@@ -56,23 +71,25 @@
     </nav>
 
     <!-- Main Content -->
-    <main>
+    <main id="main-content">
         @yield('content')
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer footer-light">
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-col">
                     <div class="footer-brand">
-                        <svg class="logo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                        <span class="logo-text">MarketPulse</span>
+                        <span class="logo-mark logo-mark-sm" aria-hidden="true">
+                            <svg class="logo-mark-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>
+                            </svg>
+                        </span>
+                        <span class="logo-wordmark footer-logo-wordmark">Marketing <span class="logo-text">Manager</span></span>
                     </div>
                     <p class="footer-description">
-                        AI-powered marketing automation platform designed to streamline campaigns, enhance collaboration, and deliver actionable insights.
+                        Plan campaigns, create with AI, and publish across channels — one workspace for modern marketing teams.
                     </p>
                 </div>
 
@@ -109,7 +126,7 @@
             </div>
 
             <div class="footer-bottom">
-                <p>&copy; {{ date('Y') }} MarketPulse. All rights reserved.</p>
+                <p>&copy; {{ date('Y') }} Marketing Manager. All rights reserved.</p>
                 <div class="social-links">
                     <a href="#" aria-label="Twitter">
                         <svg fill="currentColor" viewBox="0 0 24 24">
@@ -137,10 +154,12 @@
         const navbarToggle = document.getElementById('navbarToggle');
         const navbarMenu = document.getElementById('navbarMenu');
         
-        if (navbarToggle) {
+        if (navbarToggle && navbarMenu) {
             navbarToggle.addEventListener('click', () => {
-                navbarMenu.classList.toggle('active');
-                navbarToggle.classList.toggle('active');
+                const isOpen = navbarMenu.classList.toggle('active');
+                navbarToggle.classList.toggle('active', isOpen);
+                navbarToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                navbarToggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
             });
         }
 
@@ -159,12 +178,12 @@
         });
     </script>
     
-    <div id="cookie-banner" class="fixed bottom-0 inset-x-0 bg-gray-900 text-white p-4 text-sm flex justify-between gap-4" style="display:none">
-        <p>We use cookies for analytics and to improve the site. <a href="{{ route('privacy') }}" class="underline">Learn more</a>.</p>
-        <button type="button" onclick="localStorage.setItem('mp_cookies','1');document.getElementById('cookie-banner').style.display='none'">Accept</button>
+    <div id="cookie-banner" class="cookie-banner" style="display:none" role="dialog" aria-label="Cookie notice">
+        <p class="cookie-banner-text">We use cookies for analytics and to improve the site. <a href="{{ route('privacy') }}">Learn more</a>.</p>
+        <button type="button" class="btn btn-primary cookie-banner-accept" onclick="localStorage.setItem('mm_cookies','1');document.getElementById('cookie-banner').style.display='none'">Accept</button>
     </div>
     <script>
-        if (!localStorage.getItem('mp_cookies')) {
+        if (!localStorage.getItem('mm_cookies') && !localStorage.getItem('mp_cookies')) {
             document.getElementById('cookie-banner').style.display = 'flex';
         }
     </script>

@@ -3,19 +3,28 @@
 namespace App\Services\LandingPage;
 
 use App\Models\LandingPage;
-use App\Models\LandingPageVariant;
 use App\Models\LandingPageTemplate;
+use App\Models\LandingPageVariant;
 use App\Models\User;
+use App\Services\Security\UserHtmlSanitizer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class LandingPageService
 {
+    public function __construct(
+        private readonly UserHtmlSanitizer $htmlSanitizer,
+    ) {}
+
     public function createLandingPage(array $data, User $user): LandingPage
     {
         return DB::transaction(function () use ($data, $user) {
-            if (!isset($data['slug'])) {
+            if (! isset($data['slug'])) {
                 $data['slug'] = Str::slug($data['name']);
+            }
+
+            if (array_key_exists('html_content', $data)) {
+                $data['html_content'] = $this->htmlSanitizer->sanitize($data['html_content']);
             }
 
             return LandingPage::create([
@@ -29,11 +38,16 @@ class LandingPageService
     public function updateLandingPage(LandingPage $landingPage, array $data): LandingPage
     {
         return DB::transaction(function () use ($landingPage, $data) {
-            if (isset($data['name']) && !isset($data['slug'])) {
+            if (isset($data['name']) && ! isset($data['slug'])) {
                 $data['slug'] = Str::slug($data['name']);
             }
 
+            if (array_key_exists('html_content', $data)) {
+                $data['html_content'] = $this->htmlSanitizer->sanitize($data['html_content']);
+            }
+
             $landingPage->update($data);
+
             return $landingPage->fresh();
         });
     }
@@ -49,6 +63,7 @@ class LandingPageService
     {
         return DB::transaction(function () use ($landingPage) {
             $landingPage->update(['status' => 'published', 'is_active' => true]);
+
             return $landingPage->fresh();
         });
     }
@@ -59,7 +74,7 @@ class LandingPageService
             return LandingPageVariant::create([
                 'landing_page_id' => $landingPage->id,
                 'name' => $data['name'],
-                'html_content' => $data['html_content'] ?? null,
+                'html_content' => $this->htmlSanitizer->sanitize($data['html_content'] ?? null),
                 'page_data' => $data['page_data'] ?? [],
                 'traffic_percentage' => $data['traffic_percentage'] ?? 50,
             ]);
@@ -69,7 +84,12 @@ class LandingPageService
     public function updateVariant(LandingPageVariant $variant, array $data): LandingPageVariant
     {
         return DB::transaction(function () use ($variant, $data) {
+            if (array_key_exists('html_content', $data)) {
+                $data['html_content'] = $this->htmlSanitizer->sanitize($data['html_content']);
+            }
+
             $variant->update($data);
+
             return $variant->fresh();
         });
     }
@@ -81,6 +101,7 @@ class LandingPageService
                 ->update(['is_winner' => false]);
 
             $variant->update(['is_winner' => true]);
+
             return $variant->fresh();
         });
     }
@@ -91,7 +112,7 @@ class LandingPageService
             'organization_id' => $user?->primaryOrganization()?->id,
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
-            'template_content' => $data['template_content'],
+            'template_content' => $this->htmlSanitizer->sanitize($data['template_content']),
             'template_data' => $data['template_data'] ?? [],
             'category' => $data['category'] ?? null,
             'preview_images' => $data['preview_images'] ?? [],
@@ -114,13 +135,14 @@ class LandingPageService
     public function updateSeoSettings(LandingPage $landingPage, array $seoSettings): LandingPage
     {
         $landingPage->update(['seo_settings' => $seoSettings]);
+
         return $landingPage->fresh();
     }
 
     public function updateCustomDomain(LandingPage $landingPage, ?string $domain): LandingPage
     {
         $landingPage->update(['custom_domain' => $domain]);
+
         return $landingPage->fresh();
     }
 }
-

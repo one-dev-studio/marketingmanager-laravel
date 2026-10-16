@@ -2,23 +2,55 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\Content\ContentCalendarInertiaResource;
 use App\Models\CalendarEvent;
 use App\Models\ScheduledPost;
 use App\Services\Scheduling\RecurringScheduleService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ContentCalendarController extends Controller
 {
     public function __construct(
         private RecurringScheduleService $recurringScheduleService
     ) {}
-    public function index(Request $request, string $organizationId)
+
+    public function index(Request $request, string $organizationId): Response|JsonResponse
     {
         $startDate = $request->get('start') ? Carbon::parse($request->get('start')) : now()->startOfMonth();
         $endDate = $request->get('end') ? Carbon::parse($request->get('end')) : now()->endOfMonth();
 
+        $data = $this->eventsForRange($organizationId, $startDate, $endDate);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+            ]);
+        }
+
+        return Inertia::render('ContentCalendar/Index', [
+            'organizationId' => $organizationId,
+            'range' => [
+                'start' => $startDate->toDateString(),
+                'end' => $endDate->toDateString(),
+            ],
+            'events' => $data
+                ->map(static fn (array $event) => ContentCalendarInertiaResource::event($event))
+                ->values()
+                ->all(),
+        ]);
+    }
+
+    /**
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function eventsForRange(string $organizationId, Carbon $startDate, Carbon $endDate)
+    {
         $events = CalendarEvent::where('organization_id', $organizationId)
             ->whereBetween('start_time', [$startDate, $endDate])
             ->with(['campaign', 'scheduledPost', 'creator'])
@@ -44,7 +76,7 @@ class ContentCalendarController extends Controller
             ->get()
             ->map(function ($post) {
                 return [
-                    'id' => 'post_' . $post->id,
+                    'id' => 'post_'.$post->id,
                     'title' => $post->campaign?->name ?? 'Scheduled Post',
                     'description' => substr($post->content, 0, 100),
                     'type' => 'post',
@@ -57,18 +89,7 @@ class ContentCalendarController extends Controller
                 ];
             });
 
-        $data = $events->merge($scheduledPosts)->values();
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'data' => $data,
-            ]);
-        }
-
-        return view('content-calendar.index', [
-            'organizationId' => $organizationId,
-        ]);
+        return $events->toBase()->merge($scheduledPosts)->values();
     }
 
     public function store(Request $request, string $organizationId): JsonResponse
@@ -174,7 +195,7 @@ class ContentCalendarController extends Controller
         return response()->json([
             'success' => true,
             'data' => $scheduledPosts,
-            'message' => count($scheduledPosts) . ' posts scheduled successfully.',
+            'message' => count($scheduledPosts).' posts scheduled successfully.',
         ], 201);
     }
 
@@ -212,7 +233,7 @@ class ContentCalendarController extends Controller
             $scheduledPost,
             $validated['recurrence']
         );
-        
+
         $scheduledPost->delete();
 
         return response()->json([
@@ -231,7 +252,7 @@ class ContentCalendarController extends Controller
             ], 404);
         }
 
-        if (!$scheduledPost->is_recurring) {
+        if (! $scheduledPost->is_recurring) {
             return response()->json([
                 'success' => false,
                 'message' => 'This is not a recurring schedule.',
@@ -246,4 +267,3 @@ class ContentCalendarController extends Controller
         ]);
     }
 }
-

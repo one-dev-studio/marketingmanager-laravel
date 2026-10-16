@@ -7,6 +7,8 @@ use App\Http\Requests\Organization\AddTeamMemberRequest;
 use App\Http\Requests\Organization\InviteTeamMemberRequest;
 use App\Services\Organization\TeamService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class TeamController extends Controller
 {
@@ -14,17 +16,29 @@ class TeamController extends Controller
         private TeamService $teamService
     ) {}
 
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response
     {
         $organization = $this->resolveOrganization($request, $organizationId);
         $this->authorize('update', $organization);
 
-        return view('organization.team.index', [
-            'title' => 'Team',
+        $teamMembers = $this->teamService->getTeamMembers($organization);
+        $availableRoles = $this->teamService->getAvailableRoles();
+
+        return Inertia::render('Organization/Team/Index', [
             'organizationId' => $organizationId,
-            'organization' => $organization,
-            'teamMembers' => $this->teamService->getTeamMembers($organization),
-            'availableRoles' => $this->teamService->getAvailableRoles(),
+            'teamMembers' => $teamMembers->map(static function ($member): array {
+                return [
+                    'id' => $member->id,
+                    'name' => $member->name,
+                    'email' => $member->email,
+                    'role_id' => (int) $member->pivot->role_id,
+                ];
+            })->values()->all(),
+            'availableRoles' => $availableRoles->map(static fn ($role): array => [
+                'id' => $role->id,
+                'name' => $role->name,
+                'label' => in_array($role->name, ['viewer', 'client'], true) ? 'Client' : 'Org Admin',
+            ])->values()->all(),
         ]);
     }
 

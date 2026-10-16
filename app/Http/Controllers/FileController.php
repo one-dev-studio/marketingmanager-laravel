@@ -1,16 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use App\Models\ImageLibrary;
-use App\Models\FileFolder;
 use App\Models\Brand;
+use App\Models\ImageLibrary;
 use App\Models\Organization;
 use App\Services\File\FileService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * File Controller
@@ -22,18 +25,19 @@ class FileController extends Controller
     public function __construct(
         private FileService $fileService
     ) {}
+
     /**
      * Display file browser interface
      */
-    public function index(Request $request, string $organizationId): \Illuminate\View\View
+    public function index(Request $request, string $organizationId): Response
     {
         $brandId = $request->query('brandId');
-        
-        if (!$brandId) {
+
+        if (! $brandId) {
             abort(404, 'Brand must be selected to access files');
         }
 
-        $organization = Organization::findOrFail($organizationId);
+        Organization::findOrFail($organizationId);
         $brand = Brand::where('id', $brandId)
             ->where('organization_id', $organizationId)
             ->firstOrFail();
@@ -44,9 +48,9 @@ class FileController extends Controller
         // Filter by search term
         if ($request->has('search')) {
             $search = $request->get('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -56,20 +60,35 @@ class FileController extends Controller
             if ($type === 'image') {
                 $query->where('mime_type', 'like', 'image/%');
             } elseif ($type === 'document') {
-                $query->where(function($q) {
+                $query->where(function ($q) {
                     $q->where('mime_type', 'like', 'application/pdf')
-                      ->orWhere('mime_type', 'like', 'application/msword')
-                      ->orWhere('mime_type', 'like', 'application/vnd.openxmlformats-officedocument%');
+                        ->orWhere('mime_type', 'like', 'application/msword')
+                        ->orWhere('mime_type', 'like', 'application/vnd.openxmlformats-officedocument%');
                 });
             }
         }
 
-        $files = $query->with('uploadedBy')->paginate(24);
+        $files = $query->with('uploadedBy')->paginate(24)->through(function (ImageLibrary $file) {
+            return [
+                'id' => $file->id,
+                'name' => $file->name,
+                'mime_type' => $file->mime_type,
+                'file_url' => $file->file_url,
+                'file_size' => $file->file_size,
+                'created_at' => $file->created_at?->toIso8601String(),
+                'uploaded_by_name' => $file->uploadedBy?->name,
+            ];
+        });
 
-        return view('files.index', [
-            'organization' => $organization,
-            'brand' => $brand,
+        return Inertia::render('Files/Index', [
+            'organizationId' => (string) $organizationId,
+            'brandId' => (string) $brand->id,
+            'brandName' => $brand->name,
             'files' => $files,
+            'filters' => [
+                'search' => $request->get('search'),
+                'type' => $request->get('type'),
+            ],
         ]);
     }
 
@@ -128,15 +147,32 @@ class FileController extends Controller
     /**
      * Display file preview
      */
-    public function show(Request $request, string $organizationId, ImageLibrary $file): \Illuminate\View\View
+    public function show(Request $request, string $organizationId, ImageLibrary $file): Response
     {
         if ($file->organization_id != $organizationId) {
             abort(404);
         }
 
-        return view('files.show', [
-            'organization' => Organization::findOrFail($organizationId),
-            'file' => $file->load('uploadedBy'),
+        $file->load('uploadedBy');
+        $organization = Organization::findOrFail($organizationId);
+
+        return Inertia::render('Files/Show', [
+            'organizationId' => (string) $organizationId,
+            'organizationName' => $organization->name,
+            'brandId' => $request->query('brandId') ? (string) $request->query('brandId') : null,
+            'file' => [
+                'id' => $file->id,
+                'name' => $file->name,
+                'description' => $file->description,
+                'mime_type' => $file->mime_type,
+                'file_url' => $file->file_url,
+                'file_size' => $file->file_size,
+                'width' => $file->width,
+                'height' => $file->height,
+                'tags' => $file->tags ?? [],
+                'created_at' => $file->created_at?->format('M j, Y'),
+                'uploaded_by_name' => $file->uploadedBy?->name,
+            ],
         ]);
     }
 
@@ -177,7 +213,7 @@ class FileController extends Controller
             abort(404);
         }
 
-        if (!Storage::disk('public')->exists($file->file_path)) {
+        if (! Storage::disk('public')->exists($file->file_path)) {
             abort(404, 'File not found');
         }
 
@@ -305,4 +341,3 @@ class FileController extends Controller
         ]);
     }
 }
-

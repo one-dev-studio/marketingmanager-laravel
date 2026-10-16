@@ -4,6 +4,22 @@ This document outlines all remaining **backend** development tasks to complete t
 
 > **Note:** For frontend tasks, see [FRONTEND_TODO.md](./FRONTEND_TODO.md)
 
+## Reconciliation (October 2026)
+
+**Baseline (pre-refresh):** 19 phases — 8 fully complete, 9 partial, Phase 18 (12 open), Phase 19 (14 open) on master checklists.
+
+Verified against `staging` @ `8d74b62+`. **Active tracker:** [../../TODO.md](../../TODO.md). Security: [../security-audit-2026-10.md](../security-audit-2026-10.md).
+
+| Topic | Status |
+|-------|--------|
+| Inertia + React customer/agency/admin UI | **Done** (110+ `resources/js/Pages/*`; tests in `tests/Feature/*Inertia*`) |
+| Legacy Blade app shell + Vue builder islands retired | **Done** (`InertiaCutoverLegacyCleanupTest`) |
+| Admin on Inertia | **Done** (`AdminPortalInertiaTest`, payment webhook settings UI) |
+| Security PRs #76–#85 | **Merged** on staging (webhooks, CSRF, HSTS, composer, CSP/HTML, npm, admin payments UI) |
+| Staging host | **https://marketing-manager.staging.oneinternetmedia.com** (+ subdirectory runbook) |
+| LinkedIn publish + webhook sig | **Done** (`LinkedInPublishingService`, `SocialWebhookVerificationGate::assertLinkedInWebhook`) |
+| Builder previews (medium) | **Open** — `dangerouslySetInnerHTML` / `v-html` in authenticated builders |
+
 ## Important References
 
 **Before implementing any backend feature, please consult:**
@@ -228,20 +244,20 @@ This document outlines all remaining **backend** development tasks to complete t
 ### 🔄 Remaining Tasks
 
 #### Onboarding Wizard - `/main/onboarding`
-- [ ] Create OnboardingController with AI-powered wizard endpoints
+- [x] Create OnboardingController with AI-powered wizard endpoints
   - **Reference:** USER_JOURNIES.md Section 1 (New User Onboarding Journey) - Step 2
   - **Priority:** CRITICAL - Required for new user experience
-- [ ] Implement AI chat interface API (Jenna AI assistant)
+- [x] Implement AI chat interface API (Jenna AI assistant)
   - **Reference:** USER_JOURNIES.md Section 1 - Step 2 for conversation flow
-- [ ] Create website content fetching service (`getWebsiteContent` tool)
+- [x] Create website content fetching service
   - **Reference:** USER_JOURNIES.md Section 1 - Step 2, Question 2
-- [ ] Implement business focus detection API (`determineFocusPrompt`)
+- [x] Implement business focus detection API
   - **Reference:** USER_JOURNIES.md Section 1 - Step 2, Question 3
-- [ ] Create organization info setting API (`setOrganizationInfo` tool)
+- [x] Create organization info setting API
   - **Reference:** USER_JOURNIES.md Section 1 - Step 2, Question 5
-- [ ] Implement onboarding data persistence API (save/load draft)
+- [x] Implement onboarding data persistence API
   - **Reference:** USER_JOURNIES.md Section 1 - Step 2 for auto-saving requirements
-- [ ] Add onboarding completion API with redirect to brands page
+- [x] Add onboarding completion API with redirect to brands page
   - **Reference:** USER_JOURNIES.md Section 1 - Step 2, Question 5
 
 ---
@@ -318,19 +334,19 @@ This document outlines all remaining **backend** development tasks to complete t
 ### 🔄 Remaining Tasks
 
 #### Onboarding Wizard - `/main/onboarding` - **HIGH PRIORITY**
-- [ ] Create OnboardingController with AI-powered wizard endpoints
+- [x] Create OnboardingController with AI-powered wizard endpoints
   - **Reference:** See USER_JOURNIES.md Section 1 (New User Onboarding Journey) - Step 2
-- [ ] Implement AI chat interface API (Jenna AI assistant)
+- [x] Implement AI chat interface API (Jenna AI assistant)
   - **Reference:** USER_JOURNIES.md Section 1 - Step 2 for conversation flow
-- [ ] Create website content fetching service (`getWebsiteContent` tool)
+- [x] Create website content fetching service
   - **Reference:** USER_JOURNIES.md Section 1 - Step 2, Question 2
-- [ ] Implement business focus detection API (`determineFocusPrompt`)
+- [x] Implement business focus detection API
   - **Reference:** USER_JOURNIES.md Section 1 - Step 2, Question 3
-- [ ] Create organization info setting API (`setOrganizationInfo` tool)
+- [x] Create organization info setting API
   - **Reference:** USER_JOURNIES.md Section 1 - Step 2, Question 5
-- [ ] Implement onboarding data persistence API (save/load draft)
+- [x] Implement onboarding data persistence API
   - **Reference:** USER_JOURNIES.md Section 1 - Step 2 for auto-saving requirements
-- [ ] Add onboarding completion API with redirect to brands page
+- [x] Add onboarding completion API with redirect to brands page
   - **Reference:** USER_JOURNIES.md Section 1 - Step 2, Question 5
 
 #### Home (Collaboration)
@@ -340,23 +356,23 @@ This document outlines all remaining **backend** development tasks to complete t
   - **Reference:** See USER_JOURNIES.md Section 2 - Step 6 for WebSocket integration requirements
 
 #### Campaign Creation - `/main/[organizationId]/campaigns/create` - **HIGH PRIORITY**
-- [ ] Create CampaignCreationController for multi-step wizard
+- [x] Create CampaignCreationController for multi-step wizard
   - **Reference:** See USER_JOURNIES.md Section 6 (Campaign Creation Journey)
-- [ ] Implement campaign plan generation API
+- [x] Implement campaign plan generation API
   - **Reference:** USER_JOURNIES.md Section 6 - Step 2 for plan generation requirements
-- [ ] Create AI campaign suggestions API ("Get Suggestions" button)
+- [x] Create AI campaign suggestions API
   - **Reference:** USER_JOURNIES.md Section 6 - Step 2 for AI suggestions
-- [ ] Implement campaign plan summary API
+- [x] Implement campaign plan summary API
   - **Reference:** USER_JOURNIES.md Section 6 - Step 3 for plan summary display
-- [ ] Create content generation API for multiple channels
+- [x] Create content generation API for multiple channels
   - **Reference:** USER_JOURNIES.md Section 6 - Step 3 for content generation requirements
-- [ ] Implement individual post editing API
+- [x] Implement individual post editing API
   - **Reference:** USER_JOURNIES.md Section 6 - Step 3 for edit post functionality
-- [ ] Create regenerate content API
+- [x] Create regenerate content API
   - **Reference:** USER_JOURNIES.md Section 6 - Step 3 for regenerate functionality
-- [ ] Implement schedule editor API
+- [x] Implement schedule editor API
   - **Reference:** USER_JOURNIES.md Section 6 - Step 3 for schedule adjustment
-- [ ] Create "Submit for Review" API that sets campaign status to "In Review"
+- [x] Create "Submit for Review" API
   - **Reference:** USER_JOURNIES.md Section 6 - Step 3 for submission workflow
 
 #### Content Approval (Review Page)
@@ -765,17 +781,17 @@ This document outlines all remaining **backend** development tasks to complete t
 #### Payment Processing
 - [ ] Integrate Laravel Cashier (Stripe) (Payment gateway integration)
 - [ ] Add PayPal integration (Payment gateway integration)
-- [ ] Create invoice generation system
-- [ ] Implement webhook handlers for payment events
-- [ ] Add payment history tracking
+- [x] Create invoice generation system
+- [x] Implement webhook handlers for payment events
+- [x] Add payment history tracking
 
 #### Usage Tracking & Cost Analytics
-- [ ] Create AI usage tracking (tokens, API calls)
-- [ ] Implement cost calculation per organization
-- [ ] Create usage reports
-- [ ] Add cost breakdown by feature
-- [ ] Implement budget alerts
-- [ ] Create admin costing dashboard
+- [x] Create AI usage tracking (tokens, API calls)
+- [x] Implement cost calculation per organization
+- [x] Create usage reports
+- [x] Add cost breakdown by feature
+- [x] Implement budget alerts
+- [x] Create admin costing dashboard
 
 #### Organization Storage Sources
 - [ ] Add storage quota tracking (backend structure ready)
@@ -1067,24 +1083,24 @@ This document outlines all remaining **backend** development tasks to complete t
 ### 🔄 Remaining Tasks
 
 #### Deployment Configuration
-- [ ] Create CI/CD pipeline (GitHub Actions/GitLab CI)
-- [ ] Create deployment scripts
-- [ ] Set up health checks
-- [ ] Configure environment variables
+- [x] Create CI/CD pipeline (GitHub Actions/GitLab CI)
+- [x] Create deployment scripts
+- [x] Set up health checks
+- [x] Configure environment variables
 
 #### Backup Strategy
-- [ ] Implement daily database backups
-- [ ] Set up file backups
-- [ ] Configure 30-day retention
+- [x] Implement daily database backups
+- [x] Set up file backups
+- [x] Configure 30-day retention
 - [ ] Create disaster recovery procedures
 - [ ] Test backup restoration
 
 #### Documentation
 - [ ] Generate API documentation (Scribe/Scramble setup guide exists)
 - [ ] Write user guides
-- [ ] Create developer documentation
-- [ ] Write deployment guides
-- [ ] Document environment setup
+- [x] Create developer documentation
+- [x] Write deployment guides
+- [x] Document environment setup
 
 ---
 
@@ -1097,9 +1113,10 @@ This document outlines all remaining **backend** development tasks to complete t
 - Phase 9-11 (Collaboration & Billing): ✅ BACKEND COMPLETED (~95%)
 - Phase 12-14 (Portals & API): ✅ COMPLETED (~95%)
 - Phase 16-17 (Infrastructure & Testing): ✅ COMPLETED (~95%)
-- Phase 18-19 (Performance & Deployment): 🔄 PENDING (~10%)
+- Phase 18 Performance: 🔄 OPEN (12 tasks)
+- Phase 19 Deployment: 🔄 PARTIAL (10/14 tasks done — DR, user guides, API docs, restore drill open)
 
-**Overall Backend Completion: ~95%**
+**Overall Backend Completion: ~97%** (live gateways + CDN/scan open)
 
 **Remaining Backend Tasks:**
 - Payment gateway integrations (Stripe, PayPal)
@@ -1112,7 +1129,7 @@ This document outlines all remaining **backend** development tasks to complete t
 
 ---
 
-*Last Updated: 2024-12-19*
+*Last Updated: 2026-10-15*
 *Document Version: 1.0*
 *Split from DEVELOPMENT_TODO.md*
 

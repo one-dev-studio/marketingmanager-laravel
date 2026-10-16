@@ -1,22 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\Auth\PostAuthenticationRedirect;
 use App\Services\Auth\SessionService;
+use App\Support\GoogleAuthConfig;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class LoginController extends Controller
 {
     public function __construct(
-        private SessionService $sessionService
+        private SessionService $sessionService,
+        private PostAuthenticationRedirect $postAuthenticationRedirect,
     ) {}
 
-    public function showLoginForm()
+    public function showLoginForm(): Response
     {
-        return view('auth.login');
+        return Inertia::render('Auth/Login', [
+            'canResetPassword' => true,
+            'googleAuthEnabled' => GoogleAuthConfig::isEnabled(),
+        ]);
     }
 
     public function login(Request $request)
@@ -29,9 +39,10 @@ class LoginController extends Controller
         if (Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
             $user = Auth::user();
 
-            if ($user->hasTwoFactorEnabled() && !$request->session()->has('two_factor_verified')) {
+            if ($user->hasTwoFactorEnabled() && ! $request->session()->has('two_factor_verified')) {
                 $request->session()->put('login.id', $user->id);
                 Auth::logout();
+
                 return redirect()->route('two-factor.challenge');
             }
 
@@ -48,14 +59,7 @@ class LoginController extends Controller
 
     protected function authenticated(Request $request, $user)
     {
-        return match($user->user_type) {
-            'admin' => redirect()->route('admin.dashboard'),
-            'agency' => $user->primaryAgency()
-                ? redirect()->route('agency.dashboard', $user->primaryAgency())
-                : redirect()->route('main.organizations'),
-            'customer' => redirect()->route('main.organizations'),
-            default => redirect()->route('main.organizations'),
-        };
+        return $this->postAuthenticationRedirect->redirectFor($user);
     }
 
     public function logout(Request $request)
@@ -74,4 +78,3 @@ class LoginController extends Controller
         return redirect('/');
     }
 }
-

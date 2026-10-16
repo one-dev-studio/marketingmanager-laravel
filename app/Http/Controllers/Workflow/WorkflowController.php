@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Workflow;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Workflow\CreateWorkflowRequest;
 use App\Http\Requests\Workflow\UpdateWorkflowRequest;
+use App\Http\Resources\Workflow\WorkflowInertiaResource;
 use App\Http\Resources\Workflow\WorkflowResource;
 use App\Models\Workflow;
 use App\Services\Workflow\WorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class WorkflowController extends Controller
 {
@@ -41,17 +45,19 @@ class WorkflowController extends Controller
             ]);
         }
 
-        return view('workflows.index', [
+        return Inertia::render('Workflows/Index', [
             'organizationId' => $organizationId,
-            'workflows' => $workflows,
+            'workflows' => $workflows->through(
+                fn (Workflow $workflow) => WorkflowInertiaResource::listItem($workflow, $request)
+            ),
+            'can' => [
+                'create' => $request->user()?->can('create', Workflow::class) ?? false,
+            ],
         ]);
     }
 
-    public function builder(Request $request): \Illuminate\View\View
+    public function builder(Request $request, string $organizationId): Response
     {
-        $organizationId = auth()->user()->primaryOrganization()->id;
-        $organization = auth()->user()->primaryOrganization();
-
         $workflow = null;
         if ($request->has('id')) {
             $workflow = Workflow::where('organization_id', $organizationId)
@@ -59,9 +65,9 @@ class WorkflowController extends Controller
                 ->firstOrFail();
         }
 
-        return view('workflows.builder', [
-            'organization' => $organization,
-            'workflow' => $workflow,
+        return Inertia::render('Workflows/Builder', [
+            'organizationId' => $organizationId,
+            'workflow' => WorkflowInertiaResource::builder($workflow, $request),
         ]);
     }
 
@@ -158,4 +164,3 @@ class WorkflowController extends Controller
         ]);
     }
 }
-

@@ -6,10 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\LandingPage;
 use App\Models\LandingPageVariant;
 use App\Models\PageAnalytics;
+use App\Services\Security\UserHtmlSanitizer;
 use Illuminate\Http\Request;
 
 class PublicLandingPageController extends Controller
 {
+    public function __construct(
+        private readonly UserHtmlSanitizer $htmlSanitizer,
+    ) {}
+
     public function show(Request $request, string $slug)
     {
         $page = LandingPage::where('slug', $slug)
@@ -35,9 +40,12 @@ class PublicLandingPageController extends Controller
             $request->session()->put('lp_seen_'.$page->id, true);
         }
 
+        $html = $variant?->html_content ?? $page->html_content;
+
         return view('landing-pages.public', [
             'page' => $page,
             'variant' => $variant,
+            'safeHtml' => $this->htmlSanitizer->sanitize($html),
         ]);
     }
 

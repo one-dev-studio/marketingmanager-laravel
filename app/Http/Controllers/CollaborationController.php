@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use App\Models\ChatTopic;
-use App\Models\ChatMessage;
-use App\Models\ActivityLog;
-use App\Services\ReviewService;
-use App\Services\Chat\ChatService;
 use App\Events\ChatMessageSent;
 use App\Events\ChatTopicCreated;
+use App\Models\ActivityLog;
+use App\Models\ChatMessage;
+use App\Models\ChatTopic;
+use App\Services\Chat\ChatService;
+use App\Services\ReviewService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class CollaborationController extends Controller
 {
@@ -20,49 +24,63 @@ class CollaborationController extends Controller
         private ChatService $chatService
     ) {}
 
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response|JsonResponse
     {
+        $payload = $this->collaborationIndexPayload($request, $organizationId);
+
         if ($request->expectsJson()) {
-            $user = $request->user();
-            
-            $topics = ChatTopic::where('organization_id', $organizationId)
-                ->where(function ($query) use ($user) {
-                    $query->where('is_private', false)
-                        ->orWhere('created_by', $user->id)
-                        ->orWhereHas('participants', function ($q) use ($user) {
-                            $q->where('user_id', $user->id);
-                        });
-                })
-                ->with(['latestMessage', 'participants'])
-                ->withCount(['messages', 'participants'])
-                ->orderBy('updated_at', 'desc')
-                ->get()
-                ->map(function ($topic) use ($user) {
-                    $topic->unread_count = $topic->unreadCountForUser($user->id);
-                    return $topic;
-                });
-
-            $pendingReviews = $this->reviewService->getPendingReviewsForUser($organizationId, $user->id, 3);
-
-            $recentActivity = ActivityLog::where('organization_id', $organizationId)
-                ->with(['user', 'model'])
-                ->orderBy('created_at', 'desc')
-                ->limit(20)
-                ->get();
-
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'topics' => $topics,
-                    'pending_reviews' => $pendingReviews,
-                    'recent_activity' => $recentActivity,
-                ],
+                'data' => $payload,
             ]);
         }
 
-        return view('collaboration.index', [
+        return Inertia::render('Collaboration/Index', [
             'organizationId' => $organizationId,
+            'topics' => $payload['topics'],
+            'pendingReviews' => $payload['pending_reviews'],
+            'recentActivity' => $payload['recent_activity'],
         ]);
+    }
+
+    /**
+     * @return array{topics: mixed, pending_reviews: mixed, recent_activity: mixed}
+     */
+    private function collaborationIndexPayload(Request $request, string $organizationId): array
+    {
+        $user = $request->user();
+
+        $topics = ChatTopic::where('organization_id', $organizationId)
+            ->where(function ($query) use ($user) {
+                $query->where('is_private', false)
+                    ->orWhere('created_by', $user->id)
+                    ->orWhereHas('participants', function ($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    });
+            })
+            ->with(['latestMessage', 'participants'])
+            ->withCount(['messages', 'participants'])
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->map(function ($topic) use ($user) {
+                $topic->unread_count = $topic->unreadCountForUser($user->id);
+
+                return $topic;
+            });
+
+        $pendingReviews = $this->reviewService->getPendingReviewsForUser((int) $organizationId, $user->id, 3);
+
+        $recentActivity = ActivityLog::where('organization_id', $organizationId)
+            ->with(['user', 'model'])
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get();
+
+        return [
+            'topics' => $topics,
+            'pending_reviews' => $pendingReviews,
+            'recent_activity' => $recentActivity,
+        ];
     }
 
     public function showTopic(Request $request, string $organizationId, ChatTopic $topic): JsonResponse
@@ -118,7 +136,7 @@ class CollaborationController extends Controller
 
         $message = DB::transaction(function () use ($topic, $validated, $request) {
             $attachments = [];
-            
+
             if ($request->hasFile('files')) {
                 $attachments = $this->chatService->handleFileUploads($request->file('files'), $topic);
             }
@@ -128,11 +146,11 @@ class CollaborationController extends Controller
                 'user_id' => $request->user()->id,
                 'message' => $validated['message'],
                 'reply_to' => $validated['reply_to'] ?? null,
-                'attachments' => !empty($attachments) ? $attachments : null,
+                'attachments' => ! empty($attachments) ? $attachments : null,
             ]);
 
             $mentionedUserIds = $this->chatService->parseMentions($validated['message'], $topic);
-            if (!empty($mentionedUserIds)) {
+            if (! empty($mentionedUserIds)) {
                 $this->chatService->sendMentionNotifications($message, $mentionedUserIds, $request->user());
             }
 
@@ -144,7 +162,7 @@ class CollaborationController extends Controller
             ]);
 
             $message->load(['user', 'replyTo', 'topic', 'reactions.user']);
-            
+
             broadcast(new ChatMessageSent($message))->toOthers();
 
             return $message;
@@ -192,7 +210,7 @@ class CollaborationController extends Controller
             ]);
 
             $topic->load(['creator', 'participants.user']);
-            
+
             broadcast(new ChatTopicCreated($topic))->toOthers();
 
             return $topic;
@@ -205,5 +223,3 @@ class CollaborationController extends Controller
         ], 201);
     }
 }
-
-

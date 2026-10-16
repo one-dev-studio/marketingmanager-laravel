@@ -1,0 +1,48 @@
+/**
+ * Marketing Manager design tokens (canonical).
+ * Imported by Vite app.css / public-marketing bundle and mirrored under public/css/tokens for static public.css.
+ */
+:root {
+    /* Brand */
+    --mm-brand-50: #eef2ff;
+    --mm-brand-100: #e0e7ff;
+    --mm-brand-500: #6366f1;
+    --mm-brand-600: #4f46e5;
+    --mm-brand-700: #4338ca;
+    --mm-accent-violet: #7c3aed;
+    --mm-surface: #ffffff;
+    --mm-surface-muted: #f9fafb;
+    --mm-border: #e5e7eb;
+    --mm-text: #111827;
+    --mm-text-muted: #6b7280;
+    --mm-success: #10b981;
+    --mm-radius-lg: 1rem;
+    --mm-radius-xl: 1.25rem;
+    --mm-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.18);
+    --mm-shadow-brand: 0 10px 25px rgba(79, 70, 229, 0.3);
+
+    /* Legacy aliases (public.css class names) */
+    --primary: var(--mm-brand-600);
+    --primary-dark: var(--mm-brand-700);
+    --secondary: var(--mm-text-muted);
+    --success: var(--mm-success);
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --white: var(--mm-surface);
+    --gray-50: var(--mm-surface-muted);
+    --gray-100: #f3f4f6;
+    --gray-200: var(--mm-border);
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: var(--mm-text-muted);
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: var(--mm-text);
+
+    /* Typography scale */
+    --mm-font-display: clamp(2.25rem, 4vw, 3.25rem);
+    --mm-font-h2: 2rem;
+    --mm-font-lead: 1.125rem;
+    --mm-font-body: 1rem;
+}

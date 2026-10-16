@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Brand;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Brand\CreateBrandRequest;
 use App\Http\Requests\Brand\UpdateBrandRequest;
+use App\Http\Resources\Brand\BrandInertiaResource;
 use App\Http\Resources\Brand\BrandResource;
 use App\Models\Brand;
 use App\Models\Organization;
 use App\Services\Brand\BrandService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class BrandController extends Controller
 {
@@ -33,19 +38,22 @@ class BrandController extends Controller
             return BrandResource::collection($brands);
         }
 
-        return view('brands.index', [
-            'title' => 'Brands',
+        return Inertia::render('Brands/Index', [
             'organizationId' => $organizationId,
-            'brands' => $brands,
+            'brands' => $brands->through(
+                fn (Brand $brand) => BrandInertiaResource::listItem($brand, $request)
+            ),
+            'can' => [
+                'create' => $request->user()?->can('create', Brand::class) ?? false,
+            ],
         ]);
     }
 
-    public function create(Request $request, string $organizationId)
+    public function create(Request $request, string $organizationId): Response
     {
         $this->authorize('create', Brand::class);
 
-        return view('brands.create', [
-            'title' => 'Create Brand',
+        return Inertia::render('Brands/Create', [
             'organizationId' => $organizationId,
             'prefillName' => $request->query('name'),
         ]);
@@ -87,22 +95,19 @@ class BrandController extends Controller
             ]);
         }
 
-        return view('brands.show', [
-            'title' => $brand->name,
+        return Inertia::render('Brands/Show', [
             'organizationId' => $organizationId,
-            'brand' => $brand,
+            'brand' => BrandInertiaResource::detail($brand, $request),
         ]);
     }
 
-    public function edit(Request $request, string $organizationId, Brand $brand)
+    public function edit(Request $request, string $organizationId, Brand $brand): Response
     {
         $this->authorize('update', $brand);
 
-        return view('brands.edit', [
-            'title' => 'Edit Brand',
+        return Inertia::render('Brands/Edit', [
             'organizationId' => $organizationId,
-            'brand' => $brand,
-            'prefillName' => null,
+            'brand' => BrandInertiaResource::detail($brand, $request),
         ]);
     }
 
@@ -172,11 +177,11 @@ class BrandController extends Controller
     /**
      * Display brand assets page with brand guidelines and assets
      */
-    public function brandAssets(Request $request, string $organizationId)
+    public function brandAssets(Request $request, string $organizationId): Response
     {
         $brandId = $request->query('brandId');
 
-        if (!$brandId) {
+        if (! $brandId) {
             abort(400, 'Brand ID is required.');
         }
 
@@ -191,9 +196,10 @@ class BrandController extends Controller
         $guidelines = $this->brandService->getBrandGuidelines($brand);
         $assetsGrouped = $this->brandService->getAssetsGroupedByType($brand);
 
-        return view('brand-assets.index', [
-            'organizationId' => $organizationId,
-            'brand' => $brand,
+        return Inertia::render('BrandAssets/Index', [
+            'organizationId' => (string) $organizationId,
+            'brandId' => (string) $brand->id,
+            'brandName' => $brand->name,
             'guidelines' => $guidelines,
             'assetsGrouped' => $assetsGrouped,
         ]);

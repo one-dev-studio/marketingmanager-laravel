@@ -1,14 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class EmailVerificationController extends Controller
 {
+    /**
+     * Show the email verification notice page.
+     */
+    public function showNotice(Request $request): Response
+    {
+        return Inertia::render('Auth/VerifyEmail', [
+            'status' => $request->session()->get('status'),
+        ]);
+    }
+
     /**
      * Mark the authenticated user's email address as verified
      */

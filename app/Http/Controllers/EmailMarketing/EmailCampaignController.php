@@ -1,17 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\EmailMarketing;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EmailMarketing\CreateEmailCampaignRequest;
 use App\Http\Requests\EmailMarketing\UpdateEmailCampaignRequest;
+use App\Http\Resources\EmailMarketing\EmailCampaignInertiaResource;
 use App\Http\Resources\EmailMarketing\EmailCampaignResource;
-use App\Models\EmailCampaign;
-use App\Services\EmailMarketing\EmailCampaignService;
 use App\Jobs\SendEmailCampaign;
+use App\Models\ContactList;
+use App\Models\EmailCampaign;
+use App\Models\EmailTemplate;
+use App\Services\EmailMarketing\EmailCampaignService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class EmailCampaignController extends Controller
 {
@@ -19,7 +26,7 @@ class EmailCampaignController extends Controller
         private EmailCampaignService $emailCampaignService
     ) {}
 
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response|AnonymousResourceCollection
     {
         $query = EmailCampaign::where('organization_id', $organizationId)
             ->with(['emailTemplate', 'contactLists']);
@@ -34,20 +41,20 @@ class EmailCampaignController extends Controller
             return EmailCampaignResource::collection($campaigns);
         }
 
-        return view('email.campaigns.index', [
-            'title' => 'Email Campaigns',
+        return Inertia::render('EmailMarketing/Campaigns/Index', [
             'organizationId' => $organizationId,
-            'campaigns' => $campaigns,
+            'campaigns' => $campaigns->through(
+                fn (EmailCampaign $campaign) => EmailCampaignInertiaResource::listItem($campaign, $request, $organizationId)
+            ),
         ]);
     }
 
-    public function create(Request $request, string $organizationId)
+    public function create(Request $request, string $organizationId): Response
     {
-        return view('email.campaigns.create', [
-            'title' => 'Create Email Campaign',
+        return Inertia::render('EmailMarketing/Campaigns/Create', [
             'organizationId' => $organizationId,
-            'templates' => \App\Models\EmailTemplate::where('organization_id', $organizationId)->orderBy('name')->get(),
-            'lists' => \App\Models\ContactList::where('organization_id', $organizationId)->orderBy('name')->get(),
+            'templates' => EmailTemplate::where('organization_id', $organizationId)->orderBy('name')->get(['id', 'name']),
+            'lists' => ContactList::where('organization_id', $organizationId)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -74,7 +81,7 @@ class EmailCampaignController extends Controller
             ->with('success', 'Email campaign created.');
     }
 
-    public function show(Request $request, string $organizationId, EmailCampaign $emailCampaign)
+    public function show(Request $request, string $organizationId, EmailCampaign $emailCampaign): Response|JsonResponse
     {
         $this->authorize('view', $emailCampaign);
 
@@ -88,10 +95,9 @@ class EmailCampaignController extends Controller
             ]);
         }
 
-        return view('email.campaigns.show', [
-            'title' => $emailCampaign->name,
+        return Inertia::render('EmailMarketing/Campaigns/Show', [
             'organizationId' => $organizationId,
-            'campaign' => $emailCampaign,
+            'campaign' => EmailCampaignInertiaResource::detail($emailCampaign),
         ]);
     }
 
@@ -127,7 +133,7 @@ class EmailCampaignController extends Controller
     {
         $this->authorize('send', $emailCampaign);
 
-        if (!$emailCampaign->canSend()) {
+        if (! $emailCampaign->canSend()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Campaign cannot be sent. Ensure it has recipients.',
@@ -180,6 +186,7 @@ class EmailCampaignController extends Controller
 
         try {
             $emailCampaign->pause();
+
             return response()->json([
                 'success' => true,
                 'data' => new EmailCampaignResource($emailCampaign),
@@ -199,6 +206,7 @@ class EmailCampaignController extends Controller
 
         try {
             $emailCampaign->resume();
+
             return response()->json([
                 'success' => true,
                 'data' => new EmailCampaignResource($emailCampaign),
@@ -218,6 +226,7 @@ class EmailCampaignController extends Controller
 
         try {
             $emailCampaign->cancel();
+
             return response()->json([
                 'success' => true,
                 'data' => new EmailCampaignResource($emailCampaign),
@@ -247,17 +256,16 @@ class EmailCampaignController extends Controller
                 'clicked_count' => $emailCampaign->clicked_count,
                 'bounced_count' => $emailCampaign->bounced_count,
                 'unsubscribed_count' => $emailCampaign->unsubscribed_count,
-                'open_rate' => $emailCampaign->sent_count > 0 
-                    ? round(($emailCampaign->opened_count / $emailCampaign->sent_count) * 100, 2) 
+                'open_rate' => $emailCampaign->sent_count > 0
+                    ? round(($emailCampaign->opened_count / $emailCampaign->sent_count) * 100, 2)
                     : 0,
-                'click_rate' => $emailCampaign->sent_count > 0 
-                    ? round(($emailCampaign->clicked_count / $emailCampaign->sent_count) * 100, 2) 
+                'click_rate' => $emailCampaign->sent_count > 0
+                    ? round(($emailCampaign->clicked_count / $emailCampaign->sent_count) * 100, 2)
                     : 0,
-                'bounce_rate' => $emailCampaign->sent_count > 0 
-                    ? round(($emailCampaign->bounced_count / $emailCampaign->sent_count) * 100, 2) 
+                'bounce_rate' => $emailCampaign->sent_count > 0
+                    ? round(($emailCampaign->bounced_count / $emailCampaign->sent_count) * 100, 2)
                     : 0,
             ],
         ]);
     }
 }
-

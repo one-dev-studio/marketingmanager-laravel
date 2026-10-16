@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Organization;
 use App\Services\Localization\LocaleService;
 use Closure;
 use Illuminate\Http\Request;
@@ -35,16 +36,22 @@ class SetLocale
     /**
      * Get the organization from the current request context
      */
-    protected function getOrganizationFromRequest(Request $request): mixed
+    protected function getOrganizationFromRequest(Request $request): ?Organization
     {
-        // Try to get organization from route parameter
-        $organizationId = $request->route('organization');
-        
-        if ($organizationId) {
-            return \App\Models\Organization::find($organizationId);
+        $organization = $request->route('organization');
+        if ($organization instanceof Organization) {
+            return $organization;
         }
 
-        // Try to get from authenticated user's primary organization
+        $organizationId = $request->route('organizationId');
+        if ($organizationId !== null && $organizationId !== '') {
+            return Organization::find((int) $organizationId);
+        }
+
+        if (is_numeric($organization)) {
+            return Organization::find((int) $organization);
+        }
+
         if ($user = $request->user()) {
             return $user->primaryOrganization();
         }
@@ -52,5 +59,3 @@ class SetLocale
         return null;
     }
 }
-
-

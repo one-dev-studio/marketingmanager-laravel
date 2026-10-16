@@ -196,6 +196,10 @@ Last reconciled with the codebase: **20 Aug 2026**.
 ### 3.3 Collaboration / chat
 
 - [x] Echo/Pusher wiring in `bootstrap.js`
+- [x] Echo/Pusher production env (`.env.example`, broadcast fallback, Inertia `realtime` share)
+- [x] Builder preview sanitization (email/landing `BuilderHtmlPreview`)
+- [x] CSP `style-src` tightening (nonce + no `unsafe-inline` outside local)
+- [x] Phase 18 perf indexes + lazy Inertia page chunks
 - [x] Wall: pending reviews + activity from DB
 - [x] Notification preferences in org settings
 
@@ -295,7 +299,7 @@ Last reconciled with the codebase: **20 Aug 2026**.
 - [x] Sentry config stub; Telescope install noted in README
 - [x] API inventory via `php artisan route:list` (Scribe not installed)
 - [x] User + deploy notes in README
-- [x] Vue builders split as extra Vite entries
+- [x] Vue builders split as extra Vite entries (superseded: React builder panels; legacy Vue entries removed)
 
 ---
 
@@ -310,7 +314,7 @@ Last reconciled with the codebase: **20 Aug 2026**.
 - [x] SEO sitemap (`/sitemap.xml`); image enhance still generate-only
 - [x] Public contact persistence, cookie banner, sitemap
 - [x] Menu count badges (review + mentions)
-- [x] Accessibility: sidebar toggle `aria-label`, locale menu ARIA
+- [x] Accessibility: sidebar toggle `aria-label`, locale/org menus ARIA + Escape, skip link, `main-content` target
 
 ---
 

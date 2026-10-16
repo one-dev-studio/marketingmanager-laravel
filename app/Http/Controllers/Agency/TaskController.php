@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Agency;
 
 use App\Http\Controllers\Controller;
@@ -10,6 +12,8 @@ use App\Services\AgencyService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * Agency Task Controller
@@ -24,20 +28,42 @@ class TaskController extends Controller
     /**
      * Display cross-client task Kanban board (Web)
      */
-    public function index(Request $request, Agency $agency)
+    public function index(Request $request, Agency $agency): Response|AnonymousResourceCollection|JsonResponse
     {
         $clientOrganizationIds = $this->agencyService->getClientOrganizationIds($agency);
-        
-        $tasks = Task::whereIn('organization_id', $clientOrganizationIds)
-            ->with(['organization', 'assignee', 'creator'])
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->groupBy('status');
 
-        return view('agency.tasks.index', [
-            'agency' => $agency,
-            'tasks' => $tasks,
-            'clientOrganizationIds' => $clientOrganizationIds,
+        $query = Task::whereIn('organization_id', $clientOrganizationIds)
+            ->with(['organization', 'assignee', 'creator']);
+
+        if ($request->filled('organization_id')) {
+            $query->where('organization_id', $request->integer('organization_id'));
+        }
+
+        $tasks = $query->orderBy('created_at', 'desc')->get();
+
+        if ($this->wantsJson($request)) {
+            return TaskResource::collection($tasks);
+        }
+
+        $clients = $agency->clientOrganizations()
+            ->orderBy('name')
+            ->get(['organizations.id', 'organizations.name'])
+            ->map(fn ($org) => ['id' => $org->id, 'name' => $org->name])
+            ->values()
+            ->all();
+
+        return Inertia::render('Agency/Tasks/Index', [
+            'agencyId' => (string) $agency->id,
+            'clients' => $clients,
+            'tasks' => $tasks
+                ->map(function (Task $task) use ($request) {
+                    $payload = (new TaskResource($task))->toArray($request);
+                    $payload['organization_name'] = $task->organization?->name;
+
+                    return $payload;
+                })
+                ->values()
+                ->all(),
         ]);
     }
 
@@ -47,7 +73,7 @@ class TaskController extends Controller
     public function apiIndex(Request $request, Agency $agency): AnonymousResourceCollection
     {
         $clientOrganizationIds = $this->agencyService->getClientOrganizationIds($agency);
-        
+
         $query = Task::whereIn('organization_id', $clientOrganizationIds)
             ->with(['organization', 'assignee', 'creator', 'project', 'comments.user', 'attachments']);
 
@@ -105,14 +131,14 @@ class TaskController extends Controller
     public function statistics(Request $request, Agency $agency): JsonResponse
     {
         $clientOrganizationIds = $this->agencyService->getClientOrganizationIds($agency);
-        
+
         $totalTasks = Task::whereIn('organization_id', $clientOrganizationIds)->count();
         $tasksByStatus = Task::whereIn('organization_id', $clientOrganizationIds)
             ->selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
-        
+
         $tasksByPriority = Task::whereIn('organization_id', $clientOrganizationIds)
             ->selectRaw('priority, COUNT(*) as count')
             ->groupBy('priority')
@@ -150,4 +176,3 @@ class TaskController extends Controller
         ]);
     }
 }
-

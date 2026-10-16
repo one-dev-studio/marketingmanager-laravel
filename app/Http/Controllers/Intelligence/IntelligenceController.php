@@ -4,25 +4,32 @@ namespace App\Http\Controllers\Intelligence;
 
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
-use App\Models\Competitor;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class IntelligenceController extends Controller
 {
-    public function sentiment(Request $request, string $organizationId)
+    public function sentiment(Request $request, string $organizationId): Response
     {
-        return view('intelligence.sentiment', [
-            'title' => 'Sentiment',
+        return Inertia::render('Intelligence/Sentiment', [
             'organizationId' => $organizationId,
         ]);
     }
 
-    public function predictive(Request $request, string $organizationId)
+    public function predictive(Request $request, string $organizationId): Response
     {
-        return view('intelligence.predictive', [
-            'title' => 'Predictive Analytics',
+        $campaigns = Campaign::query()
+            ->where('organization_id', $organizationId)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return Inertia::render('Intelligence/Predictive', [
             'organizationId' => $organizationId,
-            'campaigns' => Campaign::where('organization_id', $organizationId)->orderBy('name')->get(['id', 'name']),
+            'campaigns' => $campaigns->map(fn (Campaign $campaign) => [
+                'id' => $campaign->id,
+                'name' => $campaign->name,
+            ])->values()->all(),
         ]);
     }
 }

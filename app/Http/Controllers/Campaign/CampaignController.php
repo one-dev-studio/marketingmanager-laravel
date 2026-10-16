@@ -1,16 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Campaign;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Campaign\CreateCampaignRequest;
 use App\Http\Requests\Campaign\UpdateCampaignRequest;
+use App\Http\Resources\Campaign\CampaignInertiaResource;
 use App\Http\Resources\Campaign\CampaignResource;
+use App\Models\Brand;
 use App\Models\Campaign;
+use App\Models\Channel;
 use App\Services\Campaign\CampaignService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class CampaignController extends Controller
 {
@@ -18,43 +25,62 @@ class CampaignController extends Controller
         private CampaignService $campaignService
     ) {}
 
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response|AnonymousResourceCollection
     {
+        $this->authorize('viewAny', Campaign::class);
+
         $brandId = $request->query('brand_id');
 
         $campaigns = Campaign::where('organization_id', $organizationId)
             ->forBrand($brandId)
-            ->with(['channels', 'organization', 'creator', 'brand'])
+            ->with(['brand'])
+            ->orderByDesc('updated_at')
             ->paginate();
 
         if ($request->expectsJson()) {
             return CampaignResource::collection($campaigns);
         }
 
-        return view('campaigns.index', [
+        return Inertia::render('Campaigns/Index', [
             'organizationId' => $organizationId,
-            'campaigns' => $campaigns,
+            'campaigns' => $campaigns->through(
+                fn (Campaign $campaign) => CampaignInertiaResource::listItem($campaign, $request),
+            ),
+            'can' => [
+                'create' => $request->user()?->can('create', Campaign::class) ?? false,
+            ],
         ]);
     }
 
-    public function create(Request $request, string $organizationId)
+    public function create(Request $request, string $organizationId): Response
     {
-        $brandId = $request->query('brand_id') ?? $request->query('brandId');
-        
-        $brands = \App\Models\Brand::where('organization_id', $organizationId)->get();
-        $products = \App\Models\Product::where('organization_id', $organizationId)
-            ->when($brandId, fn($q) => $q->where('brand_id', $brandId))
-            ->get();
-        $channels = \App\Models\Channel::where('organization_id', $organizationId)
-            ->where('status', 'active')
-            ->get();
+        $this->authorize('create', Campaign::class);
 
-        return view('campaigns.create', [
+        $brandId = $request->query('brand_id') ?? $request->query('brandId');
+
+        $brands = Brand::where('organization_id', $organizationId)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+        $channels = Channel::where('organization_id', $organizationId)
+            ->where('status', 'active')
+            ->orderBy('display_name')
+            ->get(['id', 'display_name']);
+
+        return Inertia::render('Campaigns/Create', [
             'organizationId' => $organizationId,
-            'brandId' => $brandId,
-            'brands' => $brands,
-            'products' => $products,
-            'channels' => $channels,
+            'prefillBrandId' => $brandId ? (string) $brandId : null,
+            'brands' => $brands->map(static fn (Brand $brand) => [
+                'id' => $brand->id,
+                'name' => $brand->name,
+            ])->values()->all(),
+            'channels' => $channels->map(static fn (Channel $channel) => [
+                'id' => $channel->id,
+                'display_name' => $channel->display_name,
+            ])->values()->all(),
+            'defaults' => [
+                'start_date' => now()->addDay()->toDateString(),
+                'end_date' => now()->addMonth()->toDateString(),
+            ],
         ]);
     }
 
@@ -89,7 +115,7 @@ class CampaignController extends Controller
     {
         $this->authorize('view', $campaign);
 
-        $campaign->load(['channels', 'goals', 'scheduledPosts']);
+        $campaign->load(['brand', 'channels', 'goals', 'scheduledPosts']);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -98,9 +124,9 @@ class CampaignController extends Controller
             ]);
         }
 
-        return view('campaigns.show', [
-            'campaign' => $campaign,
+        return Inertia::render('Campaigns/Show', [
             'organizationId' => $organizationId,
+            'campaign' => CampaignInertiaResource::detail($campaign, $request),
         ]);
     }
 
@@ -150,6 +176,7 @@ class CampaignController extends Controller
 
         try {
             $campaign->submitForReview();
+
             return response()->json([
                 'success' => true,
                 'data' => new CampaignResource($campaign),
@@ -181,6 +208,7 @@ class CampaignController extends Controller
 
         try {
             $campaign->deactivate();
+
             return response()->json([
                 'success' => true,
                 'data' => new CampaignResource($campaign),
@@ -200,6 +228,7 @@ class CampaignController extends Controller
 
         try {
             $campaign->reactivate();
+
             return response()->json([
                 'success' => true,
                 'data' => new CampaignResource($campaign),
@@ -219,6 +248,7 @@ class CampaignController extends Controller
 
         try {
             $campaign->pause();
+
             return response()->json([
                 'success' => true,
                 'data' => new CampaignResource($campaign),
@@ -238,6 +268,7 @@ class CampaignController extends Controller
 
         try {
             $campaign->resume();
+
             return response()->json([
                 'success' => true,
                 'data' => new CampaignResource($campaign),
@@ -257,6 +288,7 @@ class CampaignController extends Controller
 
         try {
             $campaign->complete();
+
             return response()->json([
                 'success' => true,
                 'data' => new CampaignResource($campaign),
@@ -401,4 +433,3 @@ class CampaignController extends Controller
         }
     }
 }
-

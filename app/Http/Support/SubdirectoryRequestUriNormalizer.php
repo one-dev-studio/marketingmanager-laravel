@@ -46,6 +46,17 @@ final class SubdirectoryRequestUriNormalizer
     }
 
     /**
+     * Root-relative path for a file under /public (same host as the page; supports subdirectory APP_URL).
+     */
+    public static function rootRelativePublicPath(string $relativePath, ?string $appUrl = null): string
+    {
+        $relativePath = ltrim($relativePath, '/');
+        $prefix = self::pathPrefixFromAppUrl($appUrl);
+
+        return ($prefix ?? '').'/'.$relativePath;
+    }
+
+    /**
      * Remove one leading subdirectory prefix and collapse accidental duplicates.
      */
     public static function stripPrefixFromRequestUri(string $requestUri, string $pathPrefix): string

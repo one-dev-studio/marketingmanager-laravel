@@ -2,24 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ContentApprovalStatusChanged;
+use App\Http\Resources\Content\ContentApprovalInertiaResource;
 use App\Models\ContentApproval;
-use App\Models\ScheduledPost;
 use App\Models\Organization;
-use App\Policies\ReviewPolicy;
+use App\Models\ScheduledPost;
 use App\Notifications\ContentApprovalRequested;
 use App\Notifications\ContentApproved;
 use App\Notifications\ContentRejected;
-use App\Events\ContentApprovalStatusChanged;
+use App\Policies\ReviewPolicy;
+use App\Services\PdfAnnotationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ContentApprovalController extends Controller
 {
-    public function index(Request $request, string $organizationId)
+    public function index(Request $request, string $organizationId): Response|JsonResponse
     {
         $organization = Organization::findOrFail($organizationId);
-        $policy = new ReviewPolicy();
-        if (!$policy->viewAny($request->user(), $organization)) {
+        $policy = new ReviewPolicy;
+        if (! $policy->viewAny($request->user(), $organization)) {
             abort(403, 'You do not have permission to view content approvals.');
         }
 
@@ -48,7 +52,8 @@ class ContentApprovalController extends Controller
 
         $approvals = $query->with(['scheduledPost.campaign', 'scheduledPost.channel', 'requestedBy', 'approvedBy'])
             ->orderBy('requested_at', 'desc')
-            ->paginate();
+            ->paginate()
+            ->withQueryString();
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -57,16 +62,25 @@ class ContentApprovalController extends Controller
             ]);
         }
 
-        return view('review.index', [
+        return Inertia::render('ContentApprovals/Index', [
             'organizationId' => $organizationId,
+            'filters' => [
+                'status' => $request->get('status'),
+                'channel_id' => $request->get('channel_id'),
+                'author_id' => $request->get('author_id'),
+                'date' => $request->get('date'),
+            ],
+            'approvals' => $approvals->through(
+                fn (ContentApproval $approval) => ContentApprovalInertiaResource::listItem($approval, $request),
+            ),
         ]);
     }
 
     public function requestApproval(Request $request, string $organizationId, ScheduledPost $scheduledPost): JsonResponse
     {
         $organization = Organization::findOrFail($organizationId);
-        $policy = new ReviewPolicy();
-        if (!$policy->requestApproval($request->user(), $organization)) {
+        $policy = new ReviewPolicy;
+        if (! $policy->requestApproval($request->user(), $organization)) {
             abort(403, 'You do not have permission to request content approval.');
         }
 
@@ -193,7 +207,7 @@ class ContentApprovalController extends Controller
         $this->authorize('view', $approval);
 
         $approval->load(['scheduledPost.campaign', 'scheduledPost.channel', 'approvedBy', 'requestedBy']);
-        
+
         $approvalHistory = ContentApproval::where('scheduled_post_id', $approval->scheduled_post_id)
             ->with(['approvedBy', 'requestedBy'])
             ->orderBy('requested_at', 'desc')
@@ -206,18 +220,17 @@ class ContentApprovalController extends Controller
             ]);
         }
 
-        return view('content-approvals.show', [
-            'approval' => $approval,
-            'approvalHistory' => $approvalHistory,
+        return Inertia::render('ContentApprovals/Show', [
             'organizationId' => $organizationId,
+            'approval' => ContentApprovalInertiaResource::detail($approval, $request, $approvalHistory),
         ]);
     }
 
     public function getApprovalHistory(Request $request, string $organizationId, ScheduledPost $scheduledPost): JsonResponse
     {
         $organization = Organization::findOrFail($organizationId);
-        $policy = new ReviewPolicy();
-        if (!$policy->viewHistory($request->user(), $organization)) {
+        $policy = new ReviewPolicy;
+        if (! $policy->viewHistory($request->user(), $organization)) {
             abort(403, 'You do not have permission to view approval history.');
         }
 
@@ -242,7 +255,7 @@ class ContentApprovalController extends Controller
     public function queue(Request $request, string $organizationId): JsonResponse
     {
         $organization = Organization::findOrFail($organizationId);
-        $policy = new ReviewPolicy();
+        $policy = new ReviewPolicy;
         if (! $policy->viewAny($request->user(), $organization)) {
             abort(403);
         }
@@ -309,7 +322,7 @@ class ContentApprovalController extends Controller
             ?? null;
 
         $annotations = $path
-            ? app(\App\Services\PdfAnnotationService::class)->detectAnnotations($path)
+            ? app(PdfAnnotationService::class)->detectAnnotations($path)
             : [];
 
         return response()->json([
@@ -318,4 +331,3 @@ class ContentApprovalController extends Controller
         ]);
     }
 }
-

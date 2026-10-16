@@ -1,21 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\LandingPage;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LandingPage\CreateLandingPageRequest;
 use App\Http\Requests\LandingPage\UpdateLandingPageRequest;
+use App\Http\Resources\LandingPage\LandingPageInertiaResource;
 use App\Http\Resources\LandingPage\LandingPageResource;
 use App\Models\LandingPage;
+use App\Models\LandingPageVariant;
 use App\Services\LandingPage\LandingPageService;
+use App\Services\Security\UserHtmlSanitizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class LandingPageController extends Controller
 {
     public function __construct(
-        private LandingPageService $landingPageService
+        private LandingPageService $landingPageService,
+        private UserHtmlSanitizer $htmlSanitizer,
     ) {}
 
     public function index(Request $request, string $organizationId)
@@ -33,35 +40,59 @@ class LandingPageController extends Controller
             return LandingPageResource::collection($landingPages);
         }
 
-        return view('landing-pages.index', [
+        return Inertia::render('LandingPages/Index', [
             'organizationId' => $organizationId,
-            'landingPages' => $landingPages,
+            'landingPages' => $landingPages->through(
+                fn (LandingPage $page) => LandingPageInertiaResource::listItem($page, $request)
+            ),
+            'can' => [
+                'create' => $request->user()?->hasAccessToOrganization((int) $organizationId) ?? false,
+            ],
         ]);
     }
 
-    public function create(Request $request, string $organizationId)
+    public function create(Request $request, string $organizationId): Response
     {
-        return view('landing-pages.create', ['organizationId' => $organizationId]);
+        return Inertia::render('LandingPages/Create', [
+            'organizationId' => $organizationId,
+        ]);
     }
 
-    public function builder(Request $request, string $organizationId, LandingPage $landingPage)
+    public function builder(Request $request, string $organizationId, LandingPage $landingPage): Response
     {
-        return view('landing-pages.builder', [
+        $landingPage->load('variants', 'analytics');
+
+        return Inertia::render('LandingPages/Builder', [
             'organizationId' => $organizationId,
-            'page' => $landingPage->load('variants', 'analytics'),
+            'page' => LandingPageInertiaResource::builder($landingPage, $request),
         ]);
     }
 
     public function preview(Request $request, string $organizationId, LandingPage $landingPage)
     {
-        return view('landing-pages.preview', ['page' => $landingPage]);
+        return view('landing-pages.preview', [
+            'page' => $landingPage,
+            'safeHtml' => $this->htmlSanitizer->sanitize($landingPage->html_content),
+        ]);
     }
 
-    public function analytics(Request $request, string $organizationId, LandingPage $landingPage)
+    public function analytics(Request $request, string $organizationId, LandingPage $landingPage): Response
     {
-        return view('landing-pages.analytics', [
+        $landingPage->load('analytics', 'variants');
+
+        return Inertia::render('LandingPages/Analytics', [
             'organizationId' => $organizationId,
-            'page' => $landingPage->load('analytics', 'variants'),
+            'page' => [
+                'id' => $landingPage->id,
+                'name' => $landingPage->name,
+            ],
+            'analytics' => $landingPage->analytics->map(static fn ($row) => [
+                'id' => $row->id,
+                'event' => $row->visits !== null ? "{$row->visits} visits" : null,
+                'metric' => $row->conversions !== null ? "{$row->conversions} conversions" : null,
+                'created_at' => $row->analytics_date?->format('Y-m-d') ?? $row->created_at?->toDateTimeString(),
+            ])->values()->all(),
+            'variantsCount' => $landingPage->variants->count(),
         ]);
     }
 
@@ -143,7 +174,7 @@ class LandingPageController extends Controller
         return back()->with('success', 'Landing page published.');
     }
 
-    public function createVariant(Request $request, LandingPage $landingPage): JsonResponse
+    public function createVariant(Request $request, LandingPage $landingPage)
     {
         $this->authorize('update', $landingPage);
 
@@ -159,11 +190,15 @@ class LandingPageController extends Controller
             $request->validated()
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => $variant,
-            'message' => 'Variant created successfully.',
-        ], 201);
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'data' => $variant,
+                'message' => 'Variant created successfully.',
+            ], 201);
+        }
+
+        return back()->with('success', 'Variant created successfully.');
     }
 
     public function setWinner(Request $request, LandingPage $landingPage): JsonResponse
@@ -174,7 +209,7 @@ class LandingPageController extends Controller
             'variant_id' => ['required', 'exists:landing_page_variants,id'],
         ]);
 
-        $variant = \App\Models\LandingPageVariant::find($request->variant_id);
+        $variant = LandingPageVariant::find($request->variant_id);
         $variant = $this->landingPageService->setWinnerVariant($variant);
 
         return response()->json([
@@ -247,4 +282,3 @@ class LandingPageController extends Controller
         ]);
     }
 }
-
